@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+
 import {
-  add,
-  eachDayOfInterval,
+  addDays,
+  startOfDay,
+  // eachDayOfInterval,
   endOfMonth,
   format,
   getDay,
@@ -15,7 +17,7 @@ import {
   parse,
   startOfMonth,
   startOfToday,
-  isWithinInterval,
+  isWithinRange,
   isBefore,
 } from "date-fns"
 
@@ -27,24 +29,39 @@ interface CalendarProps {
   dateRange?: { start: string; end: string }
 }
 
+function eachDayOfIntervalCustom({ start, end }: { start: Date; end: Date }) {
+  const dates = [];
+  let currentDate = startOfDay(start);
+  const endDate = startOfDay(end);
+
+  while (currentDate <= endDate) {
+    dates.push(currentDate);
+    currentDate = addDays(currentDate, 1);
+  }
+
+  return dates;
+}
+
+
 export default function Calendar({ type, onSelect, onRangeSelect, selectedDate, dateRange }: CalendarProps) {
   const today = startOfToday()
   const [currentMonth, setCurrentMonth] = useState(format(today, "MMM-yyyy"))
-  const firstDayCurrentMonth = parse(currentMonth, "MMM-yyyy", new Date())
+  // const firstDayCurrentMonth = parse(currentMonth, "MMM-yyyy", new Date())
+  const firstDayCurrentMonth = parse(currentMonth)
   const [rangeStart, setRangeStart] = useState<Date | null>(dateRange?.start ? new Date(dateRange.start) : null)
 
-  const days = eachDayOfInterval({
+  const days = eachDayOfIntervalCustom({
     start: startOfMonth(firstDayCurrentMonth),
     end: endOfMonth(firstDayCurrentMonth),
   })
 
   const previousMonth = () => {
-    const firstDayNextMonth = add(firstDayCurrentMonth, { months: -1 })
+    const firstDayNextMonth = addDays(firstDayCurrentMonth, -1)
     setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"))
   }
 
   const nextMonth = () => {
-    const firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 })
+    const firstDayNextMonth = addDays(firstDayCurrentMonth, 1)
     setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"))
   }
 
@@ -68,7 +85,7 @@ export default function Calendar({ type, onSelect, onRangeSelect, selectedDate, 
     if (!dateRange) return false
     const start = new Date(dateRange.start)
     const end = new Date(dateRange.end)
-    return isWithinInterval(day, { start, end })
+    return isWithinRange(day, start, end)
   }
 
   const isRangeStart = (day: Date) => dateRange?.start && isEqual(day, new Date(dateRange.start))
@@ -99,31 +116,31 @@ export default function Calendar({ type, onSelect, onRangeSelect, selectedDate, 
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {days.map((day, dayIdx) => {
-          const isSelected = selectedDate ? isEqual(day, new Date(selectedDate)) : false
+        {days.map((day: Date, dayIdx: number) => {
+          const isSelected: boolean = selectedDate ? isEqual(day, new Date(selectedDate)) : false
 
           return (
             <div
               key={day.toString()}
               className={`
-                ${dayIdx === 0 ? colStartClasses[getDay(day)] : ""}
-                p-0.5
+          ${dayIdx === 0 ? colStartClasses[getDay(day)] : ""}
+          p-0.5
               `}
             >
               <button
-                onClick={() => handleDateClick(day)}
-                className={`
-                  w-full aspect-square flex items-center justify-center text-sm rounded-full
-                  hover:bg-gray-100 relative
-                  ${!isSameMonth(day, firstDayCurrentMonth) ? "text-gray-300" : ""}
-                  ${isToday(day) ? "font-bold" : ""}
-                  ${isSelected ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
-                  ${isInRange(day) ? "bg-blue-50" : ""}
-                  ${isRangeStart(day) ? "bg-blue-500 text-white rounded-l-full" : ""}
-                  ${isRangeEnd(day) ? "bg-blue-500 text-white rounded-r-full" : ""}
-                `}
+          onClick={() => handleDateClick(day)}
+          className={`
+            w-full aspect-square flex items-center justify-center text-sm rounded-full
+            hover:bg-gray-100 relative
+            ${!isSameMonth(day, firstDayCurrentMonth) ? "text-gray-300" : ""}
+            ${isToday(day) ? "font-bold" : ""}
+            ${isSelected ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+            ${isInRange(day) ? "bg-blue-50" : ""}
+            ${isRangeStart(day) ? "bg-blue-500 text-white rounded-l-full" : ""}
+            ${isRangeEnd(day) ? "bg-blue-500 text-white rounded-r-full" : ""}
+          `}
               >
-                {format(day, "d")}
+          {format(day, "d")}
               </button>
             </div>
           )
@@ -134,4 +151,3 @@ export default function Calendar({ type, onSelect, onRangeSelect, selectedDate, 
 }
 
 const colStartClasses = ["", "col-start-2", "col-start-3", "col-start-4", "col-start-5", "col-start-6", "col-start-7"]
-

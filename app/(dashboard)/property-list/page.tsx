@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { Search, Plus, ChevronRight, MoreVertical, Bell } from "lucide-react";
+import { Search, Plus, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 export default function Dashboard() {
   return (
@@ -117,10 +118,10 @@ function PropertyCard({ status }: { status: string }) {
       </div>
       <div className="flex justify-between items-center mt-4 pt-4 border-t">
         <span className="text-gray-500 text-sm">Office</span>
-        <a href="#" className="flex items-center text-blue-500 text-sm">
+        <Link href="#" className="flex items-center text-blue-500 text-sm">
           View Details
           <ChevronRight className="h-4 w-4 ml-1" />
-        </a>
+        </Link>
       </div>
     </div>
   );

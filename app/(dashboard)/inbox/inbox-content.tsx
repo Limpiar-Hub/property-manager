@@ -55,7 +55,7 @@ export function InboxContent() {
         </div>
 
         <div className="p-4 border-t flex justify-end">
-          <Button onClick={() => setIsNewTicketOpen(true)} className="w-[10rem] bg-blue-500 " size="lg">
+          <Button onClick={() => setIsNewTicketOpen(true)} className="w-[10rem] bg-blue-500 hover:bg-blue-700 " size="lg">
             <Plus className="w-5 h-5 mr-2" />
             New Ticket
           </Button>

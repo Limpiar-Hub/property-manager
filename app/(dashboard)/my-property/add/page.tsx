@@ -1,8 +1,6 @@
 "use client"
 
 import { useAppSelector } from "@/hooks/useReduxHooks"
-import Sidebar from "@/components/sidebar"
-import Header from "@/components/header"
 import FormNavigation from "@/components/property-form/form-navigation"
 import ProgressSteps from "@/components/property-form/progress-steps"
 import CategorySelection from "@/components/property-form/category-selection"

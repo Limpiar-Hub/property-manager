@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -35,9 +36,13 @@ export default function Hero() {
               placeholder="Enter your business email"
               className="flex-grow px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <Link href="/my-property">
             <button className="bg-[#0082ED] hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-[8px] transition-colors whitespace-nowrap">
               Get Started
             </button>
+
+            </Link>
+        
           </div>
         </div>
       </div>

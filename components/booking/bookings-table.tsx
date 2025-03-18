@@ -136,12 +136,9 @@ const bookings: Booking[] = [
   // Add more mock data as needed
 ]
 
-interface BookingsTableProps {
-  status: string
-  searchQuery: string
-}
 
-export default function BookingTable({ status, searchQuery  }: BookingsTableProps) {
+
+export default function BookingTable() {
   return (
     <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
       <div className="min-w-[800px]">
@@ -169,8 +166,8 @@ export default function BookingTable({ status, searchQuery  }: BookingsTableProp
                 <td className="p-3 sm:p-4 border border-gray-200">{booking.property}</td>
                 <td className="p-3 sm:p-4 border border-gray-200">{booking.date}</td>
                 <td className="p-3 sm:p-4 border border-gray-200">{booking.time}</td>
-                <td className="p-3 sm:p-4 border border-gray-200 max-w-[300px] truncate">{booking.additionalNote}</td>
-                <td className="p-3 sm:p-4 border border-gray-200">{booking.paymentStatus}</td>
+                <td className="p-3 sm:p-4 border border-gray-200 max-w-[300px] truncate">Booking available</td>
+                <td className="p-3 sm:p-4 border border-gray-200">Pending</td>
               </tr>
             ))}
           </tbody>

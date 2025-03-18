@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { resolveTicket } from "@/redux/features/tickets/ticketSlice"
 import type { RootState } from "@/redux/store"
+import Image from "next/image"
 
 export function TicketDetail() {
   const [reply, setReply] = useState("")
@@ -33,7 +34,7 @@ export function TicketDetail() {
       <div className="flex-1 overflow-auto p-6">
         <div className="flex gap-4 mb-6">
           <Avatar className="w-10 h-10">
-            <img src={ticket.userAvatar} alt="User avatar" />
+            <Image src={ticket.userAvatar} alt="User avatar" />
           </Avatar>
           <div className="flex-1">
             <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -46,7 +47,7 @@ export function TicketDetail() {
       <div className="p-4 border-t bg-white">
         <div className="flex gap-4">
           <Avatar className="w-10 h-10">
-            <img src="/placeholder.svg" alt="Your avatar" />
+            <Image src="/placeholder.svg" alt="Your avatar" />
           </Avatar>
           <div className="flex-1">
             <Input

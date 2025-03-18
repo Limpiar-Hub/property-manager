@@ -4,26 +4,17 @@ import { useState } from "react";
 import { Search, Plus } from "lucide-react";
 import { useAppDispatch } from "@/hooks/useReduxHooks";
 import { openModal } from "@/redux/features/booking/bookingSlice";
-import Sidebar from "@/components/sidebar";
-import Header from "@/components/header";
 import BookingModal from "@/components/booking/booking-modal";
 import BookingsTable from "@/components/booking/bookings-table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import BookingTabs from "@/components/booking/booking-tabs";
 
-type BookingStatus = "active" | "pending" | "completed" | "cancelled";
-
-const statusCounts = {
-  active: 10,
-  pending: 20,
-  completed: 17,
-  cancelled: 3,
-};
+// type BookingStatus = "active" | "pending" | "completed" | "cancelled";
 
 export default function BookingsPage() {
   const dispatch = useAppDispatch();
-  const [activeStatus, setActiveStatus] = useState<BookingStatus>("completed");
+
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -74,17 +65,21 @@ export default function BookingsPage() {
             ))}
           </div> */}
 
-<BookingTabs activeTab={"active"} setActiveTab={function (tab: BookingStatus): void {
-            throw new Error("Function not implemented.");
-          } } counts={{
-            active: 0,
-            pending: 0,
-            completed: 0,
-            cancelled: 0
-          }}/>
+          <BookingTabs
+            activeTab={"active"}
+            setActiveTab={function ( ): void {
+              throw new Error("Function not implemented.");
+            }}
+            counts={{
+              active: 0,
+              pending: 0,
+              completed: 0,
+              cancelled: 0,
+            }}
+          />
 
           {/* Bookings Table */}
-          <BookingsTable status={activeStatus} searchQuery={searchQuery} />
+          <BookingsTable />
         </div>
       </main>
 

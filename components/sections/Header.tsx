@@ -39,7 +39,7 @@ export default function Header() {
             <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm">About Us</Link>
             <Link href="/social-impact" className="text-gray-600 hover:text-gray-900 text-sm">Social Impact</Link>
             <Link href="/blog" className="text-gray-600 hover:text-gray-900 text-sm">Blog</Link>
-            <Link href='/signup'>            <Button className="bg-[#0082ED] hover:bg-blue-600 text-white rounded-[8px] px-6">Get Started</Button></Link>
+            <Link href='/my-property'>            <Button className="bg-[#0082ED] hover:bg-blue-600 text-white rounded-[8px] px-6">Get Started</Button></Link>
 
           </div>
 

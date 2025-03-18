@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { Avatar } from "@/components/ui/avatar"
 import { setSelectedTicket } from "@/redux/features/tickets/ticketSlice"
 import type { RootState } from "@/redux/store"
+import Image from "next/image"
 
 export function TicketList() {
   const dispatch = useDispatch()
@@ -31,7 +32,7 @@ export function TicketList() {
         >
           <div className="flex gap-3">
             <Avatar className="w-10 h-10">
-              <img src={ticket.userAvatar} alt="User avatar" />
+              <Image src={ticket.userAvatar} alt="User avatar" />
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start mb-1">

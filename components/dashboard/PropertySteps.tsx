@@ -1,30 +1,30 @@
-const steps = [
-  {
-    number: 1,
-    title: "Category",
-    description: "Basic info like property category and sub-category.",
-  },
-  {
-    number: 2,
-    title: "Title",
-    description: "Give your property a name.",
-  },
-  {
-    number: 3,
-    title: "Units",
-    description: "Add all kinds of units of your property.",
-  },
-  {
-    number: 4,
-    title: "Location",
-    description: "Add location of your property.",
-  },
-  {
-    number: 5,
-    title: "Image",
-    description: "Add photos of your property.",
-  },
-];
+// const steps = [
+//   {
+//     number: 1,
+//     title: "Category",
+//     description: "Basic info like property category and sub-category.",
+//   },
+//   {
+//     number: 2,
+//     title: "Title",
+//     description: "Give your property a name.",
+//   },
+//   {
+//     number: 3,
+//     title: "Units",
+//     description: "Add all kinds of units of your property.",
+//   },
+//   {
+//     number: 4,
+//     title: "Location",
+//     description: "Add location of your property.",
+//   },
+//   {
+//     number: 5,
+//     title: "Image",
+//     description: "Add photos of your property.",
+//   },
+// ];
 
 export function PropertySteps() {
   return (
