@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import { Sidebar } from "@/components/sidebar-stepper";
 import StepForm from "@/components/MultiStepForm/StepForm";
-import Image from "next/image";
+import Image from "next/image"; 
 import dynamic from "next/dynamic";
 
 const SuccessPage = dynamic(() => import("@/components/SuccessPage"), {
