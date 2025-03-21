@@ -63,7 +63,7 @@ export default function OtpInput() {
                                         className="w-9 h-9 border-2 rounded-md border-[#E7E8E9] bg-[#F9F9F9] text-center text-4xl"
                                         type="text"
                                         placeholder="0"
-                                        inputMode="numeric"
+                                        inputMode="numeric" 
                                         maxLength={1}
                                     />
                                 ))}
