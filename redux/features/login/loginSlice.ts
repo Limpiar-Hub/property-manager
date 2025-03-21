@@ -9,10 +9,12 @@ interface LoginState {
     step: number,
     loginInfo: LoginInfo,
     otpVerified: false,
+    signingIn: boolean
 }
 
 const initialState: LoginState = {
     step: 1,
+    signingIn: false,
     loginInfo: {
         email: "",
         password: ""

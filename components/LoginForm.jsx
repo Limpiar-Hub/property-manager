@@ -9,6 +9,7 @@ import Image from "next/image";
 import { PasswordInput } from "@/components/password-input";
 // import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // const SuccessPage = dynamic(() => import("@/components/SuccessPage"), {
 //   ssr: false,
@@ -23,6 +24,16 @@ export default function LoginForm() {
       } = useForm();
 
       const router = useRouter();
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLoading = () =>{
+        setIsLoading(true);
+        setTimeout(() => {
+            setIsLoading(false);
+            router.push('/verifylogin-otp');
+        }, 3000)
+    }
 //   const { currentStep, showOtpVerification, showSuccess } = useSelector(
 //     (state: RootState) => state.onboarding
 //   );
@@ -68,11 +79,11 @@ export default function LoginForm() {
                     <a className="pl-20 text-sm underline text-blue-600 hover:text-blue-800 visited:text-purple-600 cursor-pointer">Forgot Password?</a>
                 </div>
                 <button
-                    type="button" onClick={() => router.push("/verifylogin-otp")}
+                    type="button" onClick={() => handleLoading()}
                     className="relative bg-[#0082ED] w-full h-10 top-1/2 mt-14 transform -translate-y-1/2 text-white rounded-md"
                     // onClick={() => setShowPassword(!showPassword)}
                     >
-                        Login
+                        {isLoading ? "Signing In..." : "Next"}
                 </button>
                 <span className="items-center flex justify-center">If you dont have an account <a className="pl-2 underline text-blue-600 hover:text-blue-800 visited:text-purple-600 cursor-pointer"> Sign Up</a></span>
             </div>
