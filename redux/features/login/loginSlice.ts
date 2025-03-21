@@ -1,25 +1,13 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
-export interface LoginInfo {
-    email: string,
-    password: string
-}
-
 interface LoginState {
-    step: number,
-    loginInfo: LoginInfo,
-    otpVerified: false,
-    signingIn: boolean
+    phoneNumber: number,
+    otp: number
 }
 
 const initialState: LoginState = {
-    step: 1,
-    signingIn: false,
-    loginInfo: {
-        email: "",
-        password: ""
-    },
-    otpVerified: false
+    phoneNumber: +2349056431251,
+    otp: 776655
   }
 
 
@@ -27,13 +15,16 @@ const initialState: LoginState = {
     name: "login",
     initialState,
     reducers: {
-      setStep: (state, action: PayloadAction<number>) => {
-        state.step = action.payload
+      setPhone: (state, action: PayloadAction<number>) => {
+        state.phoneNumber = action.payload
+      },
+      setOtp: (state, action: PayloadAction<number>) => {
+        state.otp = action.payload
       },
     },
   })
 
-  export const { setStep } =
+  export const { setPhone, setOtp } =
     LoginSlice.actions
   
   export default LoginSlice.reducer

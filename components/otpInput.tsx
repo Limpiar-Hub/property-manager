@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks" 
+
 
 export default function OtpInput() {
+    const { phoneNumber, otp } = useAppSelector((state) => state.login)
+
+    const [otpValue, setOtpValue] = useState<string[]>(Array(6).fill(""));
     useEffect(() => {
+
         const inputsContainer = document.getElementById("inputs");
         
         if (!inputsContainer) {
@@ -22,6 +28,17 @@ export default function OtpInput() {
                     target.value = "";
                     return;
                 }
+
+                setOtpValue((prevOtp) => {
+                    const newOtp = [...prevOtp];
+                    newOtp[index] = val;
+                    setOtpValue((prevOtp) => {
+                        const newOtp = [...prevOtp];
+                        newOtp[index] = "";
+                        return newOtp;
+                    });
+                    return newOtp;
+                });
 
                 if (val !== "" && index < inputs.length - 1) {
                     inputs[index + 1].focus();
@@ -44,13 +61,20 @@ export default function OtpInput() {
         };
     }, []);
 
+    const handleVerifyOtp = () =>{
+        const otpCode = otpValue.join("");
+        if (otpCode === otp.toString()) {
+            return true;
+        } else false
+    }
+
     return (
         <div className="relative flex-1 p-6 md:p-10 flex flex-col w-full">
             <div className="items-start flex flex-col justify-baseline space-y-4">
                 <h1 className="font-medium text-4xl pb-6">Enter OTP Code</h1>
                 <p>
                     Enter the one-time code sent to{" "}
-                    <span className="font-bold">+2349128943518</span> to confirm your account.
+                    <span className="font-bold">{phoneNumber}</span> to confirm your account.
                 </p>
                 <div className="w-full">
                     <div className="flex justify-center items-center">
@@ -70,7 +94,7 @@ export default function OtpInput() {
                         </div>
                     </div>
                     <button
-                        type="button"
+                        type="button" onClick={() => handleVerifyOtp}
                         className="bg-[#0082ED] w-full h-10 mt-14 text-white rounded-md"
                     >
                         Confirm

@@ -1,54 +1,58 @@
 "use client";
 
-// import { useSelector } from "react-redux";
-// import type { RootState } from "@/redux/store";
-// import { Sidebar } from "@/components/sidebar-stepper";
-// import StepForm from "@/components/MultiStepForm/StepForm";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks" 
+import { setPhone } from "@/redux/features/login/loginSlice";
+import { setOtp } from "@/redux/features/login/loginSlice";
 import { useForm } from "react-hook-form";
-import Image from "next/image"; 
-import { PasswordInput } from "@/components/password-input";
-// import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-// const SuccessPage = dynamic(() => import("@/components/SuccessPage"), {
-//   ssr: false,
-// });
+import { Eye, EyeOff } from "lucide-react"
+import Spinner from "./spinner";
 
 export default function LoginForm() {
-    const {
-        register,
-        handleSubmit,
-        watch,
-        formState: { errors, isSubmitting },
-      } = useForm();
-
-      const router = useRouter();
+    const dispatch = useAppDispatch()
+    
+    const router = useRouter();
 
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isVerified, setIsVerified] = useState(false);
 
-    const handleLoading = () =>{
-        setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            router.push('/verifylogin-otp');
-        }, 3000)
+    const handleEmail = (e) => {
+        const value = e.target.value;
+        setEmail(value)
     }
-//   const { currentStep, showOtpVerification, showSuccess } = useSelector(
-//     (state: RootState) => state.onboarding
-//   );
 
-    // If showing success page, render it as a standalone page
-//     if (showSuccess) {
-//       return <SuccessPage />
-//     }
+    const handlePassword = (e) => {
+        const value = e.target.value;
+        setPassword(value);
+    }
 
-//   // If showing OTP verification, render a centered layout
-//   if (showOtpVerification) {
-//     return <StepForm />;
-//   }
+    const handleLoginFunction = () => {
+        if (email === 'owoyeminiyi2@gmail.com' && password === "N123456"){
+            return true
+        } else {
+            return false
+        }
+    }
 
-  // Otherwise, render the standard layout with sidebar
+    const LoginFunc = () => {
+        setIsLoading(true);
+
+        setTimeout(() => {
+            const response = handleLoginFunction();
+    
+            response ? router.push('/verifylogin-otp') : alert('incorrect email or password');
+
+            dispatch(setPhone(+2349128943518));
+            dispatch(setOtp(456789));
+
+            setIsLoading(false);
+        }, 4000);
+    }
+
   return (
     <div className="relative flex-1 p-6 md:p-10 flex flex-col w-[50%]">
         <div className="items-start flex flex-col justify-baseline">
@@ -62,30 +66,47 @@ export default function LoginForm() {
                         <input
                         id='email'
                         type='email'
+                        onChange={handleEmail}
                         placeholder='hello@email.com'
                         className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#2e7eea] focus:border-transparent pr-10`}
                         />
                     </div>
                 </div>
-                <PasswordInput
-                    id="password"
-                    label="Password"
-                    register={register("password")} 
-                />
-                <div>
+                <div className="space-y-1">
+                      <label htmlFor='password' className="block text-sm font-medium">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          id='password'
+                          onChange={handlePassword}
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          className={`w-full p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2e7eea] focus:border-transparent pr-10`}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
                     <input type="checkbox" id="keep me signed in" name="keep me signed in" value="keep me signed in" /> 
                     <label htmlFor="keep me signed in" className=" text-sm"> Keep me signed in</label>
 
                     <a className="pl-20 text-sm underline text-blue-600 hover:text-blue-800 visited:text-purple-600 cursor-pointer">Forgot Password?</a>
                 </div>
                 <button
-                    type="button" onClick={() => handleLoading()}
-                    className="relative bg-[#0082ED] w-full h-10 top-1/2 mt-14 transform -translate-y-1/2 text-white rounded-md"
-                    // onClick={() => setShowPassword(!showPassword)}
+                    type="button" onClick={() => LoginFunc()}
+                    className="relative bg-[#0082ED] w-full h-10 top-1/2 mt-14 text-white rounded-md"
+                    disabled={isLoading}
                     >
-                        {isLoading ? "Signing In..." : "Next"}
+                        {isLoading ? <Spinner /> : "Next"}
                 </button>
-                <span className="items-center flex justify-center">If you dont have an account <a className="pl-2 underline text-blue-600 hover:text-blue-800 visited:text-purple-600 cursor-pointer"> Sign Up</a></span>
+                <span className="items-center flex justify-center">If you don't have an account <a className="pl-2 underline text-blue-600 hover:text-blue-800 visited:text-purple-600 cursor-pointer"> Sign Up</a></span>
             </div>
         </div>
     </div>
