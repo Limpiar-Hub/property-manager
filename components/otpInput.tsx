@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function OtpInput() {
+    const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+    const [isVerified, setIsVerified] = useState(false);
+
     useEffect(() => {
         const inputsContainer = document.getElementById("inputs");
         
@@ -26,11 +29,22 @@ export default function OtpInput() {
                 if (val !== "" && index < inputs.length - 1) {
                     inputs[index + 1].focus();
                 }
+
+                setOtp((prevOtp) => {
+                    const newOtp = [...prevOtp];
+                    newOtp[index] = val;
+                    return newOtp;
+                });
             });
 
             input.addEventListener("keydown", (e) => {
                 if (e.key === "Backspace" && index > 0) {
                     inputs[index].value = "";
+                    setOtp((prevOtp) => {
+                        const newOtp = [...prevOtp];
+                        newOtp[index] = "";
+                        return newOtp;
+                    });
                     inputs[index - 1].focus();
                 }
             });
@@ -43,6 +57,19 @@ export default function OtpInput() {
             });
         };
     }, []);
+
+    const handleOtpVerification = () => {
+        const otpCode = otp.join(""); // Combine all inputs into a single string
+        console.log("OTP Entered:", otpCode);
+        if (otpCode.length === 6) {
+            setIsVerified(true);
+            setTimeout(() => {
+            setIsVerified(false);
+        }, 3000)
+        } else {
+            alert("Please enter all 6 digits.");
+        }
+    };
 
     return (
         <div className="relative flex-1 p-6 md:p-10 flex flex-col w-full">
@@ -70,10 +97,10 @@ export default function OtpInput() {
                         </div>
                     </div>
                     <button
-                        type="button"
+                        type="button" onClick={() => handleOtpVerification()}
                         className="bg-[#0082ED] w-full h-10 mt-14 text-white rounded-md"
                     >
-                        Confirm
+                        {isVerified ? "verifying...." : "Confirm"}
                     </button>
                     <span className="items-center flex justify-center">Resend code in 60s</span>
                 </div>
