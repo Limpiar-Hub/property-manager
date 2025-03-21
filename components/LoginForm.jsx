@@ -47,7 +47,8 @@ export default function LoginForm() {
             response ? router.push('/verifylogin-otp') : alert('incorrect email or password');
 
             dispatch(setPhone(+2349128943518));
-            dispatch(setOtp(456789));
+
+            dispatch(setOtp(Math.floor(100000 + Math.random() * 900000)));
 
             setIsLoading(false);
         }, 4000);
