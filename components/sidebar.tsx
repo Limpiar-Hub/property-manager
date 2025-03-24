@@ -18,6 +18,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// import { useRouter } from "next/navigation"
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks"
+
+import { useRouter } from "next/navigation";
+import { RootState } from "@/redux/store";
+import { logout } from "@/redux/features/auth/authSlice";
+
 const navItems = [
   { name: "My Property", href: "/my-property", icon: Building },
   { name: "Inbox", href: "/inbox", icon: MessageCircle },
@@ -31,6 +38,16 @@ const navItems = [
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+
+
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+ 
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push('/login');
+  };
 
   return (
     <>
@@ -88,13 +105,16 @@ export default function Sidebar() {
             <Headphones className="mr-3 h-5 w-5 text-gray-300" />
             Help and Support
           </Link>
-          <Link
-            href="/logout"
+          <div
+             onClick={handleLogout}
             className="group flex items-center px-4 py-3 text-sm font-medium hover:bg-gray-700"
           >
             <LogOut className="mr-3 h-5 w-5 text-gray-300" />
             Logout
-          </Link>
+          </div>
+
+
+  
         </div>
       </div>
     </>

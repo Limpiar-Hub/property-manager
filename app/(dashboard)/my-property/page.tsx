@@ -2,15 +2,17 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/hooks/useReduxHooks";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import { resetProperty } from "@/redux/features/addProperty/propertySlice";
 
 export default function Home() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
+  const { user } = useAppSelector((state) => state.auth);
+
   const handleAddProperty = () => {
-    dispatch(resetProperty()); // Reset the property state
+    dispatch(resetProperty()); 
     router.push("/my-property/add");
   };
   return (
@@ -20,7 +22,7 @@ export default function Home() {
         <div className="flex flex-col md:flex-row justify-between p-6 md:p-8">
           <div className="space-y-3 md:space-y-4 md:max-w-lg">
             <h1 className="text-3xl md:text-4xl font-bold text-white">
-              Welcome, William!
+            Welcome, {user?.fullName || "Guest"}!
             </h1>
             <p className="text-blue-100 text-base md:text-lg">
               Let&apos;s go ahead and add your first property to get you
