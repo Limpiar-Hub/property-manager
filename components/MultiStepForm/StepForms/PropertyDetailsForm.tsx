@@ -25,7 +25,7 @@ export default function PropertyDetailsForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: {  isSubmitting },
   } = useForm<PropertyDetailsFormData>({
     resolver: zodResolver(propertyDetailsSchema),
     defaultValues: {

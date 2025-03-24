@@ -6,10 +6,13 @@ import { X } from "lucide-react";
 import ServiceTypeStep from "./steps/service-type-step";
 import PropertyStep from "./steps/property-step";
 import DateStep from "./steps/date-step";
-import TimeStep from "./steps/time-step";
 import NotesStep from "./steps/notes-step";
 import BookingPreview from "./booking-preview";
 import ProgressSteps from "./progress-steps";
+import dynamic from "next/dynamic";
+const TimeStep = dynamic(() => import("./steps/time-step"), {
+  ssr: false,
+});
 
 export default function BookingModal() {
   const dispatch = useAppDispatch();
@@ -36,7 +39,7 @@ export default function BookingModal() {
     }
   };
 
-  // Don't show the header and progress steps on the preview/confirmation screen
+ 
   const showHeader = step < 6;
 
   return (

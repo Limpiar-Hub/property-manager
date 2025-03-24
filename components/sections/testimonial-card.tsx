@@ -1,3 +1,4 @@
+import Image from "next/image";
 import QuoteIcon from "../../lib/quote-icon";
 import AuthorInfo from "./author-info";
 
@@ -26,7 +27,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
         <AuthorInfo name={authorName} role={authorRole} />
       </div>
       <div className="absolute top-52 w-60 h-0 bg-neutral-700 right-[244px] max-md:hidden" />
-      <img
+      <Image
         src={imageUrl}
         className="absolute top-52 w-60 h-60 rounded-2xl right-[101px] max-md:relative max-md:top-auto max-md:right-auto max-md:mt-8 max-md:h-[200px] max-md:w-[200px] max-sm:w-40 max-sm:h-40"
         alt={imageAlt}

@@ -4,22 +4,12 @@ import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import { setUnits } from "@/redux/features/addProperty/propertySlice";
 import { Minus, Plus } from "lucide-react";
 
+type UnitFieldKey = "floors" | "restrooms" | "units" | "breakRooms" | "officesRooms" | "cafeteria" | "meetingRooms" | "gym" | "lobbies";
+
 interface UnitField {
-  id: keyof typeof initialUnits;
+  id: UnitFieldKey;
   label: string;
 }
-
-const initialUnits = {
-  floors: 0,
-  restrooms: 0,
-  units: 0,
-  breakRooms: 0,
-  officesRooms: 0,
-  cafeteria: 0,
-  meetingRooms: 0,
-  gym: 0,
-  lobbies: 0,
-};
 
 const unitFields: UnitField[] = [
   { id: "floors", label: "Floors" },
@@ -37,11 +27,11 @@ export default function UnitsForm() {
   const dispatch = useAppDispatch();
   const units = useAppSelector((state) => state.property.units);
 
-  const handleIncrement = (field: keyof typeof initialUnits) => {
+  const handleIncrement = (field: UnitFieldKey) => {
     dispatch(setUnits({ [field]: units[field] + 1 }));
   };
 
-  const handleDecrement = (field: keyof typeof initialUnits) => {
+  const handleDecrement = (field: UnitFieldKey) => {
     if (units[field] > 0) {
       dispatch(setUnits({ [field]: units[field] - 1 }));
     }

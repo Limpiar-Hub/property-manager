@@ -12,14 +12,14 @@ const SuccessPage = dynamic(() => import("@/components/SuccessPage"), {
 });
 
 export default function Home() {
-  const { currentStep, showOtpVerification, showSuccess } = useSelector(
+  const { showOtpVerification, showSuccess } = useSelector(
     (state: RootState) => state.onboarding
   );
 
-    // If showing success page, render it as a standalone page
-    if (showSuccess) {
-      return <SuccessPage />
-    }
+  // If showing success page, render it as a standalone page
+  if (showSuccess) {
+    return <SuccessPage />;
+  }
 
   // If showing OTP verification, render a centered layout
   if (showOtpVerification) {
@@ -42,7 +42,7 @@ export default function Home() {
       <div className="flex flex-col md:flex-row flex-1">
         {/* Sidebar - Hidden on mobile */}
         <div className="hidden md:block md:w-[400px] lg:w-[550px] ml-10">
-          <Sidebar currentStep={currentStep} />
+          <Sidebar />
         </div>
 
         {/* Main Content */}

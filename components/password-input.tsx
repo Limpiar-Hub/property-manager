@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
-import type { FieldError } from "react-hook-form"
+import type { FieldError,UseFormRegisterReturn } from "react-hook-form"
 
 interface PasswordInputProps {
   id: string
   label: string
-  register: any
+  register: UseFormRegisterReturn
   error?: FieldError
   placeholder?: string
 }
