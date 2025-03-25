@@ -25,7 +25,7 @@ export interface BookingState {
     routineDays?: string[]
   }
   time: string
-  notes: string
+  // notes: string
   isModalOpen: boolean
 }
 
@@ -37,7 +37,7 @@ const initialState: BookingState = {
     type: null,
   },
   time: "",
-  notes: "",
+  // notes: "",
   isModalOpen: false,
 }
 
@@ -60,9 +60,9 @@ export const bookingSlice = createSlice({
     setTime: (state, action: PayloadAction<string>) => {
       state.time = action.payload
     },
-    setNotes: (state, action: PayloadAction<string>) => {
-      state.notes = action.payload
-    },
+    // setNotes: (state, action: PayloadAction<string>) => {
+    //   state.notes = action.payload
+    // },
     openModal: (state) => {
       state.isModalOpen = true
     },
@@ -101,7 +101,7 @@ export const {
   setProperty,
   setDate,
   setTime,
-  setNotes,
+  // setNotes,
   openModal,
   closeModal,
   resetBooking,

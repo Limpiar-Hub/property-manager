@@ -30,9 +30,9 @@ export default function BookingModal() {
         return <DateStep />;
       case 4:
         return <TimeStep />;
+      // case 5:
+      //   return <NotesStep />;
       case 5:
-        return <NotesStep />;
-      case 6:
         return <BookingPreview />;
       default:
         return <ServiceTypeStep />;
@@ -40,7 +40,7 @@ export default function BookingModal() {
   };
 
  
-  const showHeader = step < 6;
+  const showHeader = step < 5;
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50 p-4">
