@@ -1,12 +1,14 @@
 "use client"
 
+
+
 import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { verifyOtp } from "@/redux/features/onboarding/onboardingSlice"
 import type { RootState } from "@/redux/store"
-import  Logo  from "@/public/logo.svg"
+// import  Logo  from "@/public/logo.svg"
 import Image from 'next/image'
 
 export default function OtpVerification() {
@@ -29,26 +31,27 @@ export default function OtpVerification() {
   }, [countdown])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError("")
-
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+  
     try {
       // Simulate OTP verification
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+  
       // For demo purposes, let's say "1234" is the correct OTP
       if (otp === "1234") {
-        dispatch(verifyOtp(true))
+        dispatch(verifyOtp(true));
       } else {
-        setError("Wrong OTP")
+        setError("Wrong OTP");
       }
     } catch (error) {
-      setError("Failed to verify OTP. Please try again.")
+      console.error("Error during OTP verification:", error); // Log the error
+      setError("Failed to verify OTP. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleResendCode = async () => {
     setCountdown(30)

@@ -3,8 +3,10 @@ import type { RootState } from "@/redux/store"
 import PersonalInfoForm from "./StepForms/PersonalInfoForm"
 import CompanyInfoForm from "./StepForms/CompanyInfoForm"
 import PropertyDetailsForm from "./StepForms/PropertyDetailsForm"
-import OtpVerification from "./OtpVerification"
+// import OtpVerification from "./OtpVerification"
+import dynamic from "next/dynamic";
 
+const OtpVerification = dynamic(() => import("./OtpVerification"), { ssr: false });
 export default function StepForm() {
   const { currentStep, showOtpVerification } = useSelector((state: RootState) => state.onboarding)
 

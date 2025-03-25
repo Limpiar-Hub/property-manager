@@ -15,6 +15,7 @@ export default function TestimonialSection() {
 
         {/* Testimonial Card */}
         <div className="bg-[#111] rounded-2xl p-8 md:p-12 relative overflow-hidden lg:py-24 lg:pr-24 lg:pl-16  ">
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
           <span className="text-gray-800 text-[120px] leading-none font-serif absolute top-4 left-8">"</span>
 
           <div className="grid md:grid-cols-[auto,1fr] gap-8 md:gap-12 items-center relative lg:grid-cols-2">

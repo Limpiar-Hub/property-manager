@@ -17,13 +17,13 @@ export default function BookingPreview() {
   }
 
   const handleSubmit = () => {
-    // Simulate submission
+
     setIsSubmitted(true)
   }
 
   const handleGoToBookings = () => {
     dispatch(closeModal())
-    // Here you would redirect to the bookings page
+    // redirect to the bookings page
   }
 
   if (isSubmitted) {

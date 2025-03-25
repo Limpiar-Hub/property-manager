@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks"
+import { useAppDispatch } from "@/hooks/useReduxHooks"
 import { setStep, setTime } from "@/redux/features/booking/bookingSlice"
 import { ChevronLeft, ChevronDown, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,7 @@ interface TimeSlot {
 
 export default function TimeStep() {
   const dispatch = useAppDispatch()
-  const { time } = useAppSelector((state) => state.booking)
+  // const { time } = useAppSelector((state) => state.booking)
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([{ id: "1", startTime: "7:30 AM", endTime: "9:30 AM" }])
 
   const handleBack = () => {
@@ -86,7 +86,7 @@ export default function TimeStep() {
       <h3 className="text-lg font-semibold mb-6">Select time</h3>
 
       <div className="space-y-4">
-        {timeSlots.map((slot, index) => (
+        {timeSlots.map((slot) => (
           <div key={slot.id} className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-2">Start time:</p>

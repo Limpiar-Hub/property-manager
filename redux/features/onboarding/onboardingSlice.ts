@@ -34,8 +34,10 @@ interface OnboardingState {
 
 const initialState: OnboardingState = {
   currentStep: 1,
+  
   showOtpVerification: false,
   otpVerified: false,
+  showSuccess: false,
   personalInfo: {
     fullName: "",
     email: "",

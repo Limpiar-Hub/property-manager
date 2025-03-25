@@ -11,7 +11,7 @@ interface StepProps {
 
 export default function Step({ step }: StepProps) {
   const { number, title } = step
-  const { currentStep, otpVerified } = useSelector((state: RootState) => state.onboarding)
+  const { currentStep } = useSelector((state: RootState) => state.onboarding)
 
   // Determine step status
   const isCompleted = currentStep > number

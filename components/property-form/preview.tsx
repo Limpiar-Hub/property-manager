@@ -8,7 +8,7 @@ import Image from "next/image"
 
 export default function Preview() {
   const property = useAppSelector((state) => state.property)
-  const coverImage = property.images.find((img) => img.isCover)
+  // const coverImage = property.images.find((img) => img.isCover)
 
   return (
     <div className="max-w-6xl mx-auto  p-6">
