@@ -47,13 +47,8 @@ export const store = configureStore({
     auth: persistedAuthReducer,
     property: propertyReducer,
     tickets: ticketReducer,
-<<<<<<< HEAD
-    booking: bookingReducer, 
-    login: loginReducer
-=======
     booking: bookingReducer,
     topUpModal: topUpModalReducer,
->>>>>>> ba1ca6a552d5cc17c4005d7e8d860c600435e0ab
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({
