@@ -105,9 +105,9 @@ export default function BookingTable() {
               <th className="p-3 sm:p-4 text-left font-normal text-gray-600 border border-gray-200">
                 Price
               </th>
-              <th className="p-3 sm:p-4 text-left font-normal text-gray-600 border border-gray-200">
+              {/* <th className="p-3 sm:p-4 text-left font-normal text-gray-600 border border-gray-200">
                 Images
-              </th>
+              </th> */}
             </tr>
           </thead>
           <tbody>
@@ -131,7 +131,7 @@ export default function BookingTable() {
                 <td className="p-3 sm:p-4 border border-gray-200">
                   {booking.price ? `$${booking.price}` : "N/A"}
                 </td>
-                <td className="p-3 sm:p-4 border border-gray-200">
+                {/* <td className="p-3 sm:p-4 border border-gray-200">
                   <div className="flex space-x-2">
                     {booking.propertyId.images.map((imageId) => (
                       <img
@@ -142,7 +142,7 @@ export default function BookingTable() {
                       />
                     ))}
                   </div>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>

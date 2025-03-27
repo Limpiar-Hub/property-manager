@@ -337,6 +337,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState } from "react";
 import axios from "axios";
+import { revalidatePath } from "next/cache"; 
 
 export default function BookingPreview() {
   const dispatch = useAppDispatch();
@@ -367,7 +368,7 @@ export default function BookingPreview() {
 
       // Prepare the request body
       const requestBody = {
-        propertyId: "67e31b1d0c40b5b8ee14e269", 
+        propertyId: "67e5334a1f67bc45b36bb9f0", 
         propertyManagerId: user._id, 
         serviceType: booking.serviceType?.name,
         date: booking.date.selectedDate, 
@@ -391,6 +392,8 @@ export default function BookingPreview() {
       );
 
       console.log("Booking response:", response.data);
+
+      // revalidatePath("/booking");
 
       // Mark the submission as successful
       setIsSubmitted(true);
