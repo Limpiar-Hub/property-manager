@@ -364,7 +364,7 @@ const isTokenExpired = (token: string): boolean => {
 };
 
 // Auth slice
-const authSlice = createSlice({
+const authSlice = createSlice({ 
   name: "auth",
   initialState,
   reducers: {

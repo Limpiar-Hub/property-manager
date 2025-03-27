@@ -29,6 +29,8 @@ export interface PropertyState {
     url: string
     isCover: boolean
   }[]
+  openModal: boolean
+  isLoading: boolean
 }
 
 const initialState: PropertyState = {
@@ -52,9 +54,11 @@ const initialState: PropertyState = {
     coordinates: null,
   },
   images: [],
+  openModal: false,
+  isLoading: false
 }
 
-export const propertySlice = createSlice({
+export const propertySlice = createSlice({ 
   name: "property",
   initialState,
   reducers: {
@@ -76,6 +80,15 @@ export const propertySlice = createSlice({
     setLocation: (state, action: PayloadAction<{ address: string; coordinates: { lat: number; lng: number } }>) => {
       state.location = action.payload
     },
+    openModalFunc: (state) => {
+      state.openModal = true
+    },
+    setIsLoaing: (state, action: PayloadAction<boolean>) => {
+      state.isLoading=action.payload
+    },
+    closeModalFunc: (state) => {
+      state.openModal = false
+    },
     addImage: (state, action: PayloadAction<{ url: string; isCover: boolean }>) => {
       state.images.push(action.payload)
     },
@@ -92,7 +105,7 @@ export const propertySlice = createSlice({
   },
 })
 
-export const { setStep, setCategory, setSubCategory, setTitle, resetProperty,setUnits,setLocation,addImage,removeImage,setCoverImage } = propertySlice.actions
+export const { setStep, setCategory, setSubCategory, setTitle, setIsLoaing, openModalFunc, closeModalFunc, resetProperty,setUnits,setLocation,addImage,removeImage,setCoverImage } = propertySlice.actions
 
 export default propertySlice.reducer
 

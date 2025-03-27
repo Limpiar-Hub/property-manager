@@ -11,6 +11,7 @@ import LocationForm from "@/components/property-form/location-form"
 import ImageUpload from "@/components/property-form/image-upload"
 import Preview from "@/components/property-form/preview"
 import dynamic from "next/dynamic";
+import SuccessAddNewProperty from "@/components/successAddNewProperty"
 
 
 
@@ -19,7 +20,7 @@ const UnitsForm = dynamic(() => import("@/components/property-form/units-form"),
 });
 
 export default function AddPropertyPage() {
-  const { step } = useAppSelector((state) => state.property)
+  const { step, openModal } = useAppSelector((state) => state.property)
 
   // Determine which form component to render based on the current step
   const renderStepContent = () => {
@@ -39,9 +40,18 @@ export default function AddPropertyPage() {
       case 6:
         return <Preview />
       default:
-        return <CategorySelection />
+        return <CategorySelection /> 
     }
   }
+
+  
+  if (openModal) {
+      return (
+        <>
+          <SuccessAddNewProperty/>
+        </>
+      )
+    }
 
   return (
 
