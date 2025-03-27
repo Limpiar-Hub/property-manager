@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAppSelector } from "@/hooks/useReduxHooks";
-import axios from "axios";
+import { useState } from "react";
+import { Trash2, Edit, X } from "lucide-react";
 
 interface Property {
   _id: string;
@@ -24,69 +23,88 @@ interface Booking {
   price: number;
 }
 
-export default function BookingTable() {
-  const authState = useAppSelector((state) => state.auth); // Get the auth state
-  const token = authState.token; // Extract the token from auth state
-  const user = authState.user || null;
-  const managerId = user?._id;
-  // const userId = authState.id;
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface BookingsTableProps {
+  activeTab: "active" | "pending" | "completed" | "cancelled";
+  searchQuery: string;
+  bookings: Booking[];
+}
 
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        setIsLoading(true);
+export default function BookingsTable({
+  activeTab,
+  searchQuery,
+  bookings,
+}: BookingsTableProps) {
+  const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
 
-        if (!token || !managerId) {
-          throw new Error("Authentication token or user ID is missing.");
-        }
+  const filteredBookings = bookings
+    .filter((booking) => booking.status.toLowerCase() === activeTab)
+    .filter(
+      (booking) =>
+        booking.propertyId.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        booking.propertyId.address
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+    );
 
-        // Fetch bookings from the API
-        const response = await axios.get(
-          `https://limpiar-backend.onrender.com/api/bookings/history/${managerId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedBookings(filteredBookings.map((booking) => booking._id));
+    } else {
+      setSelectedBookings([]);
+    }
+  };
 
-        console.log("Fetched data:", response.data);
+  const handleSelectBooking = (bookingId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedBookings([...selectedBookings, bookingId]);
+    } else {
+      setSelectedBookings(selectedBookings.filter((id) => id !== bookingId));
+    }
+  };
 
-        // Access the bookings array from the response object
-        if (response.data && Array.isArray(response.data.data)) {
-          setBookings(response.data.data);
-        } else {
-          console.error("Unexpected response format:", response.data);
-          setError("Unexpected response format. Please contact support.");
-        }
-      } catch (err) {
-        console.error("Error fetching bookings:", err);
-        setError("Failed to fetch bookings. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [token, managerId]);
-
-  if (isLoading) {
-    return <p className="text-center py-4">Loading bookings...</p>;
-  }
-
-  if (error) {
-    return <p className="text-center py-4 text-red-500">{error}</p>;
-  }
+  const showCheckboxes = activeTab === "pending" || activeTab === "completed";
 
   return (
     <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+      {selectedBookings.length > 0 && (
+        <div className="mb-4 flex gap-4">
+          {activeTab === "pending" && (
+            <>
+              <button className="flex items-center gap-2 text-red-500">
+                <X className="h-4 w-4" /> Cancel
+              </button>
+              <button className="flex items-center gap-2 text-red-500">
+                <Trash2 className="h-4 w-4" /> Delete
+              </button>
+              <button className="flex items-center gap-2 text-blue-500">
+                <Edit className="h-4 w-4" /> Update
+              </button>
+            </>
+          )}
+          {activeTab === "completed" && (
+            <button className="flex items-center gap-2 text-red-500">
+              <Trash2 className="h-4 w-4" /> Delete
+            </button>
+          )}
+        </div>
+      )}
       <div className="min-w-[1000px]">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-50">
+              {showCheckboxes && (
+                <th className="p-3 sm:p-4 border border-gray-200">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedBookings.length === filteredBookings.length
+                    }
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
+                </th>
+              )}
               <th className="p-3 sm:p-4 text-left font-normal text-gray-600 border border-gray-200">
                 Property Name
               </th>
@@ -105,14 +123,22 @@ export default function BookingTable() {
               <th className="p-3 sm:p-4 text-left font-normal text-gray-600 border border-gray-200">
                 Price
               </th>
-              {/* <th className="p-3 sm:p-4 text-left font-normal text-gray-600 border border-gray-200">
-                Images
-              </th> */}
             </tr>
           </thead>
           <tbody>
-            {bookings.map((booking) => (
+            {filteredBookings.map((booking) => (
               <tr key={booking._id} className="bg-white">
+                {showCheckboxes && (
+                  <td className="p-3 sm:p-4 border border-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={selectedBookings.includes(booking._id)}
+                      onChange={(e) =>
+                        handleSelectBooking(booking._id, e.target.checked)
+                      }
+                    />
+                  </td>
+                )}
                 <td className="p-3 sm:p-4 border border-gray-200">
                   {booking.propertyId.name}
                 </td>
@@ -131,18 +157,6 @@ export default function BookingTable() {
                 <td className="p-3 sm:p-4 border border-gray-200">
                   {booking.price ? `$${booking.price}` : "N/A"}
                 </td>
-                {/* <td className="p-3 sm:p-4 border border-gray-200">
-                  <div className="flex space-x-2">
-                    {booking.propertyId.images.map((imageId) => (
-                      <img
-                        key={imageId}
-                        src={`https://limpiar-backend.onrender.com/api/images/${imageId}`}
-                        alt="Property"
-                        className="w-16 h-16 object-cover rounded-md border border-gray-300"
-                      />
-                    ))}
-                  </div>
-                </td> */}
               </tr>
             ))}
           </tbody>
