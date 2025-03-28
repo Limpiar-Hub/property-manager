@@ -1,6 +1,6 @@
 export const propertyCategories = [
     {
-      id: "Office Buildings",
+      id: "Office",
       name: "Office Buildings",
       description: "Corporate & Administrative",
       icon: "Building",
@@ -111,7 +111,7 @@ export const propertyCategories = [
     },
 
     {
-      id: "Educational_And_Institutionall",
+      id: "Educational_And_Institutional",
       name: "Educational And Institutional",
       description: "Learning & Public Services",
       icon: "GraduationCap",
@@ -324,71 +324,146 @@ export const propertyCategories = [
       ],
     },
     {
-      id: "healthcare",
-      name: "Healthcare",
+      id: "Health_Care",
+      name: "Healthcare Buildings",
       description: "Medical & Wellness",
       icon: "Stethoscope",
       subCategories: [
         {
-          id: "hospitals",
+          id: "Hospital",
           name: "Hospitals",
           description: "Full-service medical facilities.",
         },
         {
-          id: "clinics",
+          id: "Urgent Care Clinic",
           name: "Clinics & Medical Offices",
           description: "Outpatient care facilities.",
         },
         {
-          id: "wellness",
-          name: "Wellness Centers",
+          id: "Specialty Clinic",
+          name: "Specialty Clinic",
           description: "Facilities focused on health and wellness services.",
+        },
+        {
+          id: "Veterinary Clinic",
+          name: "Veterinary Clinic",
+          description: "Facilities focused on animal health and wellness services.",
+        },
+        {
+          id: "Rehabilitation Center",
+          name: "Rehabilitation Center",
+          description: "Facilities focused on the wellness of the state of mind.",
+        },
+        {
+          id: "Nursing Home",
+          name: "Nursing Home",
+          description: "Facilities for children care.",
+        },
+        {
+          id: "Medical Research Facility",
+          name: "Medical Research Facility",
+          description: "Facilities for medical research.",
+        },
+        {
+          id: "Dental Office",
+          name: "Dental Office",
+          description: "Facilities focused on dental services.",
         },
       ],
     },
     {
-      id: "transportation",
+      id: "Transportation_And_Infrastructure",
       name: "Transportation & Infrastructure",
       description: "Corporate & Administrative",
       icon: "Truck",
       subCategories: [
         {
-          id: "terminals",
-          name: "Terminals & Stations",
+          id: "Airport",
+          name: "Airport",
           description: "Facilities for passenger transport.",
         },
         {
-          id: "parking",
-          name: "Parking Structures",
+          id: "Train Station",
+          name: "Train Station",
+          description: "Facilities for passenger transport.",
+        },
+        {
+          id: "Bus Station",
+          name: "Bus Station",
+          description: "Facilities for passenger transport.",
+        },
+        {
+          id: "Gas Station",
+          name: "Gas Station",
+          description: "Facilities for passenger fueling.",
+        },
+        {
+          id: "Parking Garage",
+          name: "Parking Garage",
           description: "Multi-level parking facilities.",
         },
         {
-          id: "maintenance",
-          name: "Maintenance Facilities",
-          description: "Buildings for vehicle maintenance and repair.",
+          id: "Truck Stop",
+          name: "Truck Stop",
+          description: "Facility for truck parking.",
+        },
+        {
+          id: "Shipping Port",
+          name: "Shipping Port",
+          description: "Buildings for Consumer Goods.",
         },
       ],
     },
     {
-      id: "agricultural",
+      id: "Agriculture",
       name: "Agricultural & Specialized Commercial",
       description: "Corporate & Administrative",
       icon: "Wheat",
       subCategories: [
         {
-          id: "farms",
+          id: "Farm",
           name: "Farms & Ranches",
           description: "Agricultural production properties.",
         },
         {
-          id: "processing",
-          name: "Processing Facilities",
-          description: "Buildings for agricultural product processing.",
+          id: "Funeral Home",
+          name: "Funeral Home",
+          description: "Space for Funeral.",
         },
         {
           id: "specialized",
           name: "Specialized Commercial",
           description: "Unique commercial properties with specific uses.",
+        },
+        {
+          id: "Greenhouse",
+          name: "Greenhouse",
+          description: "Property for greenhouse farming.",
+        },
+        {
+          id: "Winery",
+          name: "Winery",
+          description: "Property for Winery farming.",
+        },
+        {
+          id: "Brewery",
+          name: "Brewery",
+          description: "Property for Brewery farming.",
+        },
+        {
+          id: "Auction House",
+          name: "Auction House",
+          description: "Property for Aution.",
+        },
+        {
+          id: "Film Studio",
+          name: "Film Studio",
+          description: "Property for Film production.",
+        },
+        {
+          id: "Tattoo & Beauty Salon",
+          name: "Tattoo & Beauty Salon",
+          description: "Property for Beauty Salon.",
         },
       ],
     },

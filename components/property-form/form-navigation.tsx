@@ -51,7 +51,7 @@ export default function FormNavigation() {
   if (token) {
         const decoded = jwtDecode(token);
         userId = decoded.userId;
-      }
+  }
 
   const handleSubmit = async () => {
     dispatch(openModalFunc());
@@ -72,6 +72,8 @@ export default function FormNavigation() {
     formData.append("propertyManagerId", userId);
     formData.append("address", location.address);
 
+    console.log(formData)
+
       try {
         const response = await fetch("https://limpiar-backend.onrender.com/api/properties", {
           method: "POST",
@@ -86,6 +88,9 @@ export default function FormNavigation() {
         if(data.status === "success") {
           dispatch(setIsLoaing(false))
         }
+
+        console.log(data)
+        console.log(token);
   
         if (!response.ok) {
           throw new Error(data.message || "Login failed")

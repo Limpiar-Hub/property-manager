@@ -32,7 +32,7 @@ const navItems = [
   { name: "Bookings", href: "/booking", icon: Calendar },
   { name: "Payment", href: "/payment", icon: CreditCard },
   { name: "Property Metric", href: "/property-metrics", icon: FileText },
-  { name: "Listing", href: "/property-list", icon: CreditCard },
+  // { name: "Listing", href: "/property-list", icon: CreditCard },
 ];
 
 export default function Sidebar() {

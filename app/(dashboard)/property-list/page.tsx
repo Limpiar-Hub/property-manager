@@ -1,8 +1,28 @@
+"use client"
+
 import Image from "next/image";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks" 
+import { useRouter } from "next/navigation";
 
-export default function Dashboard() {
+interface Property {
+  id: string;
+  status: string;
+  address: string;
+  type: string;
+  name: string;
+}
+
+export default function PropertyListing({ propertyData, count }: any) {
+  const router = useRouter()
+
+  const handleRouter = () => {
+    router.push("/my-property/add")
+  }
+
   return (
     <div className="flex h-screen bg-white">
       {/* Main Content */}
@@ -22,7 +42,7 @@ export default function Dashboard() {
                   className="pl-10 pr-4 py-2 border rounded-lg w-full sm:w-64"
                 />
               </div>
-              <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg">
+              <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg" onClick={handleRouter}>
                 <Plus className="h-5 w-5" />
                 <span>Add New Property</span>
               </button>
@@ -32,22 +52,22 @@ export default function Dashboard() {
           {/* Tabs */}
           <div className="mb-6">
             <div className="flex space-x-2 bg-gray-50 p-1 rounded-lg w-fit">
-              <TabButton text="All (0)" active />
-              <TabButton text="Active (0)" />
+              <TabButton text={`All ${count}`} active />
+              <TabButton text="Active (0)" active/>
               <TabButton text="Pending (0)" />
             </div>
           </div>
 
           {/* Property Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="pending" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
+
+          {propertyData?.length ? (
+            propertyData.map((property: any) => (
+              <PropertyCard key={property._id} status={property.status} src="/listing.png" location={property.address} type={property.type} name={property.name} />
+            ))
+          ) : (
+            <p className="text-gray-500">No properties available.</p>
+          )}
           </div>
         </div>
       </main>
@@ -55,13 +75,7 @@ export default function Dashboard() {
   );
 }
 
-function TabButton({
-  text,
-  active = false,
-}: {
-  text: string;
-  active?: boolean;
-}) {
+function TabButton({text,active = false}: {text: string; active?: boolean;}) {
   return (
     <button
       className={`py-2 px-4 rounded-lg ${
@@ -75,12 +89,12 @@ function TabButton({
   );
 }
 
-function PropertyCard({ status }: { status: string }) {
+function PropertyCard({ status, src, location, type, name }: { status: string; src: string; location: string; type: string; name: string }) {
   return (
     <div className="flex flex-col">
       <div className="relative">
-        <Image
-          src="/listing.png"
+        <Image 
+          src= {src}
           alt="Property"
           width={300}
           height={200}
@@ -97,7 +111,7 @@ function PropertyCard({ status }: { status: string }) {
         </div>
 
       </div>
-      <h3 className="text-lg font-semibold mt-3">Azure Haven</h3>
+      <h3 className="text-lg font-semibold mt-3">{name}</h3>
       <div className="flex items-center text-gray-500 text-sm mt-1">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -114,10 +128,10 @@ function PropertyCard({ status }: { status: string }) {
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span>Queens Center NY, USA</span>
+        <span>{location}</span>
       </div>
       <div className="flex justify-between items-center mt-4 pt-4 border-t">
-        <span className="text-gray-500 text-sm">Office</span>
+        <span className="text-gray-500 text-sm">{type}</span>
         <Link href="#" className="flex items-center text-blue-500 text-sm">
           View Details
           <ChevronRight className="h-4 w-4 ml-1" />
