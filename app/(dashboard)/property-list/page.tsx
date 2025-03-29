@@ -17,11 +17,20 @@ interface Property {
 }
 
 export default function PropertyListing({ propertyData, count }: any) {
+  const [searches, setSearches] = useState<string>('');
   const router = useRouter()
 
   const handleRouter = () => {
     router.push("/my-property/add")
   }
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearches(e.target.value);
+  }
+
+  const filteredProperties = propertyData.filter((property: any) =>
+    property.name.toLowerCase().includes(searches.toLowerCase()) || property.address.toLowerCase().includes(searches.toLowerCase()) || property.status.toLowerCase().includes(searches.toLowerCase()) || property.type.toLowerCase().includes(searches.toLowerCase())
+  );
 
   return (
     <div className="flex h-screen bg-white">
@@ -40,6 +49,7 @@ export default function PropertyListing({ propertyData, count }: any) {
                   type="text"
                   placeholder="Search"
                   className="pl-10 pr-4 py-2 border rounded-lg w-full sm:w-64"
+                  onChange={handleSearch}
                 />
               </div>
               <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg" onClick={handleRouter}>
@@ -61,9 +71,9 @@ export default function PropertyListing({ propertyData, count }: any) {
           {/* Property Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-          {propertyData?.length ? (
-            propertyData.map((property: any) => (
-              <PropertyCard key={property._id} status={property.status} src="/listing.png" location={property.address} type={property.type} name={property.name} />
+          {filteredProperties.length ? (
+            filteredProperties.map((property: any) => (
+              <PropertyCard key={property._id} status={property.status} src={property.images[1] ? `https://limpiar-backend.onrender.com/api/properties/gridfs/files/${property.images[1]}`: '/listing.png'} location={property.address} type={property.type} name={property.name} />
             ))
           ) : (
             <p className="text-gray-500">No properties available.</p>
@@ -128,10 +138,10 @@ function PropertyCard({ status, src, location, type, name }: { status: string; s
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span>{location}</span>
+        <span>{location.split(" ").slice(0, 4).join(" ")}</span>
       </div>
       <div className="flex justify-between items-center mt-4 pt-4 border-t">
-        <span className="text-gray-500 text-sm">{type}</span>
+        <span className="text-gray-500 w-[60%] break-words text-sm">{type}</span>
         <Link href="#" className="flex items-center text-blue-500 text-sm">
           View Details
           <ChevronRight className="h-4 w-4 ml-1" />

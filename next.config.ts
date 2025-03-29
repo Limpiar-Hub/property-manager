@@ -1,8 +1,15 @@
 
 
 module.exports = {
-      images: {
-    domains: ['cdn.builder.io'],
+  images: {
+    domains: ["cdn.builder.io"], 
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "limpiar-backend.onrender.com",
+        pathname: "/api/properties/gridfs/files/**",
+      },
+    ],
   },
   async rewrites() {
       return [

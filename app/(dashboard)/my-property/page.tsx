@@ -19,17 +19,17 @@ export default function Home() {
 
   const { user, token } = useAppSelector((state) => state.auth);
 
-  let userId = ""
+  let User: any
     if (token) {
           const decoded = jwtDecode(token);
-          userId = decoded.userId;
+          User = decoded;
     }
   
 
   useEffect(() => {
       const fetchData = async () => {
         try {
-          const response = await fetch(`https://limpiar-backend.onrender.com/api/properties/fetch/${userId}`, {
+          const response = await fetch(`https://limpiar-backend.onrender.com/api/properties/fetch/${User.userId}`, {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`, // Set the Bearer token
@@ -58,6 +58,8 @@ export default function Home() {
     dispatch(resetProperty()); 
     router.push("/my-property/add");
   };
+
+  
   return (
     <div>
       {
