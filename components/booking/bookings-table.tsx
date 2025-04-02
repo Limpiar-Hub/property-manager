@@ -1,7 +1,14 @@
+
+
+
+
+
+
 "use client";
 
 import { useState } from "react";
 import { Trash2, Edit, X } from "lucide-react";
+import BookingDetailsSidebar from "./booking-details-sidebar";
 
 interface Property {
   _id: string;
@@ -35,6 +42,7 @@ export default function BookingsTable({
   bookings,
 }: BookingsTableProps) {
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   const filteredBookings = bookings
     .filter((booking) => booking.status.toLowerCase() === activeTab)
@@ -64,10 +72,18 @@ export default function BookingsTable({
     }
   };
 
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
+  };
+
+  const closeSidebar = () => {
+    setSelectedProperty(null);
+  };
+
   const showCheckboxes = activeTab === "pending" || activeTab === "completed";
 
   return (
-    <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+    <div className="w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 relative">
       {selectedBookings.length > 0 && (
         <div className="mb-4 flex gap-4">
           {activeTab === "pending" && (
@@ -92,6 +108,8 @@ export default function BookingsTable({
       )}
       <div className="min-w-[1000px]">
         <table className="w-full border-collapse">
+          {/* ... (keep your existing table header) */}
+
           <thead>
             <tr className="bg-gray-50">
               {showCheckboxes && (
@@ -127,7 +145,7 @@ export default function BookingsTable({
           </thead>
           <tbody>
             {filteredBookings.map((booking) => (
-              <tr key={booking._id} className="bg-white">
+              <tr key={booking._id} className="bg-white hover:bg-gray-50">
                 {showCheckboxes && (
                   <td className="p-3 sm:p-4 border border-gray-200">
                     <input
@@ -140,13 +158,18 @@ export default function BookingsTable({
                   </td>
                 )}
                 <td className="p-3 sm:p-4 border border-gray-200">
-                  {booking.propertyId.name}
+                  <button
+                    onClick={() => handlePropertyClick(booking.propertyId)}
+                    className="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
+                  >
+                    {booking.propertyId.name}
+                  </button>
                 </td>
                 <td className="p-3 sm:p-4 border border-gray-200">
                   {booking.propertyId.address}
                 </td>
-                <td className="p-3 sm:p-4 border border-gray-200">
-                  {new Date(booking.date).toLocaleDateString()}
+
+                <td className="p-3 sm:p-4 border border-gray-200">                   {new Date(booking.date).toLocaleDateString()}
                 </td>
                 <td className="p-3 sm:p-4 border border-gray-200">
                   {booking.startTime}
@@ -157,11 +180,23 @@ export default function BookingsTable({
                 <td className="p-3 sm:p-4 border border-gray-200">
                   {booking.price ? `$${booking.price}` : "N/A"}
                 </td>
+
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Property Details Sidebar */}
+      {selectedProperty && (
+        <>
+          <div className="fixed inset-0 backdrop-blur-sm bg-white/30 bg-opacity-50 z-40"></div>
+          <BookingDetailsSidebar
+            property={selectedProperty}
+            onClose={closeSidebar}
+          />
+        </>
+      )}
     </div>
   );
 }
