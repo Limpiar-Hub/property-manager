@@ -1,5 +1,6 @@
-"use client";
 
+
+"use client";
 import { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
 import { useAppDispatch } from "@/hooks/useReduxHooks";
@@ -11,28 +12,7 @@ import { Button } from "@/components/ui/button";
 import BookingTabs from "@/components/booking/booking-tabs";
 import axios from "axios";
 import { useAppSelector } from "@/hooks/useReduxHooks";
-
-export type BookingStatus = "active" | "pending" | "completed" | "cancelled";
-
-interface Property {
-  _id: string;
-  name: string;
-  address: string;
-  type: string;
-  subType: string;
-  size: string;
-  status: string;
-  images: string[];
-}
-
-interface Booking {
-  _id: string;
-  propertyId: Property;
-  date: string;
-  startTime: string;
-  status: string;
-  price: number;
-}
+import { BookingStatus } from "@/types/booking";
 
 export default function BookingsPage() {
   const dispatch = useAppDispatch();
@@ -43,52 +23,63 @@ export default function BookingsPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<BookingStatus>("active");
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalBookings, setTotalBookings] = useState(0);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         setIsLoading(true);
-        if (!token || !managerId) {
-          throw new Error("Authentication token or user ID is missing.");
-        }
+        if (!token || !managerId) return;
 
         const response = await axios.get(
           `https://limpiar-backend.onrender.com/api/bookings/history/${managerId}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
+            params: {
+              page: currentPage,
+              limit: rowsPerPage
+            }
           }
         );
 
-        if (response.data && Array.isArray(response.data.data)) {
-          setBookings(response.data.data);
-        } else {
-          setError("Unexpected response format. Please contact support.");
+        if (response.data) {
+          setBookings(response.data.data || []);
+          setTotalBookings(response.data.total || response.data.data?.length || 0);
         }
       } catch (err) {
+        setError("Failed to fetch bookings");
         console.error("Error fetching bookings:", err);
-        setError("Failed to fetch bookings. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchBookings();
-  }, [token, managerId]);
+  }, [token, managerId, currentPage, rowsPerPage]);
 
+  const totalPages = Math.ceil(totalBookings / rowsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleRowsPerPageChange = (value: number) => {
+    setRowsPerPage(Number(value));
+    setCurrentPage(1);
+  };
 
   const counts = {
-    active: bookings.filter((b) => b.status.toLowerCase() === "active").length,
-    pending: bookings.filter((b) => b.status.toLowerCase() === "pending")
-      .length,
-    completed: bookings.filter((b) => b.status.toLowerCase() === "completed")
-      .length,
-    cancelled: bookings.filter((b) => b.status.toLowerCase() === "cancelled")
-      .length,
+    active: bookings.filter((b) => b.status?.toLowerCase() === "active").length,
+    pending: bookings.filter((b) => b.status?.toLowerCase() === "pending").length,
+    completed: bookings.filter((b) => b.status?.toLowerCase() === "completed").length,
+    cancelled: bookings.filter((b) => b.status?.toLowerCase() === "cancelled").length,
   };
 
   if (isLoading) return <p>Loading...</p>;
@@ -96,7 +87,7 @@ export default function BookingsPage() {
 
   return (
     <div>
-      <main className="pt- px-6 pb-20">
+      <main className="pt-6 px-6 pb-20">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <h1 className="text-2xl font-bold">Bookings</h1>
@@ -131,6 +122,11 @@ export default function BookingsPage() {
             activeTab={activeTab}
             searchQuery={searchQuery}
             bookings={bookings}
+            currentPage={currentPage}
+            rowsPerPage={rowsPerPage}
+            totalBookings={totalBookings}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
           />
         </div>
       </main>
