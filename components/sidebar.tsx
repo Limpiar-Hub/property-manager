@@ -31,7 +31,7 @@ const navItems = [
   { name: "Analytics", href: "/analytics", icon: Activity },
   { name: "Bookings", href: "/booking", icon: Calendar },
   { name: "Payment", href: "/payment", icon: CreditCard },
-  { name: "Property Metric", href: "/property-metrics", icon: FileText },
+  // { name: "Property Metric", href: "/property-metrics", icon: FileText },
   // { name: "Listing", href: "/property-list", icon: CreditCard },
 ];
 

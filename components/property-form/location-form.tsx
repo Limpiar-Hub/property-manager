@@ -32,7 +32,10 @@ export default function LocationForm() {
     setShowSuggestions(false)
   }
 
-  const GoogleMApApiKey = process.env.NEXT_PUBLIC_API_KEY;
+  let GoogleMApApiKey: string
+  if (process.env.NEXT_PUBLIC_API_KEY) {
+    GoogleMApApiKey = process.env.NEXT_PUBLIC_API_KEY;
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -40,7 +43,7 @@ export default function LocationForm() {
       <p className="text-center text-gray-500 mb-10">Search your address or find it on the map.</p>
 
       <div className="relative">
-          <GoogleMapComponent apiKey= "AIzaSyBHDyacxa-kO7j0T34FiV0RWWJBDadd25Y" />
+          <GoogleMapComponent apiKey={process.env.NEXT_PUBLIC_API_KEY ? process.env.NEXT_PUBLIC_API_KEY : ''} />
       </div>
     </div>
   )

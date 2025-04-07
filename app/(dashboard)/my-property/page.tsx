@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { userAgent } from "next/server";
 import PropertyListing from "../property-list/page";
 import { jwtDecode } from "jwt-decode";
+import { Loader } from "lucide-react";
+import Spinner from "@/components/spinner";
 
 export default function Home() {
   const router = useRouter();
@@ -15,7 +17,7 @@ export default function Home() {
   const [propertyData, setPropertyData] = useState<any>([])
   const [propertyCount, setPropertyCount] = useState<number>(0)
   const [error, setError] = useState()
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const { user, token } = useAppSelector((state) => state.auth);
 
@@ -62,7 +64,7 @@ export default function Home() {
   
   return (
     <div>
-      {
+      { isLoading ? <Spinner/> :
         propertyData.length ? 
         <PropertyListing propertyData={propertyData} count={propertyCount}/> : 
         <div className="max-w-5xl mx-auto">

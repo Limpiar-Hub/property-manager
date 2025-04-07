@@ -5,21 +5,25 @@ import Image from "next/image";
 import { MapPinIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAppSelector } from "@/hooks/useReduxHooks";
+import { useState } from "react";
 
-export default function PropertyDetails() {
+export default function PropertyDetails({PropertyDetailsData}: any) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   // const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const { user } = useAppSelector((state) => state.auth);
 
-  const propertyDetails = [
-    { label: "Floors", value: 10 },
-    { label: "Units", value: 30 },
-    { label: "Offices Rooms", value: 50 },
-    { label: "Meeting Rooms", value: 10 },
-    { label: "Lobbies", value: 20 },
-    { label: "Restrooms", value: 40 },
-    { label: "Break Rooms", value: 3 },
-    { label: "Cafeteria", value: 2 },
-    { label: "Gym", value: 1 },
-  ];
+  const getInitials = (fullName: string) => {
+    const names = fullName.split(" ");
+    const firstInitial = names[0]?.[0] || "";
+    const lastInitial = names.length > 1 ? names[names.length - 1][0] : "";
+    return `${firstInitial}${lastInitial}`.toUpperCase();
+  };
+
+  const imageId1 = PropertyDetailsData?.images?.[0];
+  const imageId2 = PropertyDetailsData?.images?.[1];
+  const imageId3 = PropertyDetailsData?.images?.[2];
 
   return (
     <div className="mb-8">
@@ -40,65 +44,105 @@ export default function PropertyDetails() {
           {/* Image Gallery Section */}
           <div className="space-y-3">
             <div className="relative aspect-[4/3] md:aspect-video w-full overflow-hidden rounded-lg">
+            {isLoading && !hasError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            {imageId1 && (
               <Image
-                src="/cleaner.png"
-                alt="Azure Haven main image"
+                src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId1}`}
+                alt="Property"
                 fill
-                className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
+                  setHasError(true);
+                  setIsLoading(false);
+                }}
+                className={`object-cover transition-opacity duration-500 ${
+                  isLoading ? "opacity-0" : "opacity-100"
+                }`}
               />
+            )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative aspect-[4/3] md:aspect-video w-full overflow-hidden rounded-lg">
-                <Image
-                  src="/cleaner.png"
-                  alt="Property thumbnail 1"
-                  fill
-                  className="object-cover"
-                />
+              {isLoading && !hasError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            {imageId2 && (
+              <Image
+                src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId2}`}
+                alt="Property"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
+                  setHasError(true);
+                  setIsLoading(false);
+                }}
+                className={`object-cover transition-opacity duration-500 ${
+                  isLoading ? "opacity-0" : "opacity-100"
+                }`}
+              />
+            )}
               </div>
               <div className="relative aspect-[4/3] md:aspect-video w-full overflow-hidden rounded-lg group cursor-pointer">
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 text-white text-sm font-medium">
                   Show all photos
                 </div>
-                <Image
-                  src="/cleaner.png"
-                  alt="Property thumbnail 2"
-                  fill
-                  className="object-cover"
-                />
+                {isLoading && !hasError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            {imageId3 && (
+              <Image
+                src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId3}`}
+                alt="Property"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
+                  setHasError(true);
+                  setIsLoading(false);
+                }}
+                className={`object-cover transition-opacity duration-500 ${
+                  isLoading ? "opacity-0" : "opacity-100"
+                }`}
+              />
+            )}
               </div>
             </div>
           </div>
 
           {/* Property Details Section */}
           <div className="flex flex-col">
-            <h3 className="text-2xl font-bold mb-2">Azure Haven</h3>
+            <h3 className="text-2xl font-bold mb-2">{PropertyDetailsData.name}</h3>
             <div className="flex items-center text-gray-500 mb-6">
               <MapPinIcon className="h-4 w-4 mr-1 flex-shrink-0" />
-              <span className="text-sm">Queens Center NY, USA</span>
+              <span className="text-sm">{PropertyDetailsData.address}</span>
             </div>
 
-            <div className="flex items-center mb-6">
+            <div className="flex items-center relative top-24">
               <Avatar className="h-12 w-12 mr-4 border">
                 <AvatarImage src="/placeholder-user.jpg" alt="Darren Smith" />
-                <AvatarFallback>DS</AvatarFallback>
+                <AvatarFallback>
+                {user?.fullName ? getInitials(user.fullName) : "NA"}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-semibold">Darren Smith</p>
-                <p className="text-sm text-gray-500">Property Manager</p>
-              </div>
-            </div>
-
-            <div className="mt-auto">
-              <h4 className="text-lg font-semibold mb-4">Property Detail</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2">
-                {propertyDetails.map((detail, index) => (
-                  <div key={index} className="flex justify-between pr-4">
-                    <span className="text-gray-600">{detail.label}</span>
-                    <span className="font-medium">{detail.value}</span>
-                  </div>
-                ))}
+                <p className="font-semibold">{user?.fullName}</p>
+                <p className="text-sm text-gray-500">{user?.role}</p>
               </div>
             </div>
           </div>

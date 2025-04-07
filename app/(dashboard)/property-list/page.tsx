@@ -17,8 +17,8 @@ interface Property {
 }
 
 export default function PropertyListing({ propertyData, count }: any) {
+  const router = useRouter();
   const [searches, setSearches] = useState<string>('');
-  const router = useRouter()
 
   const handleRouter = () => {
     router.push("/my-property/add")
@@ -31,6 +31,14 @@ export default function PropertyListing({ propertyData, count }: any) {
   const filteredProperties = propertyData.filter((property: any) =>
     property.name.toLowerCase().includes(searches.toLowerCase()) || property.address.toLowerCase().includes(searches.toLowerCase()) || property.status.toLowerCase().includes(searches.toLowerCase()) || property.type.toLowerCase().includes(searches.toLowerCase())
   );
+
+  const countPending = propertyData.filter((property: any) => 
+    property.status.toLowerCase().includes('pending')
+  )
+  const countActive = propertyData.filter((property: any) => 
+    property.status.toLowerCase().includes('pending')
+  )
+  
 
   return (
     <div className="flex h-screen bg-white">
@@ -62,9 +70,9 @@ export default function PropertyListing({ propertyData, count }: any) {
           {/* Tabs */}
           <div className="mb-6">
             <div className="flex space-x-2 bg-gray-50 p-1 rounded-lg w-fit">
-              <TabButton text={`All ${count}`} active />
+              <TabButton text={`All (${count})`} active />
               <TabButton text="Active (0)" active/>
-              <TabButton text="Pending (0)" />
+              <TabButton text={`Pending (${countPending.length})`} active />
             </div>
           </div>
 
@@ -73,7 +81,7 @@ export default function PropertyListing({ propertyData, count }: any) {
 
           {filteredProperties.length ? (
             filteredProperties.map((property: any) => (
-              <PropertyCard key={property._id} status={property.status} src={property.images[1] ? `https://limpiar-backend.onrender.com/api/properties/gridfs/files/${property.images[1]}`: '/listing.png'} location={property.address} type={property.type} name={property.name} />
+              <PropertyCard key={property._id} status={property.status} src={property.images[1] ? `https://limpiar-backend.onrender.com/api/properties/gridfs/files/${property.images[1]}`: '/listing.png'} location={property.address} type={property.type} name={property.name} propertyId={property._id} />
             ))
           ) : (
             <p className="text-gray-500">No properties available.</p>
@@ -99,7 +107,11 @@ function TabButton({text,active = false}: {text: string; active?: boolean;}) {
   );
 }
 
-function PropertyCard({ status, src, location, type, name }: { status: string; src: string; location: string; type: string; name: string }) {
+function PropertyCard({ status, src, location, type, name, propertyId }: { status: string; src: string; location: string; type: string; name: string; propertyId: string }) {
+  const router = useRouter();
+  const handleViewDetails = (id: string) => {
+    router.push(`/my-property/${id}`)
+  };
   return (
     <div className="flex flex-col">
       <div className="relative">
@@ -109,6 +121,7 @@ function PropertyCard({ status, src, location, type, name }: { status: string; s
           width={300}
           height={200}
           className="w-full h-48 object-cover rounded-lg"
+          priority
         />
         <div
           className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-medium ${
@@ -138,14 +151,14 @@ function PropertyCard({ status, src, location, type, name }: { status: string; s
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span>{location.split(" ").slice(0, 4).join(" ")}</span>
+        <span>{location.split(" ").slice(0, 3).join(" ")}</span>
       </div>
       <div className="flex justify-between items-center mt-4 pt-4 border-t">
         <span className="text-gray-500 w-[60%] break-words text-sm">{type}</span>
-        <Link href="#" className="flex items-center text-blue-500 text-sm">
+        <button className="flex items-center text-blue-500 text-sm" onClick={() => handleViewDetails(propertyId)}>
           View Details
           <ChevronRight className="h-4 w-4 ml-1" />
-        </Link>
+        </button>
       </div>
     </div>
   );

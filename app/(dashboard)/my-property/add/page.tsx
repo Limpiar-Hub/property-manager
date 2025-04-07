@@ -15,9 +15,9 @@ import SuccessAddNewProperty from "@/components/successAddNewProperty"
 
 
 
-const UnitsForm = dynamic(() => import("@/components/property-form/units-form"), {
-  ssr: false,
-});
+// const UnitsForm = dynamic(() => import("@/components/property-form/units-form"), {
+//   ssr: false,
+// });
 
 export default function AddPropertyPage() {
   const { step, openModal } = useAppSelector((state) => state.property)
@@ -31,13 +31,13 @@ export default function AddPropertyPage() {
         return <SubcategorySelection />
       case 2:
         return <TitleInput />
+      // case 3:
+      //   return <UnitsForm />
       case 3:
-        return <UnitsForm />
-      case 4:
         return <LocationForm />
-      case 5:
+      case 4:
         return <ImageUpload />
-      case 6:
+      case 5:
         return <Preview />
       default:
         return <CategorySelection /> 
@@ -61,7 +61,7 @@ export default function AddPropertyPage() {
    
       {/* <ProgressSteps /> */}
 
-      {step !== 6 && <ProgressSteps />}
+      {step !== 5 && <ProgressSteps />}
       {renderStepContent()}
 
       {/* {renderStepContent()} */}

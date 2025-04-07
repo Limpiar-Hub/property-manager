@@ -63,7 +63,7 @@ export default function Preview() {
           {/* Property Details Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-2xl font-semibold mb-6">Property Detail</h2>
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               {[
                 { label: "Floors", value: property.units.floors },
                 { label: "Units", value: property.units.units },
@@ -80,7 +80,7 @@ export default function Preview() {
                   <span className="text-[15px] font-medium text-gray-900">{item.value}</span>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

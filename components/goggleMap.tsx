@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, LoadScriptNext, Marker } from "@react-google-maps/api";
 import SearchBox from "./mapSerchBox";
 
 const containerStyle = {
@@ -27,7 +27,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({ apiKey }) => {
 
   return (
     <div className="relative w-full">
-      <LoadScript googleMapsApiKey={apiKey} libraries={["places"]}>
+      <LoadScriptNext googleMapsApiKey={apiKey} libraries={["places"]}>
         <div className="relative w-full grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <SearchBox onPlaceSelected={handlePlaceSelected} />
@@ -39,7 +39,7 @@ const GoogleMapComponent: React.FC<GoogleMapProps> = ({ apiKey }) => {
             </GoogleMap>
           </div>
         </div>
-      </LoadScript>
+      </LoadScriptNext>
     </div>
   );
 };
