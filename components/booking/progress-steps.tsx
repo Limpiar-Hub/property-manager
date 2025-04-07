@@ -11,7 +11,7 @@ export default function ProgressSteps() {
     { id: 2, name: "Property" },
     { id: 3, name: "Date" },
     { id: 4, name: "Time" },
-    { id: 5, name: "Additional Notes" },
+    // { id: 5, name: "Additional Notes" },
   ]
 
   return (

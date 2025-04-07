@@ -1,30 +1,107 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
-import { useAppDispatch } from "@/hooks/useReduxHooks";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import { openModal } from "@/redux/features/booking/bookingSlice";
 import BookingModal from "@/components/booking/booking-modal";
 import BookingsTable from "@/components/booking/bookings-table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import BookingTabs from "@/components/booking/booking-tabs";
-
-// type BookingStatus = "active" | "pending" | "completed" | "cancelled";
+import axios from "axios";
+import { BookingStatus } from "@/types/booking";
 
 export default function BookingsPage() {
   const dispatch = useAppDispatch();
+  const { token, user } = useAppSelector((state) => state.auth);
+  const managerId = user?._id;
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<BookingStatus>("active");
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+  });
+
+  const fetchBookings = async () => {
+    try {
+      setIsLoading(true);
+      if (!token || !managerId) return;
+
+      const response = await axios.get(
+        `https://limpiar-backend.onrender.com/api/bookings/history/${managerId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            page: pagination.page,
+            limit: pagination.limit,
+            status: activeTab,
+          },
+        }
+      );
+
+      if (response.data) {
+        setBookings(response.data.data || []);
+        setPagination((prev) => ({
+          ...prev,
+          total: response.data.total || 0,
+        }));
+      }
+    } catch (err) {
+      setError("Failed to fetch bookings");
+      console.error("Error fetching bookings:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, [token, managerId, activeTab, pagination.page, pagination.limit]);
+
+  const handlePageChange = (newPage: number) => {
+    if (
+      newPage >= 1 &&
+      newPage <= Math.ceil(pagination.total / pagination.limit)
+    ) {
+      setPagination((prev) => ({ ...prev, page: newPage }));
+    }
+  };
+
+  const handleRowsPerPageChange = (value: number) => {
+    setPagination({
+      page: 1,
+      limit: Number(value),
+      total: pagination.total,
+    });
+  };
+
+  const counts = {
+    active: bookings.filter((b) => b.status?.toLowerCase() === "active").length,
+    pending: bookings.filter((b) => b.status?.toLowerCase() === "pending")
+      .length,
+    completed: bookings.filter((b) => b.status?.toLowerCase() === "completed")
+      .length,
+    cancelled: bookings.filter((b) => b.status?.toLowerCase() === "cancelled")
+      .length,
+  };
 
   return (
-    <div>
-      <main className="pt- px-6 pb-20">
+    <div className="relative">
+      {isLoading && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500 z-50">
+          <div className="h-full w-1/3 bg-blue-400 animate-slide"></div>
+        </div>
+      )}
+
+      <main className="pt-8 px-6 pb-20">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <h1 className="text-2xl font-bold">Bookings</h1>
-
             <div className="flex flex-col md:flex-row gap-4 md:items-center">
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -36,7 +113,6 @@ export default function BookingsPage() {
                   className="pl-9 w-full md:w-[300px]"
                 />
               </div>
-
               <Button
                 onClick={() => dispatch(openModal())}
                 className="bg-blue-500 hover:bg-blue-600"
@@ -47,42 +123,24 @@ export default function BookingsPage() {
             </div>
           </div>
 
-          {/* Status Tabs */}
-          {/* <div className="flex gap-6 border-b border-gray-200 mb-6 overflow-x-auto">
-            {(Object.keys(statusCounts) as BookingStatus[]).map((status) => (
-              <button
-                key={status}
-                onClick={() => setActiveStatus(status)}
-                className={`pb-4 px-2 text-sm font-medium relative whitespace-nowrap ${
-                  activeStatus === status
-                    ? "text-blue-500 border-b-2 border-blue-500"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)} (
-                {statusCounts[status]})
-              </button>
-            ))}
-          </div> */}
-
           <BookingTabs
-            activeTab={"active"}
-            setActiveTab={function ( ): void {
-              throw new Error("Function not implemented.");
-            }}
-            counts={{
-              active: 0,
-              pending: 0,
-              completed: 0,
-              cancelled: 0,
-            }}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            counts={counts}
           />
 
-          {/* Bookings Table */}
-          <BookingsTable />
+          <BookingsTable
+            activeTab={activeTab}
+            searchQuery={searchQuery}
+            bookings={bookings}
+            currentPage={pagination.page}
+            rowsPerPage={pagination.limit}
+            totalBookings={pagination.total}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
+          />
         </div>
       </main>
-
       <BookingModal />
     </div>
   );

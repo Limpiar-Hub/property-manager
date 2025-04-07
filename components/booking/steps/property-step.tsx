@@ -1,57 +1,65 @@
-"use client"
+"use client";
 
-import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks"
-import { setProperty, setStep } from "@/redux/features/booking/bookingSlice"
-import { ChevronLeft, ChevronRight, Check } from "lucide-react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-
-const properties = [
-  {
-    id: "1",
-    name: "Azure Haven",
-    image: "/p1.png",
-  },
-  {
-    id: "2",
-    name: "Golden Crest Residences",
-    image: "/p2.png",
-  },
-  {
-    id: "3",
-    name: "Sunset Grove Residences",
-    image: "/p3.png",
-  },
-  {
-    id: "4",
-    name: "Serenity Springs Villas",
-    image: "/p4.png",
-  },
-  {
-    id: "5",
-    name: "Evergreen Heights",
-    image: "/p5.png",
-  },
-  {
-    id: "6",
-    name: "Azure Haven",
-    image: "/p6.png",
-  },
-]
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
+import { setProperty, setStep } from "@/redux/features/booking/bookingSlice";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function PropertyStep() {
-  const dispatch = useAppDispatch()
-  const { property } = useAppSelector((state) => state.booking)
+  const dispatch = useAppDispatch();
+  const { property } = useAppSelector((state) => state.booking);
+  const authState = useAppSelector((state) => state.auth);
+  const user = authState.user || null;
+  const token = authState.token;
+
+  const [properties, setProperties] = useState<{ _id: string; name: string }[]>(
+    []
+  );
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      if (!token || !user) {
+        console.error("User or token is missing");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          "https://limpiar-backend.onrender.com/api/properties/fetch/67dd4395a978408fbcd04e00",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error fetching properties: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched properties:", data);
+        setProperties(data.data || []);
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+      }
+    };
+
+    fetchProperties();
+  }, [token, user]);
 
   const handleBack = () => {
-    dispatch(setStep(1))
-  }
+    dispatch(setStep(1));
+  };
 
   const handleNext = () => {
     if (property) {
-      dispatch(setStep(3))
+      dispatch(setStep(3));
     }
-  }
+  };
 
   return (
     <div>
@@ -60,26 +68,30 @@ export default function PropertyStep() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         {properties.map((prop) => (
           <div
-            key={prop.id}
-            onClick={() => dispatch(setProperty(prop))}
-            className={`relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all
-              ${property?.id === prop.id ? "border-blue-500" : "border-transparent hover:border-gray-200"}`}
+            key={prop._id}
+            onClick={() => {
+              dispatch(
+                setProperty({
+                  id: prop._id,
+                  name: prop.name,
+                  image: prop.image || "/placeholder.svg",
+                })
+              );
+              console.log("Selected property:", prop);
+            }}
+            className={`relative rounded-lg p-4 cursor-pointer border-2 transition-all
+              ${
+                property?.id === prop._id
+                  ? "border-blue-500"
+                  : "border-gray-200 hover:border-gray-400"
+              }`}
           >
-            <Image
-              src={prop.image || "/placeholder.svg"}
-              alt={prop.name}
-              width={300}
-              height={200}
-              className="w-full h-40 object-cover"
-            />
-            {property?.id === prop.id && (
+            <h4 className="font-medium text-center">{prop.name}</h4>
+            {property?.id === prop._id && (
               <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                 <Check className="w-4 h-4 text-white" />
               </div>
             )}
-            <div className="p-3">
-              <h4 className="font-medium">{prop.name}</h4>
-            </div>
           </div>
         ))}
       </div>
@@ -102,6 +114,5 @@ export default function PropertyStep() {
         </Button>
       </div>
     </div>
-  )
+  );
 }
-

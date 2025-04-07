@@ -191,6 +191,7 @@ import { jwtDecode } from "jwt-decode";
 // Types
 interface User {
   userId: string;
+  _id: string;
   fullName: string;
   email: string;
   phoneNumber: string;
@@ -199,6 +200,7 @@ interface User {
 
 interface AuthState {
   isAuthenticated: boolean;
+  
   token: string | null;
   user: User | null;
   loading: boolean;

@@ -1,0 +1,133 @@
+{
+    "success": true,
+    "data": [
+        {
+            "_id": "67e42304683f30bb6c127cbd",
+            "propertyId": {
+                "_id": "67e42171683f30bb6c127cae",
+                "name": "ibro property",
+                "address": "North land",
+                "type": "Industrial",
+                "subType": "Business Park",
+                "size": "400 meter",
+                "status": "pending",
+                "images": [
+                    "67e42170683f30bb6c127ca5",
+                    "67e42170683f30bb6c127ca6",
+                    "67e42170683f30bb6c127ca3",
+                    "67e42170683f30bb6c127ca4"
+                ]
+            },
+            "propertyManagerId": "67dd4395a978408fbcd04e00",
+            "cleanerId": null,
+            "cleaningBusinessId": null,
+            "phoneNumber": "+2348101200547",
+            "date": "2025-03-28T00:00:00.000Z",
+            "startTime": "7:30 AM",
+            "endTime": null,
+            "serviceType": "Janitorial",
+            "price": 0,
+            "status": "Pending",
+            "uuid": "6e810e2b-0fdd-40e0-841f-eb122ed59360",
+            "createdAt": "2025-03-26T15:53:40.047Z",
+            "updatedAt": "2025-03-26T15:53:40.047Z",
+            "__v": 0
+        },
+        {
+            "_id": "67e31b2e0c40b5b8ee14e26b",
+            "propertyId": {
+                "_id": "67e31b1d0c40b5b8ee14e269",
+                "name": "property",
+                "address": "iikorodu",
+                "type": "Industrial",
+                "subType": "Business Park",
+                "size": "400 meter",
+                "status": "pending",
+                "images": [
+                    "67e31b1c0c40b5b8ee14e25e",
+                    "67e31b1c0c40b5b8ee14e25d",
+                    "67e31b1c0c40b5b8ee14e25f",
+                    "67e31b1c0c40b5b8ee14e25c"
+                ]
+            },
+            "propertyManagerId": "67dd4395a978408fbcd04e00",
+            "cleanerId": null,
+            "cleaningBusinessId": null,
+            "phoneNumber": "+2348101200547",
+            "date": "2025-03-29T00:00:00.000Z",
+            "startTime": "7:30 AM",
+            "endTime": null,
+            "serviceType": "Window Cleaning",
+            "price": 0,
+            "status": "Pending",
+            "uuid": "f7897831-2f5f-4142-9413-97f434a8c333",
+            "createdAt": "2025-03-25T21:07:58.252Z",
+            "updatedAt": "2025-03-25T21:07:58.252Z",
+            "__v": 0
+        },
+        {
+            "_id": "67e319500c40b5b8ee14e259",
+            "propertyId": {
+                "_id": "67e312b10c40b5b8ee14e24d",
+                "name": "Limpiar prpert",
+                "address": "iikorodu",
+                "type": "Industrial",
+                "subType": "Business Park",
+                "size": "400 meter",
+                "status": "pending",
+                "images": [
+                    "67e312af0c40b5b8ee14e241",
+                    "67e312af0c40b5b8ee14e242",
+                    "67e312af0c40b5b8ee14e240",
+                    "67e312af0c40b5b8ee14e243"
+                ]
+            },
+            "propertyManagerId": "67dd4395a978408fbcd04e00",
+            "cleanerId": null,
+            "cleaningBusinessId": null,
+            "phoneNumber": "+2348101200547",
+            "date": "2025-03-29T00:00:00.000Z",
+            "startTime": "7:30 AM",
+            "endTime": null,
+            "serviceType": "Janitorial",
+            "price": 0,
+            "status": "Pending",
+            "uuid": "09837624-40cd-472e-af49-f0e212b8edb4",
+            "createdAt": "2025-03-25T21:00:00.818Z",
+            "updatedAt": "2025-03-25T21:00:00.818Z",
+            "__v": 0
+        },
+        {
+            "_id": "67e310820c40b5b8ee14e23e",
+            "propertyId": {
+                "_id": "67e30ffe0c40b5b8ee14e23c",
+                "name": "daniel estate",
+                "address": "lagos,ikeja",
+                "type": "Industrial",
+                "subType": "Business Park",
+                "size": "300 meter",
+                "status": "pending",
+                "images": [
+                    "67e30ffb0c40b5b8ee14e232",
+                    "67e30ffb0c40b5b8ee14e230",
+                    "67e30ffb0c40b5b8ee14e231",
+                    "67e30ffb0c40b5b8ee14e22f"
+                ]
+            },
+            "propertyManagerId": "67dd4395a978408fbcd04e00",
+            "cleanerId": null,
+            "cleaningBusinessId": null,
+            "phoneNumber": "+2347089224054",
+            "date": "2026-02-01T00:00:00.000Z",
+            "startTime": "6:30",
+            "endTime": null,
+            "serviceType": "Deep Cleaning",
+            "price": 0,
+            "status": "Pending",
+            "uuid": "38eab61f-3103-47ae-8aa5-d5b227397881",
+            "createdAt": "2025-03-25T20:22:26.796Z",
+            "updatedAt": "2025-03-25T20:22:26.796Z",
+            "__v": 0
+        }
+    ]
+}
