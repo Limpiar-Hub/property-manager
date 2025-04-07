@@ -1,4 +1,4 @@
-// components/booking/confirm-cancel-modal.tsx
+
 "use client";
 
 import { Button } from "@/components/ui/button";

@@ -1,142 +1,3 @@
-
-
-// "use client";
-// import { useState, useEffect } from "react";
-// import { Search, Plus } from "lucide-react";
-// import { useAppDispatch } from "@/hooks/useReduxHooks";
-// import { openModal } from "@/redux/features/booking/bookingSlice";
-// import BookingModal from "@/components/booking/booking-modal";
-// import BookingsTable from "@/components/booking/bookings-table";
-// import { Input } from "@/components/ui/input";
-// import { Button } from "@/components/ui/button";
-// import BookingTabs from "@/components/booking/booking-tabs";
-// import axios from "axios";
-// import { useAppSelector } from "@/hooks/useReduxHooks";
-// import { BookingStatus } from "@/types/booking";
-
-// export default function BookingsPage() {
-//   const dispatch = useAppDispatch();
-//   const authState = useAppSelector((state) => state.auth);
-//   const token = authState.token;
-//   const user = authState.user || null;
-//   const managerId = user?._id;
-
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [activeTab, setActiveTab] = useState<BookingStatus>("active");
-//   const [bookings, setBookings] = useState<any[]>([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState<string | null>(null);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [rowsPerPage, setRowsPerPage] = useState(10);
-//   const [totalBookings, setTotalBookings] = useState(0);
-
-//   useEffect(() => {
-//     const fetchBookings = async () => {
-//       try {
-//         setIsLoading(true);
-//         if (!token || !managerId) return;
-
-//         const response = await axios.get(
-//           `https://limpiar-backend.onrender.com/api/bookings/history/${managerId}`,
-//           {
-//             headers: { Authorization: `Bearer ${token}` },
-//             params: {
-//               page: currentPage,
-//               limit: rowsPerPage
-//             }
-//           }
-//         );
-
-//         if (response.data) {
-//           setBookings(response.data.data || []);
-//           setTotalBookings(response.data.total || response.data.data?.length || 0);
-//         }
-//       } catch (err) {
-//         setError("Failed to fetch bookings");
-//         console.error("Error fetching bookings:", err);
-//       } finally {
-//         setIsLoading(false);
-//       }
-//     };
-
-//     fetchBookings();
-//   }, [token, managerId, currentPage, rowsPerPage]);
-
-//   const totalPages = Math.ceil(totalBookings / rowsPerPage);
-
-//   const handlePageChange = (newPage: number) => {
-//     if (newPage >= 1 && newPage <= totalPages) {
-//       setCurrentPage(newPage);
-//     }
-//   };
-
-//   const handleRowsPerPageChange = (value: number) => {
-//     setRowsPerPage(Number(value));
-//     setCurrentPage(1);
-//   };
-
-//   const counts = {
-//     active: bookings.filter((b) => b.status?.toLowerCase() === "active").length,
-//     pending: bookings.filter((b) => b.status?.toLowerCase() === "pending").length,
-//     completed: bookings.filter((b) => b.status?.toLowerCase() === "completed").length,
-//     cancelled: bookings.filter((b) => b.status?.toLowerCase() === "cancelled").length,
-//   };
-
-//   if (isLoading) return <p>Loading...</p>;
-//   if (error) return <p className="text-red-500">{error}</p>;
-
-//   return (
-//     <div>
-//       <main className="pt-6 px-6 pb-20">
-//         <div className="max-w-7xl mx-auto">
-//           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-//             <h1 className="text-2xl font-bold">Bookings</h1>
-//             <div className="flex flex-col md:flex-row gap-4 md:items-center">
-//               <div className="relative">
-//                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-//                 <Input
-//                   type="text"
-//                   placeholder="Search"
-//                   value={searchQuery}
-//                   onChange={(e) => setSearchQuery(e.target.value)}
-//                   className="pl-9 w-full md:w-[300px]"
-//                 />
-//               </div>
-//               <Button
-//                 onClick={() => dispatch(openModal())}
-//                 className="bg-blue-500 hover:bg-blue-600"
-//               >
-//                 <Plus className="h-4 w-4 mr-2" />
-//                 Add New Booking
-//               </Button>
-//             </div>
-//           </div>
-
-//           <BookingTabs
-//             activeTab={activeTab}
-//             setActiveTab={setActiveTab}
-//             counts={counts} 
-//           />
-
-//           <BookingsTable
-//             activeTab={activeTab}
-//             searchQuery={searchQuery}
-//             bookings={bookings}
-//             currentPage={currentPage}
-//             rowsPerPage={rowsPerPage}
-//             totalBookings={totalBookings}
-//             onPageChange={handlePageChange}
-//             onRowsPerPageChange={handleRowsPerPageChange}
-//           />
-//         </div>
-//       </main>
-//       <BookingModal />
-//     </div>
-//   );
-// }
-
-
-
 "use client";
 import { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
@@ -163,7 +24,7 @@ export default function BookingsPage() {
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
-    total: 0
+    total: 0,
   });
 
   const fetchBookings = async () => {
@@ -178,16 +39,16 @@ export default function BookingsPage() {
           params: {
             page: pagination.page,
             limit: pagination.limit,
-            status: activeTab
-          }
+            status: activeTab,
+          },
         }
       );
 
       if (response.data) {
         setBookings(response.data.data || []);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
-          total: response.data.total || 0
+          total: response.data.total || 0,
         }));
       }
     } catch (err) {
@@ -203,8 +64,11 @@ export default function BookingsPage() {
   }, [token, managerId, activeTab, pagination.page, pagination.limit]);
 
   const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= Math.ceil(pagination.total / pagination.limit)) {
-      setPagination(prev => ({ ...prev, page: newPage }));
+    if (
+      newPage >= 1 &&
+      newPage <= Math.ceil(pagination.total / pagination.limit)
+    ) {
+      setPagination((prev) => ({ ...prev, page: newPage }));
     }
   };
 
@@ -212,15 +76,18 @@ export default function BookingsPage() {
     setPagination({
       page: 1,
       limit: Number(value),
-      total: pagination.total
+      total: pagination.total,
     });
   };
 
   const counts = {
-    active: bookings.filter(b => b.status?.toLowerCase() === "active").length,
-    pending: bookings.filter(b => b.status?.toLowerCase() === "pending").length,
-    completed: bookings.filter(b => b.status?.toLowerCase() === "completed").length,
-    cancelled: bookings.filter(b => b.status?.toLowerCase() === "cancelled").length,
+    active: bookings.filter((b) => b.status?.toLowerCase() === "active").length,
+    pending: bookings.filter((b) => b.status?.toLowerCase() === "pending")
+      .length,
+    completed: bookings.filter((b) => b.status?.toLowerCase() === "completed")
+      .length,
+    cancelled: bookings.filter((b) => b.status?.toLowerCase() === "cancelled")
+      .length,
   };
 
   return (
@@ -230,7 +97,7 @@ export default function BookingsPage() {
           <div className="h-full w-1/3 bg-blue-400 animate-slide"></div>
         </div>
       )}
-      
+
       <main className="pt-8 px-6 pb-20">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -259,7 +126,7 @@ export default function BookingsPage() {
           <BookingTabs
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            counts={counts} 
+            counts={counts}
           />
 
           <BookingsTable
