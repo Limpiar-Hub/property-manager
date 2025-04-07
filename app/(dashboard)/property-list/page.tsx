@@ -1,8 +1,45 @@
+"use client"
+
 import Image from "next/image";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks" 
+import { useRouter } from "next/navigation";
 
-export default function Dashboard() {
+interface Property {
+  id: string;
+  status: string;
+  address: string;
+  type: string;
+  name: string;
+}
+
+export default function PropertyListing({ propertyData, count }: any) {
+  const router = useRouter();
+  const [searches, setSearches] = useState<string>('');
+
+  const handleRouter = () => {
+    router.push("/my-property/add")
+  }
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearches(e.target.value);
+  }
+
+  const filteredProperties = propertyData.filter((property: any) =>
+    property.name.toLowerCase().includes(searches.toLowerCase()) || property.address.toLowerCase().includes(searches.toLowerCase()) || property.status.toLowerCase().includes(searches.toLowerCase()) || property.type.toLowerCase().includes(searches.toLowerCase())
+  );
+
+  const countPending = propertyData.filter((property: any) => 
+    property.status.toLowerCase().includes('pending')
+  )
+  const countActive = propertyData.filter((property: any) => 
+    property.status.toLowerCase().includes('pending')
+  )
+  
+
   return (
     <div className="flex h-screen bg-white">
       {/* Main Content */}
@@ -20,9 +57,10 @@ export default function Dashboard() {
                   type="text"
                   placeholder="Search"
                   className="pl-10 pr-4 py-2 border rounded-lg w-full sm:w-64"
+                  onChange={handleSearch}
                 />
               </div>
-              <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg">
+              <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg" onClick={handleRouter}>
                 <Plus className="h-5 w-5" />
                 <span>Add New Property</span>
               </button>
@@ -32,22 +70,22 @@ export default function Dashboard() {
           {/* Tabs */}
           <div className="mb-6">
             <div className="flex space-x-2 bg-gray-50 p-1 rounded-lg w-fit">
-              <TabButton text="All (0)" active />
-              <TabButton text="Active (0)" />
-              <TabButton text="Pending (0)" />
+              <TabButton text={`All (${count})`} active />
+              <TabButton text="Active (0)" active/>
+              <TabButton text={`Pending (${countPending.length})`} active />
             </div>
           </div>
 
           {/* Property Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="pending" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
-            <PropertyCard status="active" />
+
+          {filteredProperties.length ? (
+            filteredProperties.map((property: any) => (
+              <PropertyCard key={property._id} status={property.status} src={property.images[1] ? `https://limpiar-backend.onrender.com/api/properties/gridfs/files/${property.images[1]}`: '/listing.png'} location={property.address} type={property.type} name={property.name} propertyId={property._id} />
+            ))
+          ) : (
+            <p className="text-gray-500">No properties available.</p>
+          )}
           </div>
         </div>
       </main>
@@ -55,13 +93,7 @@ export default function Dashboard() {
   );
 }
 
-function TabButton({
-  text,
-  active = false,
-}: {
-  text: string;
-  active?: boolean;
-}) {
+function TabButton({text,active = false}: {text: string; active?: boolean;}) {
   return (
     <button
       className={`py-2 px-4 rounded-lg ${
@@ -75,16 +107,21 @@ function TabButton({
   );
 }
 
-function PropertyCard({ status }: { status: string }) {
+function PropertyCard({ status, src, location, type, name, propertyId }: { status: string; src: string; location: string; type: string; name: string; propertyId: string }) {
+  const router = useRouter();
+  const handleViewDetails = (id: string) => {
+    router.push(`/my-property/${id}`)
+  };
   return (
     <div className="flex flex-col">
       <div className="relative">
-        <Image
-          src="/listing.png"
+        <Image 
+          src= {src}
           alt="Property"
           width={300}
           height={200}
           className="w-full h-48 object-cover rounded-lg"
+          priority
         />
         <div
           className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-medium ${
@@ -97,7 +134,7 @@ function PropertyCard({ status }: { status: string }) {
         </div>
 
       </div>
-      <h3 className="text-lg font-semibold mt-3">Azure Haven</h3>
+      <h3 className="text-lg font-semibold mt-3">{name}</h3>
       <div className="flex items-center text-gray-500 text-sm mt-1">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -114,14 +151,14 @@ function PropertyCard({ status }: { status: string }) {
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span>Queens Center NY, USA</span>
+        <span>{location.split(" ").slice(0, 3).join(" ")}</span>
       </div>
       <div className="flex justify-between items-center mt-4 pt-4 border-t">
-        <span className="text-gray-500 text-sm">Office</span>
-        <Link href="#" className="flex items-center text-blue-500 text-sm">
+        <span className="text-gray-500 w-[60%] break-words text-sm">{type}</span>
+        <button className="flex items-center text-blue-500 text-sm" onClick={() => handleViewDetails(propertyId)}>
           View Details
           <ChevronRight className="h-4 w-4 ml-1" />
-        </Link>
+        </button>
       </div>
     </div>
   );

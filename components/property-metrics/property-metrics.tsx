@@ -5,8 +5,14 @@ import { ArrowUpIcon, CopyIcon, BarChart4Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function PropertyMetrics() {
+export default function PropertyMetrics({bookings}: any) {
   const [timeframe, setTimeframe] = useState("This Week")
+
+  const countActive = bookings.filter((book: any) => book.status.toLowerCase().includes("confirm"));
+  const countPending = bookings.filter((book: any) => book.status.toLowerCase().includes("pend"));
+  const countCancelled = bookings.filter((book: any) => book.status.toLowerCase().includes("cancel"));
+  const countCompleted = bookings.filter((book: any) => book.status.toLowerCase().includes("complete"));
+
 
   return (
     <div className="mb-8">
@@ -31,7 +37,7 @@ export default function PropertyMetrics() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Bookings</p>
-              <h3 className="text-2xl md:text-3xl font-bold">137,789</h3>
+              <h3 className="text-2xl md:text-3xl font-bold">{bookings.length}</h3>
             </div>
             <Button variant="ghost" size="icon">
               <CopyIcon className="h-5 w-5" />
@@ -41,15 +47,15 @@ export default function PropertyMetrics() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
             <div>
               <p className="text-sm text-gray-500 mb-1">Active Bookings</p>
-              <p className="text-lg md:text-xl font-semibold">100,000</p>
+              <p className="text-lg md:text-xl font-semibold">{countActive.length}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">Pending Bookings</p>
-              <p className="text-lg md:text-xl font-semibold">20,000</p>
+              <p className="text-lg md:text-xl font-semibold">{countPending.length}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">Cancelled Bookings</p>
-              <p className="text-lg md:text-xl font-semibold">17,789</p>
+              <p className="text-lg md:text-xl font-semibold">{countCancelled.length}</p>
             </div>
           </div>
 

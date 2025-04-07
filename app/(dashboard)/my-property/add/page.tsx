@@ -11,15 +11,16 @@ import LocationForm from "@/components/property-form/location-form"
 import ImageUpload from "@/components/property-form/image-upload"
 import Preview from "@/components/property-form/preview"
 import dynamic from "next/dynamic";
+import SuccessAddNewProperty from "@/components/successAddNewProperty"
 
 
 
-const UnitsForm = dynamic(() => import("@/components/property-form/units-form"), {
-  ssr: false,
-});
+// const UnitsForm = dynamic(() => import("@/components/property-form/units-form"), {
+//   ssr: false,
+// });
 
 export default function AddPropertyPage() {
-  const { step } = useAppSelector((state) => state.property)
+  const { step, openModal } = useAppSelector((state) => state.property)
 
   // Determine which form component to render based on the current step
   const renderStepContent = () => {
@@ -30,18 +31,27 @@ export default function AddPropertyPage() {
         return <SubcategorySelection />
       case 2:
         return <TitleInput />
+      // case 3:
+      //   return <UnitsForm />
       case 3:
-        return <UnitsForm />
-      case 4:
         return <LocationForm />
-      case 5:
+      case 4:
         return <ImageUpload />
-      case 6:
+      case 5:
         return <Preview />
       default:
-        return <CategorySelection />
+        return <CategorySelection /> 
     }
   }
+
+  
+  if (openModal) {
+      return (
+        <>
+          <SuccessAddNewProperty/>
+        </>
+      )
+    }
 
   return (
 
@@ -51,7 +61,7 @@ export default function AddPropertyPage() {
    
       {/* <ProgressSteps /> */}
 
-      {step !== 6 && <ProgressSteps />}
+      {step !== 5 && <ProgressSteps />}
       {renderStepContent()}
 
       {/* {renderStepContent()} */}

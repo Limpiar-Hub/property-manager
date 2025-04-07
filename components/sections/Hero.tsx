@@ -3,7 +3,7 @@
 // import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function Hero() {
+export default function Hero() {  
   return (
     <div className="relative min-h-screen bg-center bg-cover bg-[url('https://cdn.builder.io/api/v1/image/assets/TEMP/09fae11e99a64dfdeffb44dfd091dd38bede69a2')]">
       <div className="absolute inset-0">

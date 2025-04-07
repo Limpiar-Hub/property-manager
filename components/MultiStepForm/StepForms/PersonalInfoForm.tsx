@@ -154,7 +154,7 @@ export default function PersonalInfoForm() {
         <PasswordInput
           id="password"
           label="Password"
-          register={register("password")}
+          register={register("password")} 
           error={errors.password}
         />
 

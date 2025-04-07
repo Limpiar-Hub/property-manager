@@ -4,11 +4,9 @@
 // import ticketReducer from "./features/tickets/ticketSlice";
 // import bookingReducer from "./features/booking/bookingSlice";
 // import topUpModalReducer from "./features/topUpModalSlice/topUpModalSlice";
-// import authReducer from "./features/auth/authSlice";
-
-
+// import authReducer from "./features/auth/authSlice";"
 // export const store = configureStore({
-//   reducer: {
+  //   reducer: {
 //     // onboarding: onboardingReducer,
 //     auth: authReducer,
 //     property: propertyReducer,
@@ -32,6 +30,7 @@ import ticketReducer from "./features/tickets/ticketSlice";
 import bookingReducer from "./features/booking/bookingSlice";
 import topUpModalReducer from "./features/topUpModalSlice/topUpModalSlice";
 import authReducer from "./features/auth/authSlice";
+import loginReducer from "./features/login/loginSlice"
 
 // Configuration for redux-persist
 const authPersistConfig = {

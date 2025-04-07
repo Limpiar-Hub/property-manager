@@ -5,10 +5,19 @@
 import { useAppSelector } from "@/hooks/useReduxHooks"
 import { MapPin } from "lucide-react"
 import Image from "next/image"
+import { jwtDecode } from "jwt-decode";
+import { useImageContext } from "../imageFileProvider";
+
+import SuccessAddNewProperty from "../successAddNewProperty";
 
 export default function Preview() {
   const property = useAppSelector((state) => state.property)
+  const { imageFiles, removeFile } = useImageContext();
+  
   // const coverImage = property.images.find((img) => img.isCover)
+    const { token, user, loading } = useAppSelector((state) => state.auth);
+    const { step, category, subCategory, title, location, images } = useAppSelector((state) => state.property)
+
 
   return (
     <div className="max-w-6xl mx-auto  p-6">
@@ -33,7 +42,7 @@ export default function Preview() {
           <div>
             <h1 className="text-[32px] font-bold text-gray-900">{property.title}</h1>
             <div className="flex items-center mt-2 text-gray-600">
-              <MapPin size={20} className="mr-2" />
+              <MapPin size={40} className="mr-2" />
               <span className="text-base">{property.location.address || "Location not set"}</span>
             </div>
           </div>
@@ -45,7 +54,7 @@ export default function Preview() {
                 <Image src="/darren.png" alt="Property Owner" fill className="object-cover" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Darren Smith</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{user?.fullName}</h3>
                 <p className="text-gray-600">Property Owner</p>
               </div>
             </div>
@@ -54,7 +63,7 @@ export default function Preview() {
           {/* Property Details Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-2xl font-semibold mb-6">Property Detail</h2>
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               {[
                 { label: "Floors", value: property.units.floors },
                 { label: "Units", value: property.units.units },
@@ -71,7 +80,7 @@ export default function Preview() {
                   <span className="text-[15px] font-medium text-gray-900">{item.value}</span>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

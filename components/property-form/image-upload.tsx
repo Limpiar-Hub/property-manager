@@ -9,10 +9,14 @@ import { Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { useImageContext } from "../imageFileProvider";
+import SuccessAddNewProperty from "../successAddNewProperty";
 
 export default function ImageUpload() {
+  const { addFiles, removeFile } = useImageContext();
   const dispatch = useAppDispatch();
   const images = useAppSelector((state) => state.property.images);
+  const {openModal} = useAppSelector((state) => state.property);
   const [uploading, setUploading] = useState(false);
 
   const onDrop = useCallback(
@@ -22,6 +26,7 @@ export default function ImageUpload() {
       setTimeout(() => {
         acceptedFiles.forEach((file) => {
           const imageUrl = URL.createObjectURL(file);
+          addFiles(acceptedFiles);
           dispatch(
             addImage({
               url: imageUrl,
@@ -44,6 +49,12 @@ export default function ImageUpload() {
   const handleRemoveImage = (url: string) => {
     dispatch(removeImage(url));
   };
+
+  // if (openModal) {
+  //     return (
+  //       <SuccessAddNewProperty/>
+  //     )
+  //   }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
