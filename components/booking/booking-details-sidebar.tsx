@@ -1,11 +1,13 @@
-
-
 "use client";
 import { useEffect } from "react";
 import { X, MessageSquare, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Booking, TimelineEvent } from "@/types/booking";
 import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "@/hooks/useReduxHooks";
+import { createChatThread } from "@/redux/features/chat/chatSlice";
 
 interface BookingDetailsSidebarProps {
   booking: Booking;
@@ -16,6 +18,11 @@ export default function BookingDetailsSidebar({
   booking,
   onClose,
 }: BookingDetailsSidebarProps) {
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const token = useAppSelector((state) => state.auth.token);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const sidebar = document.getElementById("booking-sidebar");
@@ -30,7 +37,38 @@ export default function BookingDetailsSidebar({
     };
   }, [onClose]);
 
-  // Demo timeline data (can be replaced with real data if available)
+  // Handle sending a message to the cleaner
+  const handleSendMessage = async () => {
+    try {
+    
+      const cleanerId = booking.cleanerId?._id || "67a7e709b5df23292f632874"; // Demo ID
+      const propertyManagerId = "67dd4395a978408fbcd04e00";
+
+      // Check if token is null
+      if (!token) {
+        console.error("Token is missing. Unable to create chat thread.");
+        return; 
+      }
+
+      console.log("Token being used for createChatThread:", token);
+
+      // Create chat thread between property manager and cleaner
+      await dispatch(
+        createChatThread({
+          participantIds: [propertyManagerId, cleanerId],
+          taskId: booking._id,
+          token,
+        }) as any
+      );
+
+      // Navigate to inbox page
+      router.push("/inbox");
+    } catch (error) {
+      console.error("Error creating chat thread:", error);
+    }
+  };
+
+ 
   const demoTimeline: TimelineEvent[] = [
     {
       date: new Date(booking.createdAt).toLocaleDateString("en-US", {
@@ -150,7 +188,9 @@ export default function BookingDetailsSidebar({
       className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-lg z-50 flex flex-col"
     >
       <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
-        <h2 className="text-base font-semibold text-gray-900">Booking Details</h2>
+        <h2 className="text-base font-semibold text-gray-900">
+          Booking Details
+        </h2>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
           <X className="h-5 w-5" />
         </button>
@@ -181,12 +221,14 @@ export default function BookingDetailsSidebar({
               <span className="text-sm font-medium">
                 {booking.cleanerId?.fullName || "Not assigned"}
               </span>
-
-            
             </div>
-            <Button className="mt-4 border bg-white text-black">
-                send Message
-              </Button>
+            <Button
+              className="mt-4 border bg-white text-black flex items-center gap-2"
+              onClick={handleSendMessage}
+            >
+              <MessageSquare className="h-4 w-4" />
+              Send Message
+            </Button>
           </div>
 
           {booking.cleanerId?.phoneNumber && (
@@ -309,7 +351,9 @@ export default function BookingDetailsSidebar({
                     )}
                     {event.company && (
                       <span>
-                        <span className="text-blue-600 ml-1">{event.company}</span>
+                        <span className="text-blue-600 ml-1">
+                          {event.company}
+                        </span>
                       </span>
                     )}
                   </div>
