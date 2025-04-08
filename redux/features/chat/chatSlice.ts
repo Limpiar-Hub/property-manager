@@ -114,7 +114,7 @@ export const fetchChatMessages = createAsyncThunk(
   async ({ chatId, token }: { chatId: string; token: string }) => {
     try {
       const response = await axios.get(
-        `https://limpiar-backend.onrender.com/api/chats/${chatId}`,
+        `https://limpiar-backend.onrender.com/api/chats/${chatId}/messages`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

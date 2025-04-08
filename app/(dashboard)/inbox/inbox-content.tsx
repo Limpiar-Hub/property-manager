@@ -36,6 +36,8 @@ export function InboxContent() {
     (state: RootState) => state.chat.selectedChatId
   );
 
+  console.log("Selected Chat ID:", selectedChatId);
+
   return (
     <div className="flex h-[calc(100vh-4rem)]">
       {/* Left side - List */}
@@ -117,7 +119,7 @@ export function InboxContent() {
       </div>
 
       {/* Right side - Detail */}
-      <div className="hidden md:block flex-1 bg-gray-50">
+      {/* <div className="hidden md:block flex-1 bg-gray-50">
         {activeTab === "tickets" ? (
           selectedTicketId ? (
             <TicketDetail />
@@ -133,7 +135,26 @@ export function InboxContent() {
             Select a conversation to view messages
           </div>
         )}
+      </div> */}
+
+<div className="hidden md:block flex-1 bg-gray-50">
+  {activeTab === "tickets" ? (
+    selectedTicketId ? (
+      <TicketDetail />
+    ) : (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Select a ticket to view details
       </div>
+    )
+  ) : selectedChatId ? (
+    // Ensure ChatDetail is displayed when selectedChatId is set
+    <ChatDetail />
+  ) : (
+    <div className="flex items-center justify-center h-full text-gray-500">
+      Select a conversation to view messages
+    </div>
+  )}
+</div>
 
       <NewTicketDialog
         open={isNewTicketOpen}

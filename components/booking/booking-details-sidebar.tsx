@@ -7,7 +7,7 @@ import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "@/hooks/useReduxHooks";
-import { createChatThread } from "@/redux/features/chat/chatSlice";
+import { createChatThread, setSelectedChat } from "@/redux/features/chat/chatSlice";
 
 interface BookingDetailsSidebarProps {
   booking: Booking;
@@ -52,8 +52,9 @@ export default function BookingDetailsSidebar({
 
       console.log("Token being used for createChatThread:", token);
 
-      // Create chat thread between property manager and cleaner
-      await dispatch(
+
+
+      const response = await dispatch(
         createChatThread({
           participantIds: [propertyManagerId, cleanerId],
           taskId: booking._id,
@@ -61,8 +62,21 @@ export default function BookingDetailsSidebar({
         }) as any
       );
 
-      // Navigate to inbox page
-      router.push("/inbox");
+      console.log("Response payload from createChatThread:", response.payload);
+  
+      const newChatId = response.payload?._id;
+
+      console.log ("New Chat ID:",newChatId)
+
+      if (newChatId) {
+        // Set the newly created chat as the selected chat
+        dispatch(setSelectedChat(newChatId));
+  
+        // Navigate to the inbox
+        router.push("/inbox");
+      } else {
+        console.error("Failed to create chat thread.");
+      }
     } catch (error) {
       console.error("Error creating chat thread:", error);
     }
