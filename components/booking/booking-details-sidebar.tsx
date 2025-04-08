@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { X, MessageSquare, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Booking, TimelineEvent } from "@/types/booking";
+import { Button } from "../ui/button";
 
 interface BookingDetailsSidebarProps {
   booking: Booking;
@@ -180,7 +181,12 @@ export default function BookingDetailsSidebar({
               <span className="text-sm font-medium">
                 {booking.cleanerId?.fullName || "Not assigned"}
               </span>
+
+            
             </div>
+            <Button className="mt-4 border bg-white text-black">
+                send Message
+              </Button>
           </div>
 
           {booking.cleanerId?.phoneNumber && (

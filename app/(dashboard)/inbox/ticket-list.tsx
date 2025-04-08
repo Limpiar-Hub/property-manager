@@ -32,7 +32,8 @@ export function TicketList() {
         >
           <div className="flex gap-3">
             <Avatar className="w-10 h-10">
-              <Image src={ticket.userAvatar} alt="User avatar" />
+              <Image src={ticket.userAvatar} alt="User avatar" width={500}
+        height={500} />
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start mb-1">

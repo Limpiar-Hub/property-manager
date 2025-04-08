@@ -34,7 +34,8 @@ export function TicketDetail() {
       <div className="flex-1 overflow-auto p-6">
         <div className="flex gap-4 mb-6">
           <Avatar className="w-10 h-10">
-            <Image src={ticket.userAvatar} alt="User avatar" />
+            <Image src={ticket.userAvatar} alt="User avatar" width={500}
+        height={500} />
           </Avatar>
           <div className="flex-1">
             <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -47,7 +48,8 @@ export function TicketDetail() {
       <div className="p-4 border-t bg-white">
         <div className="flex gap-4">
           <Avatar className="w-10 h-10">
-            <Image src="/placeholder.svg" alt="Your avatar" />
+            <Image src="/placeholder.svg" width={200}
+        height={100}   alt="Your avatar" />
           </Avatar>
           <div className="flex-1">
             <Input
@@ -58,7 +60,7 @@ export function TicketDetail() {
 
             />
           </div>
-          {/* <Button>Send</Button> */}
+          <Button>Send</Button>
         </div>
       </div>
     </div>
