@@ -9,9 +9,14 @@ import { SendHorizontal } from "lucide-react";
 import {
   sendChatMessage,
   fetchChatMessages,
-  sendSupportMessage,
   markChatAsRead,
 } from "@/redux/features/chat/chatSlice";
+
+import {
+
+  createTicket
+
+} from "@/redux/features/tickets/ticketSlice";
 import type { RootState } from "@/redux/store";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import Image from "next/image";
@@ -100,7 +105,7 @@ export function ChatDetail() {
       if (chat.isSupportTicket) {
         // Send message to the support endpoint
         await dispatch(
-          sendSupportMessage({
+          createTicket({
             userId: currentUserId,
             messageText: message,
             token,

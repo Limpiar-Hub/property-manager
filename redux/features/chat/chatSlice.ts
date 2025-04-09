@@ -185,75 +185,6 @@ export const fetchChatMessages = createAsyncThunk(
   }
 );
 
-export const createSupportTicket = createAsyncThunk(
-  "chat/createSupportTicket",
-  async ({
-    userId,
-    messageText,
-    token,
-  }: {
-    userId: string;
-    messageText: string;
-    token: string;
-  },
-  { rejectWithValue }
-) => {
-    try {
-      const response = await axios.post(
-        "https://limpiar-backend.onrender.com/api/chats/support/start",
-        {
-          userId,
-          messageText,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error("Error creating support ticket:", error);
-      return rejectWithValue(error.response?.data || "Failed to create support ticket");
-      throw error;
-    }
-  }
-);
-
-export const sendSupportMessage = createAsyncThunk(
-  "chat/sendSupportMessage",
-  async (
-    {
-      userId,
-      messageText,
-      token,
-    }: {
-      userId: string;
-      messageText: string;
-      token: string;
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axios.post(
-        "https://limpiar-backend.onrender.com/api/chats/support/start",
-        {
-          userId,
-          messageText,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      return response.data; // Assuming the response contains the updated ticket or message
-    } catch (error: any) {
-      console.error("Error sending support message:", error);
-      return rejectWithValue(error.response?.data || "Failed to send support message");
-    }
-  }
-);
 
 const chatSlice = createSlice({
   name: "chat",
@@ -371,41 +302,7 @@ const chatSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || "Failed to fetch messages";
       })
-      .addCase(createSupportTicket.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createSupportTicket.fulfilled, (state, action) => {
-        state.loading = false;
-        state.chats.push({
-          ...action.payload,
-          messages: action.payload.messages || [],
-          unreadCount: 0,
-          participantInfo: action.payload.participantInfo || {},
-        });
-        state.selectedChatId = action.payload.id;
-      })
-      .addCase(createSupportTicket.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || "Failed to create support ticket";
-      })
-      .addCase(sendSupportMessage.pending, (state: ChatState) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(sendSupportMessage.fulfilled, (state: { loading: boolean; chats: any[]; }, action: { payload: any; }) => {
-        state.loading = false;
-    
-        // Find the support ticket chat and update its messages
-        const updatedChat = state.chats.find((chat: { isSupportTicket: any; }) => chat.isSupportTicket);
-        if (updatedChat) {
-          updatedChat.messages.push(action.payload); // Assuming the response contains the new message
-        }
-      });
-      // .addCase(sendSupportMessage.rejected, (state: { loading: boolean; error: string; }, action: { payload: string; }) => {
-      //   state.loading = false;
-      //   state.error = action.payload as string || "Failed to send support message";
-      // });
+
   },
 });
 

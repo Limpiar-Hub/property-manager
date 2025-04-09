@@ -12,9 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  createSupportTicket,
-  setSelectedChat,
-} from "@/redux/features/chat/chatSlice";
+  createTicket,
+  setSelectedTicket
+} from "@/redux/features/tickets/ticketSlice";
 import type { RootState } from "@/redux/store";
 
 interface NewTicketDialogProps {
@@ -31,39 +31,31 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!description.trim()) {
       alert("Please enter a description.");
       return;
     }
-
+  
     if (!userId || !token) {
       alert("User is not authenticated.");
       return;
     }
-
+  
     try {
       const response = await dispatch(
-        createSupportTicket({
+        createTicket({
           userId,
           messageText: description,
           token,
         }) as any
       );
-
+  
       if (response.payload) {
-        // Automatically select the newly created ticket
-        dispatch(
-          setSelectedChat({
-            chatId: response.payload.id,
-            cleanerName: "Support", // Default name for support
-            cleanerAvatar: "/placeholder.svg", // Default avatar for support
-          })
-        );
-
+        dispatch(setSelectedTicket(response.payload.id));
         alert("Support ticket created successfully.");
         setDescription("");
-        onOpenChange(false); // Close the dialog
+        onOpenChange(false);
       } else {
         alert("Failed to create support ticket.");
       }
