@@ -23,6 +23,13 @@ export default function PropertyInfo({ id }: { id: string }) {
         User = decoded;
     }
 
+    let userWallet: any;
+    const getUserFromLocalStorage = localStorage.getItem("userWallet");
+    if (getUserFromLocalStorage) {
+      const user = JSON.parse(getUserFromLocalStorage)
+      userWallet = user.data.wallet;
+    }
+
     useEffect(() => {
           const fetchData = async () => {
             try {
@@ -34,7 +41,7 @@ export default function PropertyInfo({ id }: { id: string }) {
               }); 
       
               const result = await Details.json();
-
+              console.log(userWallet);
       
               if (!Details.ok) {
                 throw new Error(result.message || "Login failed")

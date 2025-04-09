@@ -1,8 +1,12 @@
 "use client";
 
-import { Plus, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw, UserCheck, Wallet } from "lucide-react";
 import { TransactionTable } from "@/components/payment/transaction-table";
 import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { useAppSelector } from "@/hooks/useReduxHooks";
+import { jwtDecode } from "jwt-decode";
+import { Loader2 } from "lucide-react";
 // import { TopUpModal } from "@/components/payment/top-up-modal/top-up-modal"
 import dynamic from "next/dynamic";
 const TopUpModal = dynamic(
@@ -25,10 +29,145 @@ const TopUpModal = dynamic(
 //   }
 // );
 import { openModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
+import { promise } from "zod";
 // import { openModal } from "@/redux/features/modalSlice/modalSlice";
 
 export default function PaymentsPage() {
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const dispatch = useDispatch();
+
+  let userWallet: any;
+    const getUserFromLocalStorage = localStorage.getItem("userWallet");
+    if (getUserFromLocalStorage) {
+      const user = JSON.parse(getUserFromLocalStorage)
+      userWallet = user.data;
+    }
+
+    const { user, token } = useAppSelector((state) => state.auth);
+        let User: any
+        if (token) {
+            const decoded = jwtDecode(token);
+            User = decoded;
+        }
+
+    useEffect(() => {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          const GetWalletBalance = await fetch(`https://limpiar-backend.onrender.com/api/wallets/balances/${userWallet.wallet._id
+          }`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`, // Set the Bearer token
+            }
+          }); 
+  
+          const res = await GetWalletBalance.json();
+          console.log(`Wallet balance ${res.wallet.balance}`);
+  
+          if (!GetWalletBalance.ok) {
+            throw new Error(res.message || "Login failed")
+          }
+  
+          setWalletBalance(res.wallet.balance);
+        } catch (err:any) {
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          const [GetPaymentTransactions, GetWalletTransactions] = await  Promise.all([
+            fetch(`https://limpiar-backend.onrender.com/api/payments`, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`, // Set the Bearer token
+              }
+            }), 
+  
+            fetch(`https://limpiar-backend.onrender.com/api/wallets/`, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`, // Set the Bearer token
+              }
+            })
+          ]);
+          
+  
+          const res1 = await GetPaymentTransactions.json();
+          const res2 = await GetWalletTransactions.json();
+
+          if (!GetPaymentTransactions.ok) {
+            throw new Error(res1.message || "Login failed")
+          }
+          if (!GetWalletTransactions.ok) {
+            throw new Error(res2.message || "Login failed")
+          }
+
+          const WalletTransactions = res2.wallets.flatMap((wallet: any) => {
+            if (wallet.transactions.length === 0) return [];
+
+
+           return wallet.transactions.map((txn: any) => {
+              return {
+                id: txn._id || txn.id,
+                amount: txn.amount,
+                currency: txn.currency || "USD",
+                status: txn.status || "N/A",
+                description: txn.description || "No description provided", // Fallback description
+                reference: txn.transactionId || "N/A",
+                createdAt: txn.timestamp,
+                // updatedAt: txn.updatedAt || txn.updated,
+                method: "wallet",
+              }
+            })
+          });
+          const PaymentTransactions = res1.data.map((txn: any) => {
+            return {
+              id: txn._id || txn.id,
+              amount: txn.amount,
+              currency: txn.currency || "USD",
+              status: txn.status || "N/A",
+              description: txn.description || `Payment of ${txn.amount} ${txn.currency}`, // Fallback description
+              reference: txn.paymentIntentId || txn.reference,
+              createdAt: txn.createdAt || txn.created,
+              // updatedAt: txn.updatedAt || txn.updated,
+              method: "stripe",
+            }
+          });
+
+          console.log(WalletTransactions);
+          const combinedTransactions = [...WalletTransactions, ...PaymentTransactions].flat();
+
+          combinedTransactions.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+
+          setTransactions(combinedTransactions);
+
+  
+  
+          // setWalletBalance(res.wallet.balance);
+        } catch (err:any) {
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+        
+      }
+
+        fetchData();
+    }, []);
 
   return (
     <div className="flex  bg-gray-50">
@@ -168,7 +307,7 @@ export default function PaymentsPage() {
 
                 <div className="relative z-10 text-center">
                   <p className="text-lg mb-2">Wallet Balance</p>
-                  <p className="text-4xl font-bold">$1,000.00</p>
+                  <p className="text-4xl font-bold">${isLoading ? <span className="text-xl">Loading...</span>: walletBalance}</p>
                 </div>
               </div>
 
@@ -199,7 +338,7 @@ export default function PaymentsPage() {
           {/* Transaction History */}
           <div className="mt-10">
             <h2 className="text-xl font-bold mb-4">Transaction History</h2>
-            <TransactionTable />
+            <TransactionTable transactions={transactions}/>
           </div>
         </div>
         <TopUpModal />

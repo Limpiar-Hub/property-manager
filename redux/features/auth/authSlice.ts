@@ -340,6 +340,7 @@ export const verifyOtp = createAsyncThunk(
       }
 
       const data: VerifyOtpResponse = await response.json();
+      localStorage.setItem("userWallet", JSON.stringify({ data }))
       return data;
     } catch (error) {
       return rejectWithValue(
