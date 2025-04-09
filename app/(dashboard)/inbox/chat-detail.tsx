@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -7,7 +6,12 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SendHorizontal } from "lucide-react";
-import { sendChatMessage, fetchChatMessages, markChatAsRead } from "@/redux/features/chat/chatSlice";
+import {
+  sendChatMessage,
+  fetchChatMessages,
+  sendSupportMessage,
+  markChatAsRead,
+} from "@/redux/features/chat/chatSlice";
 import type { RootState } from "@/redux/store";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import Image from "next/image";
@@ -15,23 +19,28 @@ import Image from "next/image";
 export function ChatDetail() {
   const [message, setMessage] = useState("");
   const dispatch = useDispatch();
-  const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
-  const chat = useSelector((state: RootState) => 
+  const selectedChatId = useSelector(
+    (state: RootState) => state.chat.selectedChatId
+  );
+  const chat = useSelector((state: RootState) =>
     state.chat.chats.find((c) => c.id === selectedChatId)
   );
-  const currentUserId = "67dd4395a978408fbcd04e00"; 
+  const cleanerName = useSelector((state: RootState) => state.chat.cleanerName);
+  const cleanerAvatar = useSelector(
+    (state: RootState) => state.chat.cleanerAvatar
+  );
+  const currentUserId = "67dd4395a978408fbcd04e00"; // Replace with the actual logged-in property manager ID
   const messagesEndRef = useRef<HTMLDivElement>(null);
- 
 
-   const token = useAppSelector((state) => state.auth.token);
+  const token = useAppSelector((state) => state.auth.token);
 
   useEffect(() => {
-
-    
     if (selectedChatId) {
       // Fetch messages for the selected chat
-      dispatch(fetchChatMessages({ chatId: selectedChatId, token: token || "" }) as any);
-      
+      dispatch(
+        fetchChatMessages({ chatId: selectedChatId, token: token || "" }) as any
+      );
+
       // Mark chat as read
       dispatch(markChatAsRead(selectedChatId));
     }
@@ -45,65 +54,125 @@ export function ChatDetail() {
   if (!chat) return null;
 
   // Find the other participant (not the current user)
-  const otherParticipantId = chat.participants.find(id => id !== currentUserId) || "";
-  const participantInfo = chat.participantInfo[otherParticipantId] || { name: "Unknown", avatar: "/placeholder.svg" };
+  const otherParticipantId =
+    chat.participants.find((id) => id !== currentUserId) || "";
+  const participantInfo = chat.participantInfo[otherParticipantId] || {
+    name: cleanerName || "Unknown",
+    avatar: cleanerAvatar || "/placeholder.svg",
+  };
 
-  // src/components/inbox/chat-detail.tsx (continued)
+  // const handleSendMessage = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
+  //   if (!token) {
+  //     console.error("Token is missing. Unable to create chat thread.");
+  //     return;
+  //   }
+
+  //   if (!message.trim()) return;
+
+  //   try {
+  //     await dispatch(
+  //       sendChatMessage({
+  //         receiverId: otherParticipantId,
+  //         text: message,
+  //         chatId: chat.id,
+  //         token,
+  //       }) as any
+  //     );
+
+  //     // Clear message input after sending
+  //     setMessage("");
+  //   } catch (error) {
+  //     console.error("Error sending message:", error);
+  //   }
+  // };
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!token) {
-      console.error("Token is missing. Unable to create chat thread.");
-      return; 
-    }
-    
+  
     if (!message.trim()) return;
-    
+       if (!token) {
+      console.error("Token is missing. Unable to create chat thread.");
+      return;
+    }
+  
     try {
-      await dispatch(
-        sendChatMessage({
-          receiverId: otherParticipantId,
-          text: message,
-          chatId: chat.id,
-          token,
-        }) as any
-      );
-      
-      // Clear message input after sending
+      if (chat.isSupportTicket) {
+        // Send message to the support endpoint
+        await dispatch(
+          sendSupportMessage({
+            userId: currentUserId,
+            messageText: message,
+            token,
+          }) as any
+        );
+      } else {
+        // Handle normal chat message
+        await dispatch(
+          sendChatMessage({
+            receiverId: otherParticipantId,
+            text: message,
+            chatId: chat.id,
+            token,
+          }) as any
+        );
+      }
+  
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
 
+
   return (
     <div className="h-full flex flex-col">
+      {/* Chat Header */}
       <div className="p-4 border-b bg-white">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">
-            {participantInfo.avatar ? (
-              <Image 
-                src={participantInfo.avatar} 
-                alt={participantInfo.name} 
-                width={40} 
-                height={40} 
+            {/* {participantInfo.avatar ? (
+              <img
+                // src={participantInfo.avatar}
+                src={cleanerAvatar || "/placeholder.svg"}
+                  className="w-10 h-10 rounded-full"
+                alt={participantInfo.name}
+                width={40}
+                height={40}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
                 {participantInfo.name.charAt(0)}
               </div>
-            )}
+            )} */}
+
+
+
+               {/* {cleanerAvatar ? (
+                <img
+                  src={cleanerAvatar}
+                  alt={cleanerName || "Default Name"}
+                  className="w-10 h-10 rounded-full"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                  {cleanerName?.charAt(0)}
+                </div>
+              )} */}
+
+            
+
           </Avatar>
           <div>
             <h2 className="font-medium">{participantInfo.name}</h2>
             <p className="text-xs text-gray-500">
-              {chat.taskId ? `Booking ID: ${chat.taskId}` : 'Direct message'}
+              {chat.taskId ? `Booking ID: ${chat.taskId}` : "Direct message"}
             </p>
           </div>
         </div>
       </div>
 
+      {/* Chat Messages */}
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
         {chat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
@@ -116,22 +185,30 @@ export function ChatDetail() {
               return (
                 <div
                   key={msg.id}
-                  className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+                  className={`flex ${
+                    isCurrentUser ? "justify-end" : "justify-start"
+                  }`}
                 >
                   <div className="flex gap-2 max-w-[70%]">
                     {!isCurrentUser && (
                       <Avatar className="w-8 h-8">
                         {chat.participantInfo[msg.senderId]?.avatar ? (
-                          <Image 
-                            // src={chat.participantInfo[msg.senderId].avatar} 
-                            src='/placeholder.svg'
-                            alt={chat.participantInfo[msg.senderId].name || 'User'} 
-                            width={32} 
-                            height={32} 
+                          <Image
+                            src={
+                              chat.participantInfo[msg.senderId]?.avatar ||
+                              "/placeholder.svg"
+                            }
+                            alt={
+                              chat.participantInfo[msg.senderId]?.name || "User"
+                            }
+                            width={32}
+                            height={32}
                           />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                            {(chat.participantInfo[msg.senderId]?.name || 'U').charAt(0)}
+                            {(
+                              chat.participantInfo[msg.senderId]?.name || "U"
+                            ).charAt(0)}
                           </div>
                         )}
                       </Avatar>
@@ -164,6 +241,7 @@ export function ChatDetail() {
         )}
       </div>
 
+      {/* Message Input */}
       <div className="p-4 border-t bg-white">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Input

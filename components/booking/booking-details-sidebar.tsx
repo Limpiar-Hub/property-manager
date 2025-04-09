@@ -41,8 +41,11 @@ export default function BookingDetailsSidebar({
   const handleSendMessage = async () => {
     try {
     
-      const cleanerId = booking.cleanerId?._id || "67a7e709b5df23292f632874"; // Demo ID
-      const propertyManagerId = "67dd4395a978408fbcd04e00";
+      const cleanerId = booking.cleanerId?._id || "67a7e709b5df23292f632874"; 
+      const propertyManagerId = booking.propertyManagerId || "67dd4395a978408fbcd04e00"; 
+
+      console.log("Property Manager ID:", propertyManagerId);
+      console.log("Cleaner ID:", cleanerId);
 
       // Check if token is null
       if (!token) {
@@ -69,8 +72,14 @@ export default function BookingDetailsSidebar({
       console.log ("New Chat ID:",newChatId)
 
       if (newChatId) {
-        // Set the newly created chat as the selected chat
-        dispatch(setSelectedChat(newChatId));
+        // Dispatch chat metadata to Redux
+        dispatch(
+          setSelectedChat({
+            chatId: newChatId,
+            cleanerName: booking.cleanerId?.fullName || "Unknown Cleaner",
+            cleanerAvatar: booking.cleanerId?.avatar || "",
+          })
+        );
   
         // Navigate to the inbox
         router.push("/inbox");
@@ -81,6 +90,7 @@ export default function BookingDetailsSidebar({
       console.error("Error creating chat thread:", error);
     }
   };
+
 
  
   const demoTimeline: TimelineEvent[] = [
@@ -236,13 +246,16 @@ export default function BookingDetailsSidebar({
                 {booking.cleanerId?.fullName || "Not assigned"}
               </span>
             </div>
-            <Button
-              className="mt-4 border bg-white text-black flex items-center gap-2"
-              onClick={handleSendMessage}
-            >
-              <MessageSquare className="h-4 w-4" />
-              Send Message
-            </Button>
+         
+              {booking.status.toLowerCase() === "confirmed" && booking.cleanerId && (
+    <Button
+      className="mt-4 border bg-white text-black flex items-center gap-2"
+      onClick={handleSendMessage}
+    >
+      <MessageSquare className="h-4 w-4" />
+      Send Message
+    </Button>
+  )}
           </div>
 
           {booking.cleanerId?.phoneNumber && (

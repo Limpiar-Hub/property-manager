@@ -32,11 +32,14 @@ export function InboxContent() {
   const selectedTicketId = useSelector(
     (state: RootState) => state.tickets.selectedTicketId
   );
+
   const selectedChatId = useSelector(
     (state: RootState) => state.chat.selectedChatId
   );
-
-  console.log("Selected Chat ID:", selectedChatId);
+  const cleanerName = useSelector((state: RootState) => state.chat.cleanerName);
+  const cleanerAvatar = useSelector(
+    (state: RootState) => state.chat.cleanerAvatar
+  );
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
@@ -119,7 +122,7 @@ export function InboxContent() {
       </div>
 
       {/* Right side - Detail */}
-      {/* <div className="hidden md:block flex-1 bg-gray-50">
+      <div className="hidden md:block flex-1 bg-gray-50">
         {activeTab === "tickets" ? (
           selectedTicketId ? (
             <TicketDetail />
@@ -129,32 +132,16 @@ export function InboxContent() {
             </div>
           )
         ) : selectedChatId ? (
-          <ChatDetail />
+          <div className="p-6">
+            <div className="flex items-center gap-4 mb-4"></div>
+            <ChatDetail />
+          </div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">
             Select a conversation to view messages
           </div>
         )}
-      </div> */}
-
-<div className="hidden md:block flex-1 bg-gray-50">
-  {activeTab === "tickets" ? (
-    selectedTicketId ? (
-      <TicketDetail />
-    ) : (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        Select a ticket to view details
       </div>
-    )
-  ) : selectedChatId ? (
-    // Ensure ChatDetail is displayed when selectedChatId is set
-    <ChatDetail />
-  ) : (
-    <div className="flex items-center justify-center h-full text-gray-500">
-      Select a conversation to view messages
-    </div>
-  )}
-</div>
 
       <NewTicketDialog
         open={isNewTicketOpen}
@@ -163,3 +150,7 @@ export function InboxContent() {
     </div>
   );
 }
+
+
+
+
