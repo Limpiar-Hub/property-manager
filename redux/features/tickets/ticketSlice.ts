@@ -87,7 +87,7 @@ export const fetchTicketThreads = createAsyncThunk(
   ) => {
     try {
       const response = await axios.get(
-        `https://limpiar-backend.onrender.com/api/chats/threads/67dd4395a978408fbcd04e00`,
+        `https://limpiar-backend.onrender.com/api/chats/threads/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

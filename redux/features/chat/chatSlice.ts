@@ -1,6 +1,7 @@
 import { RootState } from "@/redux/store";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { use } from "react";
 
 export interface ChatMessage {
   id: string;
@@ -169,10 +170,14 @@ export const fetchChatMessages = createAsyncThunk(
 
 export const fetchAllThreads = createAsyncThunk(
   "chat/fetchAllThreads",
-  async (token: string, { rejectWithValue }) => {
+  // parse the userId from the token
+
+  async ({ userId, token }: { userId: string; token: string }, { rejectWithValue }) => {
+
+  // async (token: string, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        "https://limpiar-backend.onrender.com/api/chats/threads/67dd4395a978408fbcd04e00", // Replace with dynamic user ID if needed
+        `https://limpiar-backend.onrender.com/api/chats/threads/${userId}`, 
         {
           headers: {
             Authorization: `Bearer ${token}`,

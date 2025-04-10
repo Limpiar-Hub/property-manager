@@ -25,6 +25,7 @@ export function TicketDetail() {
     state.tickets.tickets.find((t) => t.id === selectedTicketId)
   );
   const token = useSelector((state: RootState) => state.auth.token);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const handleBack = () => {
@@ -54,7 +55,7 @@ export function TicketDetail() {
     try {
       await dispatch(
         createTicket({
-          userId: "67dd4395a978408fbcd04e00", // Current user ID
+          userId: ticket.userId, 
           messageText: reply,
           token: token || "",
         }) as any
@@ -99,14 +100,14 @@ export function TicketDetail() {
             <div
               key={msg.id}
               className={`flex ${
-                msg.senderId === "67dd4395a978408fbcd04e00"
+                msg.senderId === currentUserId
                   ? "justify-end"
                   : "justify-start"
               }`}
             >
               <div
                 className={`max-w-xs md:max-w-md rounded-lg p-3 ${
-                  msg.senderId === "67dd4395a978408fbcd04e00"
+                  msg.senderId === currentUserId
                     ? "bg-blue-500 text-white"
                     : "bg-gray-200 text-gray-800"
                 }`}
@@ -114,7 +115,7 @@ export function TicketDetail() {
                 <p>{msg.text}</p>
                 <p
                   className={`text-xs mt-1 ${
-                    msg.senderId === "67dd4395a978408fbcd04e00"
+                    msg.senderId === currentUserId
                       ? "text-blue-100"
                       : "text-gray-500"
                   }`}

@@ -42,17 +42,18 @@ export function InboxContent() {
   const selectedChatId = useSelector(
     (state: RootState) => state.chat.selectedChatId
   );
+  const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
     if (token) {
       if (activeTab === "chats") {
-        dispatch(fetchAllThreads(token) as any);
+        dispatch(fetchAllThreads({ userId: currentUserId || "", token }) as any);
       } else {
         dispatch(
           fetchTicketThreads({
-            userId: "67dd4395a978408fbcd04e00",
+            userId: currentUserId || "",
             token,
           }) as any
         );
@@ -129,13 +130,6 @@ export function InboxContent() {
       )}
 
       {/* Right side - Detail */}
-      {/* <div className="hidden md:block flex-1 bg-gray-50">
-        {activeTab === "tickets" ? (
-          <TicketDetail />
-        ) : (
-          <ChatDetail />
-        )}
-      </div> */}
 
       <div
         className={`flex-1 ${

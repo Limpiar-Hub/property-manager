@@ -13,7 +13,7 @@ export interface BookingState {
   property: {
     id: string
     name: string
-    image: string
+    // image: string
   } | null
   date: {
     type: DateType | null

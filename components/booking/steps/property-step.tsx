@@ -12,6 +12,7 @@ export default function PropertyStep() {
   const authState = useAppSelector((state) => state.auth);
   const user = authState.user || null;
   const token = authState.token;
+  const currentUserId = user?._id || null;
 
   const [properties, setProperties] = useState<{ _id: string; name: string }[]>(
     []
@@ -26,7 +27,7 @@ export default function PropertyStep() {
 
       try {
         const response = await fetch(
-          "https://limpiar-backend.onrender.com/api/properties/fetch/67dd4395a978408fbcd04e00",
+          `https://limpiar-backend.onrender.com/api/properties/fetch/${currentUserId}`,
           {
             method: "GET",
             headers: {
@@ -74,7 +75,7 @@ export default function PropertyStep() {
                 setProperty({
                   id: prop._id,
                   name: prop.name,
-                  image: prop.image || "/placeholder.svg",
+                  // image: prop.image || "/placeholder.svg",
                 })
               );
               console.log("Selected property:", prop);

@@ -10,12 +10,13 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 export function ChatList() {
   const dispatch = useDispatch();
   const chats = useSelector((state: RootState) => state.chat.chats);
+  
   const selectedChatId = useSelector(
     (state: RootState) => state.chat.selectedChatId
   );
   const loading = useSelector((state: RootState) => state.chat.loading);
   const isMobile = useMediaQuery("(max-width: 768px)");
-
+  const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
   const handleSelectChat = (chatId: string, participantInfo: any) => {
     console.log("Selecting chat:", chatId);
     dispatch(
@@ -47,7 +48,7 @@ export function ChatList() {
     <div className="divide-y">
       {chats.map((chat) => {
         const otherParticipantId =
-          chat.participants.find((id) => id !== "67dd4395a978408fbcd04e00") ||
+          chat.participants.find((id) => id !== currentUserId) ||
           "";
         const participantInfo = chat.participantInfo[otherParticipantId] || {
           name: "Unknown",

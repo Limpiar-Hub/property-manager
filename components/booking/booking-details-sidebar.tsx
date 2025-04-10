@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "@/hooks/useReduxHooks";
 import { createChatThread, setSelectedChat } from "@/redux/features/chat/chatSlice";
+import { RootState } from "@/redux/store";
 
 interface BookingDetailsSidebarProps {
   booking: Booking;
@@ -22,6 +23,7 @@ export default function BookingDetailsSidebar({
   const dispatch = useDispatch();
   const chats = useAppSelector((state) => state.chat.chats || []);
   const token = useAppSelector((state) => state.auth.token);
+    const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -37,66 +39,14 @@ export default function BookingDetailsSidebar({
     };
   }, [onClose]);
 
-  // Handle sending a message to the cleaner
-  // const handleSendMessage = async () => {
-  //   try {
-    
-  //     const cleanerId = booking.cleanerId?._id || "67a7e709b5df23292f632874"; 
-  //     const propertyManagerId = booking.propertyManagerId || "67dd4395a978408fbcd04e00"; 
-
-  //     console.log("Property Manager ID:", propertyManagerId);
-  //     console.log("Cleaner ID:", cleanerId);
-
-  //     // Check if token is null
-  //     if (!token) {
-  //       console.error("Token is missing. Unable to create chat thread.");
-  //       return; 
-  //     }
-
-  //     console.log("Token being used for createChatThread:", token);
-
-
-
-  //     const response = await dispatch(
-  //       createChatThread({
-  //         participantIds: [propertyManagerId, cleanerId],
-  //         taskId: booking._id,
-  //         token,
-  //       }) as any
-  //     );
-
-  //     console.log("Response payload from createChatThread:", response.payload);
-  
-  //     const newChatId = response.payload?._id;
-
-  //     console.log ("New Chat ID:",newChatId)
-
-  //     if (newChatId) {
-  //       // Dispatch chat metadata to Redux
-  //       dispatch(
-  //         setSelectedChat({
-  //           chatId: newChatId,
-  //           cleanerName: booking.cleanerId?.fullName || "Unknown Cleaner",
-  //           cleanerAvatar: booking.cleanerId?.avatar || "",
-  //         })
-  //       );
-  
-  //       // Navigate to the inbox
-  //       router.push("/inbox");
-  //     } else {
-  //       console.error("Failed to create chat thread.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error creating chat thread:", error);
-  //   }
-  // };
+ 
 
 
   // Update the handleSendMessage function in booking-details-sidebar.tsx
 const handleSendMessage = async () => {
   try {
     const cleanerId = booking.cleanerId?._id || "67a7e709b5df23292f632874";
-    const propertyManagerId = "67dd4395a978408fbcd04e00"; // Replace with actual property manager ID
+    const propertyManagerId = currentUserId; 
     
     if (!token) {
       console.error("Token is missing. Unable to create chat thread.");
@@ -109,7 +59,7 @@ const handleSendMessage = async () => {
 
     const existingChat = chats.find(chat => 
       chat.participants.includes(cleanerId) && 
-      chat.participants.includes(propertyManagerId) &&
+      propertyManagerId && chat.participants.includes(propertyManagerId) &&
       chat.taskId === booking._id
     );
 
@@ -130,7 +80,7 @@ const handleSendMessage = async () => {
     console.log("Creating new chat thread...");
     const response = await dispatch(
       createChatThread({
-        participantIds: [propertyManagerId, cleanerId],
+        participantIds: [propertyManagerId!, cleanerId!],
         taskId: booking._id,
         token,
       }) as any

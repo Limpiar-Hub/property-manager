@@ -27,7 +27,7 @@ export function ChatDetail() {
   );
   const loading = useSelector((state: RootState) => state.chat.loading);
   const token = useSelector((state: RootState) => state.auth.token);
-  const currentUserId = "67dd4395a978408fbcd04e00"; // Replace with actual current user ID
+  const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
