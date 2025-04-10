@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import { setProperty, setStep } from "@/redux/features/booking/bookingSlice";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function PropertyStep() {
   const dispatch = useAppDispatch();
@@ -14,9 +15,9 @@ export default function PropertyStep() {
   const token = authState.token;
   const currentUserId = user?._id || null;
 
-  const [properties, setProperties] = useState<{ _id: string; name: string }[]>(
-    []
-  );
+  const [properties, setProperties] = useState<
+    { _id: string; name: string; image?: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -43,7 +44,18 @@ export default function PropertyStep() {
 
         const data = await response.json();
         console.log("Fetched properties:", data);
-        setProperties(data.data || []);
+
+        // Map properties to include image URLs
+        const mappedProperties = data.data.map((prop: any) => ({
+          _id: prop._id,
+          name: prop.name,
+          image:
+            prop.images && prop.images.length > 0
+              ? `https://limpiar-backend.onrender.com/api/properties/gridfs/files/${prop.images[0]}`
+              : "/placeholder.svg", // Use placeholder if no image is available
+        }));
+
+        setProperties(mappedProperties);
       } catch (error) {
         console.error("Failed to fetch properties:", error);
       }
@@ -68,32 +80,41 @@ export default function PropertyStep() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         {properties.map((prop) => (
-          <div
-            key={prop._id}
-            onClick={() => {
-              dispatch(
-                setProperty({
-                  id: prop._id,
-                  name: prop.name,
-                  // image: prop.image || "/placeholder.svg",
-                })
-              );
-              console.log("Selected property:", prop);
-            }}
-            className={`relative rounded-lg p-4 cursor-pointer border-2 transition-all
-              ${
-                property?.id === prop._id
-                  ? "border-blue-500"
-                  : "border-gray-200 hover:border-gray-400"
-              }`}
-          >
-            <h4 className="font-medium text-center">{prop.name}</h4>
-            {property?.id === prop._id && (
-              <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-            )}
-          </div>
+      <div
+      key={prop._id}
+      onClick={() => {
+        dispatch(
+          setProperty({
+            id: prop._id,
+            name: prop.name,
+            image: prop.image || "/placeholder.svg", 
+          })
+        );
+        console.log("Selected property:", prop);
+      }}
+      className={`relative rounded-lg p-4 cursor-pointer border-2 transition-all
+        ${
+          property?.id === prop._id
+            ? "border-blue-500"
+            : "border-gray-200 hover:border-gray-400"
+        }`}
+    >
+      <div className="relative w-full h-32 mb-2">
+        <Image
+          src={prop.image || "/placeholder.svg"}
+          alt={prop.name}
+          layout="fill"
+          objectFit="cover"
+          className="rounded-lg"
+        />
+      </div>
+      <h4 className="font-medium text-center">{prop.name}</h4>
+      {property?.id === prop._id && (
+        <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+          <Check className="w-4 h-4 text-white" />
+        </div>
+      )}
+    </div>
         ))}
       </div>
 

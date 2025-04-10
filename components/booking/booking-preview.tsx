@@ -15,13 +15,12 @@ import { revalidatePath } from "next/cache";
 export default function BookingPreview() {
   const dispatch = useAppDispatch();
   const booking = useAppSelector((state) => state.booking);
-  const authState = useAppSelector((state) => state.auth); 
+  const authState = useAppSelector((state) => state.auth);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Parse the user and token from the persisted auth state
   const user = authState.user || null;
-  const token = authState.token ;
+  const token = authState.token;
 
   const handleBack = () => {
     dispatch(setStep(4));
@@ -31,7 +30,6 @@ export default function BookingPreview() {
     setIsLoading(true);
 
     try {
-      // Ensure required data is available
       if (!user?._id || !user?.phoneNumber || !token) {
         console.error("Missing required user data or token");
         alert("Unable to submit booking. Please ensure you are logged in.");
@@ -40,24 +38,22 @@ export default function BookingPreview() {
       }
 
       const requestBody = {
-        propertyId: booking.property?.id, 
-        propertyManagerId: user._id, 
+        propertyId: booking.property?.id,
+        propertyManagerId: user._id,
         serviceType: booking.serviceType?.name,
-        date: booking.date.selectedDate, 
-        startTime: booking.time, 
-        phoneNumber: user.phoneNumber, 
+        date: booking.date.selectedDate,
+        startTime: booking.time,
+        phoneNumber: user.phoneNumber,
       };
 
       console.log("Submitting booking data:", requestBody);
-      console.log("Bearer Token:", token);
 
-     
       const response = await axios.post(
         "https://limpiar-backend.onrender.com/api/bookings",
         requestBody,
         {
           headers: {
-            Authorization: `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -65,9 +61,6 @@ export default function BookingPreview() {
 
       console.log("Booking response:", response.data);
 
-      // revalidatePath("/booking");
-
-   
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting booking:", error);
@@ -79,7 +72,6 @@ export default function BookingPreview() {
 
   const handleGoToBookings = () => {
     dispatch(closeModal());
-    // Redirect to the bookings page
   };
 
   if (isSubmitted) {
@@ -148,7 +140,7 @@ export default function BookingPreview() {
           <div className="flex items-center">
             <div className="h-16 w-16 rounded-md overflow-hidden mr-3">
               <Image
-                src={booking.property?.image || "/placeholder.svg"}
+                src={booking.property?.image || "/placeholder.svg"} // Display the selected property's image
                 alt={booking.property?.name || "Property"}
                 width={64}
                 height={64}
