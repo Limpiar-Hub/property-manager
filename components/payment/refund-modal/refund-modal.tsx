@@ -77,7 +77,7 @@ export function RefundModal() {
             // dispatch(loginStart())
           } finally {
             // setIsLoading(false)
-            console.log('finished');
+            dispatch(closeRefundModal())
           }
     }
 
