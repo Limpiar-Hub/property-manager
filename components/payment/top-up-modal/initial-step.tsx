@@ -1,6 +1,7 @@
 "use client";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, } from "react-redux";
+import { useAppSelector } from "@/hooks/useReduxHooks";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,20 +12,75 @@ import {
   setPaymentMethod,
   setStep,
 } from "@/redux/features/topUpModalSlice/topUpModalSlice";
+import { constants } from "buffer";
+import { useState } from "react";
 
-export function InitialStep() {
+export function InitialStep({ fetchTransactions }: { fetchTransactions: () => void }) {
   const dispatch = useDispatch();
-  const { amount, paymentMethod } = useSelector(
+  const { amount, paymentMethod, userBalance } = useSelector(
     (state: RootState) => state.topUpModal
   );
+  const [transactionAmount, setTransactionAmount] = useState<string>('0');
+  const { user, token } = useAppSelector((state) => state.auth);
+  const email = user?.email;
+  const id = user?._id;
+  const currency = 'usd'
+  
 
-  const handleProceed = () => {
-    if (paymentMethod === "debit") {
-      dispatch(setStep("debitCard"));
-    } else if (paymentMethod === "ahc") {
-      dispatch(setStep("ahcTransfer"));
-    }
+  const handleProceed = async () => {
+    // console.log(email, id, currency, amount);
+      const body = {
+        userId: id,
+        email: email,
+        amount: amount,
+        currency: "usd"
+      }
+      try {
+        const response = await fetch("https://limpiar-backend.onrender.com/api/payments/create-payment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Set the Bearer token
+          },
+          body: JSON.stringify(body),
+        })
+  
+        const data = await response.json();
+  
+        if (!response.ok) {
+          throw new Error(data.message || "Unable to process payment at the moment")
+        }
+
+        if (data.success === true) {
+          
+          window.location.href = data.checkoutUrl          
+          // Store token in Redux
+          // dispatch(loginSuccess({ token: data.token }))
+          
+          // Redirect to OTP verification page
+          // router.push("/verify-otp")
+        } else {
+          throw new Error("Unexpected response from server")
+        }
+        
+        fetchTransactions();
+      } catch (err) {
+        // setError(err instanceof Error ? err.message : "An error occurred")
+        console.log(err)
+        // dispatch(loginStart())
+      } finally {
+        // setIsLoading(false)
+        console.log('finished');
+      }
+    // } else if (paymentMethod === "ahc") {
+    //   dispatch(setStep("ahcTransfer"));
+    // }
   };
+
+  const handleChange = (e:any) => {
+    setTransactionAmount(e.target.value);
+    dispatch(setAmount(Number(e.target.value)))
+  }
 
   return (
     <div className="grid gap-4 py-4">
@@ -37,10 +93,11 @@ export function InitialStep() {
         <Input
           id="amount"
           placeholder="Enter amount"
-          value={amount}
-          onChange={(e) => dispatch(setAmount(e.target.value))}
+          type="number"
+          value={transactionAmount}
+          onChange={handleChange}
         />
-        <p className="text-sm text-gray-500">Available Balance: $1000.00</p>
+        <p className="text-sm text-gray-500">Available Balance: ${userBalance}</p>
       </div>
 
       <div className="grid gap-2">

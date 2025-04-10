@@ -15,7 +15,7 @@ import { InitialStep } from "./initial-step";
 import { DebitCardStep } from "./debit-card-step";
 import { AHCTransferStep } from "./ahc-transfer-step";
 
-export function TopUpModal() {
+export function TopUpModal({ fetchTransactions }: { fetchTransactions: () => void }) {
   const dispatch = useDispatch();
   const { isOpen, currentStep } = useSelector(
     (state: RootState) => state.topUpModal
@@ -46,7 +46,7 @@ export function TopUpModal() {
           <span className="sr-only">Close</span>
         </button>
 
-        {currentStep === "initial" && <InitialStep />}
+        {currentStep === "initial" && <InitialStep fetchTransactions={fetchTransactions}/>}
         {currentStep === "debitCard" && <DebitCardStep />}
         {currentStep === "ahcTransfer" && <AHCTransferStep />}
       </DialogContent>

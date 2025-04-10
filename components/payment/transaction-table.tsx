@@ -9,7 +9,7 @@ type Transaction = {
   description: string
   amount: number
   paymentMethod: string
-  status: "pending" | "succeeded" | "failed" | "completed"
+  status: "pending" | "succeeded" | "Rejected" | "completed"
 }
 
 
@@ -187,7 +187,7 @@ function StatusBadge({ status }: { status: Transaction["status"] }) {
     )
   }
 
-  if (status === "failed") {
+  if (status === "Rejected") {
     return (
       <div className="flex items-center">
         <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>

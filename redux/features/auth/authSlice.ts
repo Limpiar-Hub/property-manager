@@ -186,7 +186,7 @@ import {
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"; 
 
 // Types
 interface User {
