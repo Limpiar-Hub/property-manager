@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
@@ -10,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState } from "react";
 import axios from "axios";
-import { revalidatePath } from "next/cache"; 
+import { revalidatePath } from "next/cache";
 
 export default function BookingPreview() {
   const dispatch = useAppDispatch();

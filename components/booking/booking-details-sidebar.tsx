@@ -272,7 +272,7 @@ const handleSendMessage = async () => {
   )}
           </div>
 
-          {booking.cleanerId?.phoneNumber && (
+          {/* {booking.cleanerId?.phoneNumber && (
             <a
               href={`tel:${booking.cleanerId.phoneNumber}`}
               className="w-full flex items-center justify-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md py-2 mt-3 hover:bg-gray-50"
@@ -280,7 +280,7 @@ const handleSendMessage = async () => {
               <Phone className="h-4 w-4" />
               Call Cleaner
             </a>
-          )}
+          )} */}
         </div>
 
         <div className="border-t border-gray-100 px-5 py-4">
