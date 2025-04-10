@@ -32,13 +32,8 @@ export function InboxContent() {
   const selectedTicketId = useSelector(
     (state: RootState) => state.tickets.selectedTicketId
   );
-
   const selectedChatId = useSelector(
     (state: RootState) => state.chat.selectedChatId
-  );
-  const cleanerName = useSelector((state: RootState) => state.chat.cleanerName);
-  const cleanerAvatar = useSelector(
-    (state: RootState) => state.chat.cleanerAvatar
   );
 
   return (
@@ -76,30 +71,32 @@ export function InboxContent() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="tickets" className="border-0 p-0 m-0">
-              <div className="flex gap-4 border-b">
-                <button
-                  onClick={() => dispatch(setFilter("open"))}
-                  className={`pb-2 ${
-                    filter === "open"
-                      ? "text-blue-500 border-b-2 border-blue-500"
-                      : "text-gray-500"
-                  }`}
-                >
-                  Open
-                </button>
-                <button
-                  onClick={() => dispatch(setFilter("resolved"))}
-                  className={`pb-2 ${
-                    filter === "resolved"
-                      ? "text-blue-500 border-b-2 border-blue-500"
-                      : "text-gray-500"
-                  }`}
-                >
-                  Resolved
-                </button>
-              </div>
-            </TabsContent>
+            {activeTab === "tickets" && (
+              <TabsContent value="tickets" className="border-0 p-0 m-0">
+                <div className="flex gap-4 border-b">
+                  <button
+                    onClick={() => dispatch(setFilter("open"))}
+                    className={`pb-2 ${
+                      filter === "open"
+                        ? "text-blue-500 border-b-2 border-blue-500"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    Open
+                  </button>
+                  <button
+                    onClick={() => dispatch(setFilter("resolved"))}
+                    className={`pb-2 ${
+                      filter === "resolved"
+                        ? "text-blue-500 border-b-2 border-blue-500"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    Resolved
+                  </button>
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
 
@@ -133,7 +130,6 @@ export function InboxContent() {
           )
         ) : selectedChatId ? (
           <div className="p-6">
-            <div className="flex items-center gap-4 mb-4"></div>
             <ChatDetail />
           </div>
         ) : (
@@ -150,7 +146,3 @@ export function InboxContent() {
     </div>
   );
 }
-
-
-
-

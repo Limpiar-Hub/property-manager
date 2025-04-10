@@ -1,3 +1,5 @@
+// }
+
 "use client";
 
 import { useState } from "react";
@@ -8,13 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  createTicket,
-  setSelectedTicket
-} from "@/redux/features/tickets/ticketSlice";
+import { createTicket } from "@/redux/features/tickets/ticketSlice";
 import type { RootState } from "@/redux/store";
 
 interface NewTicketDialogProps {
@@ -23,25 +21,25 @@ interface NewTicketDialogProps {
 }
 
 export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
-  const dispatch = useDispatch();
   const [description, setDescription] = useState("");
-  const userId = useSelector((state: RootState) => state.auth.user?._id); // Replace with actual user ID selector
+  const dispatch = useDispatch();
+  const userId = useSelector((state: RootState) => state.auth.user?._id);
   const token = useSelector((state: RootState) => state.auth.token);
-  const loading = useSelector((state: RootState) => state.chat.loading);
+  const loading = useSelector((state: RootState) => state.tickets.loading);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (!description.trim()) {
       alert("Please enter a description.");
       return;
     }
-  
+
     if (!userId || !token) {
       alert("User is not authenticated.");
       return;
     }
-  
+
     try {
       const response = await dispatch(
         createTicket({
@@ -50,12 +48,11 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
           token,
         }) as any
       );
-  
+
       if (response.payload) {
-        dispatch(setSelectedTicket(response.payload.id));
         alert("Support ticket created successfully.");
         setDescription("");
-        onOpenChange(false);
+        onOpenChange(false); // Close the dialog
       } else {
         alert("Failed to create support ticket.");
       }
