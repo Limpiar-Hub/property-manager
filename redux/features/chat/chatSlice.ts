@@ -47,39 +47,6 @@ const initialState: ChatState = {
   error: null,
 };
 
-// Async thunks for API calls
-// export const createChatThread = createAsyncThunk(
-//   "chat/createThread",
-//   async ({
-//     participantIds,
-//     taskId,
-//     token,
-//   }: {
-//     participantIds: string[];
-//     taskId: string;
-//     token: string;
-//   }) => {
-//     try {
-//       const response = await axios.post(
-//         "https://limpiar-backend.onrender.com/api/chats/thread",
-//         {
-//           participants: participantIds,
-//           taskId,
-//         },
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-//       return response.data;
-//     } catch (error) {
-//       console.error("Error creating chat thread:", error);
-//       throw error;
-//     }
-//   }
-// );
-
 export const createChatThread = createAsyncThunk(
   "chat/createThread",
   async (
@@ -165,9 +132,12 @@ export const sendChatMessage = createAsyncThunk(
   }
 );
 
+
+
+
 export const fetchChatMessages = createAsyncThunk(
   "chat/fetchMessages",
-  async ({ chatId, token }: { chatId: string; token: string }) => {
+  async ({ chatId, token }: { chatId: string; token: string }, { rejectWithValue }) => {
     try {
       const response = await axios.get(
         `https://limpiar-backend.onrender.com/api/chats/${chatId}/messages`,
@@ -177,14 +147,45 @@ export const fetchChatMessages = createAsyncThunk(
           },
         }
       );
-      return response.data;
-    } catch (error) {
+      
+      console.log("Fetched messages for chat", chatId, ":", response.data);
+      return {
+        chatId,
+        messages: response.data.map((msg: any) => ({
+          id: msg._id,
+          senderId: msg.senderId,
+          text: msg.text,
+          createdAt: msg.timestamp,
+          isRead: false,
+        })),
+      };
+    } catch (error: any) {
       console.error("Error fetching chat messages:", error);
-      throw error;
+      return rejectWithValue(error.response?.data || "Failed to fetch messages");
     }
   }
 );
 
+
+export const fetchAllThreads = createAsyncThunk(
+  "chat/fetchAllThreads",
+  async (token: string, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        "https://limpiar-backend.onrender.com/api/chats/threads/67dd4395a978408fbcd04e00", // Replace with dynamic user ID if needed
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("Error fetching chat threads:", error);
+      return rejectWithValue(error.response?.data || "Failed to fetch threads");
+    }
+  }
+);
 
 const chatSlice = createSlice({
   name: "chat",
@@ -274,34 +275,62 @@ const chatSlice = createSlice({
       })
       .addCase(fetchChatMessages.fulfilled, (state, action) => {
         state.loading = false;
-        const { chatId } = action.meta.arg;
+        const { chatId, messages } = action.payload;
         const chatIndex = state.chats.findIndex((c) => c.id === chatId);
+        
         if (chatIndex > -1) {
-          state.chats[chatIndex].messages = action.payload.messages;
-          state.chats[chatIndex].participantInfo =
-            action.payload.participantInfo || {};
-          if (action.payload.messages.length > 0) {
-            state.chats[chatIndex].lastMessage =
-              action.payload.messages[action.payload.messages.length - 1];
+          state.chats[chatIndex].messages = messages;
+          if (messages.length > 0) {
+            state.chats[chatIndex].lastMessage = messages[messages.length - 1];
           }
+          console.log("Updated messages for chat", chatId);
         } else {
-          state.chats.push({
-            id: chatId,
-            participants: action.payload.participants || [],
-            messages: action.payload.messages || [],
-            unreadCount: 0,
-            participantInfo: action.payload.participantInfo || {},
-            lastMessage:
-              action.payload.messages?.length > 0
-                ? action.payload.messages[action.payload.messages.length - 1]
-                : undefined,
-          });
+          console.warn("Chat not found for messages:", chatId);
         }
       })
       .addCase(fetchChatMessages.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch messages";
+        console.error("Failed to fetch messages:", action.error);
       })
+
+      .addCase(fetchAllThreads.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllThreads.fulfilled, (state, action) => {
+        state.loading = false;
+        const threads = action.payload.map((thread: any) => ({
+          id: thread._id,
+          participants: thread.participants.map((p: any) => p._id),
+          taskId: thread.taskId,
+          isSupportTicket: thread.chatType === "support",
+          messages: [],
+          lastMessage: thread.latestMessage ? {
+            id: thread.latestMessage._id,
+            senderId: thread.latestMessage.senderId,
+            text: thread.latestMessage.text,
+            createdAt: thread.latestMessage.timestamp,
+            isRead: false
+          } : undefined,
+          unreadCount: 0,
+          participantInfo: thread.participants.reduce((acc: any, participant: any) => {
+            acc[participant._id] = {
+              name: participant.fullName,
+              avatar: participant.avatar
+            };
+            return acc;
+          }, {})
+        }));
+        
+        state.chats = threads;
+        console.log("Fetched and transformed threads:", threads);
+      })
+      .addCase(fetchAllThreads.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch threads";
+      });
+    
 
   },
 });

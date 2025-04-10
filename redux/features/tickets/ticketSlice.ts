@@ -23,6 +23,7 @@ export interface Ticket {
   userId: string;
   userAvatar: string;
   messages: TicketMessage[];
+  lastMessage: string;
 }
 
 interface TicketState {
@@ -77,6 +78,57 @@ export const createTicket = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch ticket threads
+export const fetchTicketThreads = createAsyncThunk(
+  "tickets/fetchTicketThreads",
+  async (
+    { userId, token }: { userId: string; token: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axios.get(
+        `https://limpiar-backend.onrender.com/api/chats/threads/67dd4395a978408fbcd04e00`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Filter only support tickets and transform the data
+      const tickets = response.data
+        .filter((thread: any) => thread.chatType === "support")
+        .map((thread: any) => ({
+          id: thread._id,
+          title: "Support Ticket",
+          description: thread.latestMessage?.text || "No description",
+          category: "Support",
+          status: "open" as "open" | "resolved",
+          createdAt: thread.updatedAt,
+          userId: thread.participants[0]?._id,
+          userAvatar: "/placeholder.svg",
+          messages: thread.latestMessage
+            ? [
+                {
+                  id: thread.latestMessage._id,
+                  senderId: thread.latestMessage.senderId,
+                  text: thread.latestMessage.text,
+                  createdAt: thread.latestMessage.timestamp,
+                  isRead: false,
+                },
+              ]
+            : [],
+          lastMessage: thread.latestMessage?.text || "No messages yet",
+        }));
+
+      return tickets;
+    } catch (error: any) {
+      console.error("Error fetching ticket threads:", error);
+      return rejectWithValue(error.response?.data || "Failed to fetch tickets");
+    }
+  }
+);
+
 export const ticketSlice = createSlice({
   name: "tickets",
   initialState,
@@ -123,6 +175,7 @@ export const ticketSlice = createSlice({
             createdAt: message.timestamp,
             isRead: false,
           })),
+          lastMessage: action.payload.messages[0]?.text || "No messages yet",
         };
         state.tickets.unshift(newTicket);
         state.selectedTicketId = newTicket.id;
@@ -130,6 +183,18 @@ export const ticketSlice = createSlice({
       .addCase(createTicket.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(fetchTicketThreads.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTicketThreads.fulfilled, (state, action) => {
+        state.loading = false;
+        state.tickets = action.payload;
+      })
+      .addCase(fetchTicketThreads.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch tickets";
       });
   },
 });

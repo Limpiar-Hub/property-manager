@@ -5,21 +5,16 @@ import { useSelector, useDispatch } from "react-redux";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SendHorizontal } from "lucide-react";
+import { SendHorizontal, ArrowLeft } from "lucide-react";
 import {
   sendChatMessage,
   fetchChatMessages,
   markChatAsRead,
+  setSelectedChat,
 } from "@/redux/features/chat/chatSlice";
-
-import {
-
-  createTicket
-
-} from "@/redux/features/tickets/ticketSlice";
 import type { RootState } from "@/redux/store";
-import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import Image from "next/image";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function ChatDetail() {
   const [message, setMessage] = useState("");
@@ -30,162 +25,130 @@ export function ChatDetail() {
   const chat = useSelector((state: RootState) =>
     state.chat.chats.find((c) => c.id === selectedChatId)
   );
-  const cleanerName = useSelector((state: RootState) => state.chat.cleanerName);
-  const cleanerAvatar = useSelector(
-    (state: RootState) => state.chat.cleanerAvatar
-  );
-  const currentUserId = "67dd4395a978408fbcd04e00"; // Replace with the actual logged-in property manager ID
+  const loading = useSelector((state: RootState) => state.chat.loading);
+  const token = useSelector((state: RootState) => state.auth.token);
+  const currentUserId = "67dd4395a978408fbcd04e00"; // Replace with actual current user ID
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const token = useAppSelector((state) => state.auth.token);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
-    if (selectedChatId) {
-      // Fetch messages for the selected chat
-      dispatch(
-        fetchChatMessages({ chatId: selectedChatId, token: token || "" }) as any
-      );
-
-      // Mark chat as read
+    if (selectedChatId && token) {
+      console.log("Fetching messages for chat:", selectedChatId);
+      dispatch(fetchChatMessages({ chatId: selectedChatId, token }) as any);
       dispatch(markChatAsRead(selectedChatId));
     }
   }, [selectedChatId, dispatch, token]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.messages]);
 
-  if (!chat) return null;
-
-  // Find the other participant (not the current user)
-  const otherParticipantId =
-    chat.participants.find((id) => id !== currentUserId) || "";
-  const participantInfo = chat.participantInfo[otherParticipantId] || {
-    name: cleanerName || "Unknown",
-    avatar: cleanerAvatar || "/placeholder.svg",
+  const handleBack = () => {
+    dispatch(
+      setSelectedChat({ chatId: null, cleanerName: null, cleanerAvatar: null })
+    );
   };
 
-  // const handleSendMessage = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (!token) {
-  //     console.error("Token is missing. Unable to create chat thread.");
-  //     return;
-  //   }
-
-  //   if (!message.trim()) return;
-
-  //   try {
-  //     await dispatch(
-  //       sendChatMessage({
-  //         receiverId: otherParticipantId,
-  //         text: message,
-  //         chatId: chat.id,
-  //         token,
-  //       }) as any
-  //     );
-
-  //     // Clear message input after sending
-  //     setMessage("");
-  //   } catch (error) {
-  //     console.error("Error sending message:", error);
-  //   }
-  // };
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    if (!message.trim()) return;
-       if (!token) {
-      console.error("Token is missing. Unable to create chat thread.");
-      return;
-    }
-  
+    if (!message.trim() || !selectedChatId || !token) return;
+
     try {
-      if (chat.isSupportTicket) {
-        // Send message to the support endpoint
-        await dispatch(
-          createTicket({
-            userId: currentUserId,
-            messageText: message,
-            token,
-          }) as any
-        );
-      } else {
-        // Handle normal chat message
-        await dispatch(
-          sendChatMessage({
-            receiverId: otherParticipantId,
-            text: message,
-            chatId: chat.id,
-            token,
-          }) as any
-        );
+      const otherParticipantId = chat?.participants.find(
+        (id) => id !== currentUserId
+      );
+      if (!otherParticipantId) {
+        console.error("No other participant found");
+        return;
       }
-  
+
+      await dispatch(
+        sendChatMessage({
+          receiverId: otherParticipantId,
+          text: message,
+          chatId: selectedChatId,
+          token,
+        }) as any
+      );
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
 
+  if (!selectedChatId) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        {isMobile ? (
+          <div className="text-center p-4">
+            <p>No chat selected</p>
+            <Button onClick={handleBack} className="mt-4">
+              Back to list
+            </Button>
+          </div>
+        ) : (
+          <p>Select a conversation to view messages</p>
+        )}
+      </div>
+    );
+  }
+
+  if (loading && !chat?.messages?.length) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        Loading messages...
+      </div>
+    );
+  }
+
+  const otherParticipantId =
+    chat?.participants.find((id) => id !== currentUserId) || "";
+  const participantInfo = chat?.participantInfo[otherParticipantId] || {
+    name: "Unknown",
+    avatar: "/placeholder.svg",
+  };
 
   return (
     <div className="h-full flex flex-col">
       {/* Chat Header */}
-      <div className="p-4 border-b bg-white">
-        <div className="flex items-center gap-3">
-          <Avatar className="w-10 h-10">
-            {/* {participantInfo.avatar ? (
-              <img
-                // src={participantInfo.avatar}
-                src={cleanerAvatar || "/placeholder.svg"}
-                  className="w-10 h-10 rounded-full"
-                alt={participantInfo.name}
-                width={40}
-                height={40}
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                {participantInfo.name.charAt(0)}
-              </div>
-            )} */}
-
-
-
-               {/* {cleanerAvatar ? (
-                <img
-                  src={cleanerAvatar}
-                  alt={cleanerName || "Default Name"}
-                  className="w-10 h-10 rounded-full"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  {cleanerName?.charAt(0)}
-                </div>
-              )} */}
-
-            
-
-          </Avatar>
-          <div>
-            <h2 className="font-medium">{participantInfo.name}</h2>
-            <p className="text-xs text-gray-500">
-              {chat.taskId ? `Booking ID: ${chat.taskId}` : "Direct message"}
-            </p>
-          </div>
+      <div className="p-4 border-b bg-white flex items-center">
+        {isMobile && (
+          <Button variant="ghost" onClick={handleBack} className="mr-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        )}
+        <Avatar className="w-10 h-10 mr-3">
+          {participantInfo.avatar ? (
+            <Image
+              src={participantInfo.avatar}
+              alt={participantInfo.name}
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
+              {participantInfo.name.charAt(0)}
+            </div>
+          )}
+        </Avatar>
+        <div>
+          <h2 className="font-medium">{participantInfo.name}</h2>
+          <p className="text-xs text-gray-500">
+            {chat?.taskId ? `Booking ID: ${chat.taskId}` : "Direct message"}
+          </p>
         </div>
       </div>
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
-        {chat.messages.length === 0 ? (
+        {chat?.messages?.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             No messages yet. Start the conversation!
           </div>
         ) : (
           <div className="space-y-4">
-            {chat.messages.map((msg) => {
+            {chat?.messages?.map((msg) => {
               const isCurrentUser = msg.senderId === currentUserId;
               return (
                 <div
@@ -203,17 +166,15 @@ export function ChatDetail() {
                               chat.participantInfo[msg.senderId]?.avatar ||
                               "/placeholder.svg"
                             }
-                            alt={
-                              chat.participantInfo[msg.senderId]?.name || "User"
-                            }
+                            alt={chat.participantInfo[msg.senderId].name}
                             width={32}
                             height={32}
                           />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                            {(
-                              chat.participantInfo[msg.senderId]?.name || "U"
-                            ).charAt(0)}
+                            {chat.participantInfo[msg.senderId]?.name?.charAt(
+                              0
+                            ) || "U"}
                           </div>
                         )}
                       </Avatar>
