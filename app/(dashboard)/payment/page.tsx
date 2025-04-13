@@ -1,16 +1,16 @@
 "use client";
 
-import { Plus, RefreshCcw, UserCheck, Wallet } from "lucide-react";
+import { Plus, RefreshCcw} from "lucide-react";
 import { TransactionTable } from "@/components/payment/transaction-table";
+import { fetchTransactionData, fetchUserBalanceData } from "@/components/handlers";
 import { useDispatch } from "react-redux";
 import { openRefundModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import { useEffect, useState } from "react";
-import { useAppSelector } from "@/hooks/useReduxHooks";
-import { jwtDecode } from "jwt-decode";
+import { openModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import { setUserBalance } from "@/redux/features/topUpModalSlice/topUpModalSlice";
-import { Loader2 } from "lucide-react";
-// import { TopUpModal } from "@/components/payment/top-up-modal/top-up-modal"
 import dynamic from "next/dynamic";
+
+
 const TopUpModal = dynamic(
   () =>
     import("@/components/payment/top-up-modal/top-up-modal").then(
@@ -31,158 +31,35 @@ const RefundModal = dynamic(
   }
 );
 
-// const TopUpModal = dynamic(
-//   () =>
-//     import("@/components/payment/refundModal/top-up-modal").then(
-//       (mod) => mod.TopUpModal
-//     ),
-//   {
-//     ssr: false,
-//   }
-// );
-import { openModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
-import { promise } from "zod";
-// import { openModal } from "@/redux/features/modalSlice/modalSlice";
-
 export default function PaymentsPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
   const dispatch = useDispatch();
-  
 
-  let userWallet: any;
-    const getUserFromLocalStorage = localStorage.getItem("userWallet");
-    if (getUserFromLocalStorage) {
-      const user = JSON.parse(getUserFromLocalStorage)
-      userWallet = user.data;
-    }
-
-    const { user, token } = useAppSelector((state) => state.auth);
-        let User: any
-        if (token) {
-            const decoded = jwtDecode(token);
-            User = decoded;
-        }
-
-    useEffect(() => {
-      const fetchData = async () => {
-        setIsLoading(true);
-        try {
-          const GetWalletBalance = await fetch(`https://limpiar-backend.onrender.com/api/wallets/balances/${userWallet.wallet._id
-          }`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`, // Set the Bearer token
-            }
-          }); 
+  useEffect(() => {
+    setIsLoading(true);
+    const getData = async () => {
+      const [transactionsRes, balanceRes] = await Promise.all([
+        fetchTransactionData(),
+        fetchUserBalanceData()
+      ]);
   
-          const res = await GetWalletBalance.json();
-          console.log(`Wallet balance ${res.wallet.balance}`);
+      if (transactionsRes.data) setTransactions(transactionsRes.data);
+      if (transactionsRes.err) setError(transactionsRes.err);
   
-          if (!GetWalletBalance.ok) {
-            throw new Error(res.message || "Login failed")
-          }
-  
-          setWalletBalance(res.wallet.balance);
-          dispatch(setUserBalance(res.wallet.balance));
-        } catch (err:any) {
-          setError(err.message);
-        } finally {
-          setIsLoading(false);
-        }
+      if (balanceRes.data) {
+        setWalletBalance(balanceRes.data);
+        dispatch(setUserBalance(balanceRes.data));
       }
+      if (balanceRes.err) setError(balanceRes.err);
+    };
 
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [GetPaymentTransactions, GetWalletTransactions] = await  Promise.all([
-          fetch(`https://limpiar-backend.onrender.com/api/payments/user/${User.userId}`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`, // Set the Bearer token
-            }
-          }), 
-
-          fetch(`https://limpiar-backend.onrender.com/api/wallets/${userWallet.wallet._id}`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`, // Set the Bearer token
-            }
-          })
-        ]);
-        
-
-        const res1 = await GetPaymentTransactions.json();
-        const res2 = await GetWalletTransactions.json();
-
-        if (!GetPaymentTransactions.ok) {
-          throw new Error(res1.message || "Login failed")
-        }
-        if (!GetWalletTransactions.ok) {
-          throw new Error(res2.message || "Login failed")
-        }
-
-        const Walletobj = await res2.wallet.transactions
-        const WalletTransactions = Object.keys(Walletobj).flatMap((wallet: any) => {
-          if (Walletobj[wallet].length === 0) return [];
-
-
-         return Walletobj[wallet].map((txn: any) => {
-            return {
-              id: txn._id || txn.id,
-              amount: txn.amount,
-              currency: txn.currency || "USD",
-              status: txn.status || "N/A",
-              description: wallet === 'refunds' ? `Refund of ${txn.amount} from ${txn.from}` : txn.description || "No description provided", // Fallback description
-              reference: txn.transactionId || "N/A",
-              createdAt: txn.timestamp,
-              // updatedAt: txn.updatedAt || txn.updated,
-              method: "wallet",
-            }
-          })
-        });
-
-        const PaymentTransactions = res1.data.map((txn: any) => {
-          return {
-            id: txn._id || txn.id,
-            amount: txn.amount,
-            currency: txn.currency || "USD",
-            status: txn.status || "N/A",
-            description: txn.description || `Payment of ${txn.amount} ${txn.currency}`, // Fallback description
-            reference: txn.paymentIntentId || txn.reference,
-            createdAt: txn.createdAt || txn.created,
-            // updatedAt: txn.updatedAt || txn.updated,
-            method: "stripe",
-          }
-        });
-        const combinedTransactions = [...WalletTransactions, ...PaymentTransactions].flat();
-
-        combinedTransactions.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        console.log(user)
-        setTransactions(combinedTransactions);
-
-
-
-        // setWalletBalance(res.wallet.balance);
-      } catch (err:any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-      
-    }
-
-    useEffect(() => {
-        fetchData();
-    }, []);
+    setIsLoading(false);
+  
+    getData();
+  }, []);
 
   return (
     <div className="flex  bg-gray-50">
@@ -242,10 +119,6 @@ export default function PaymentsPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-6">
-                {/* <button className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium w-full">
-        <Plus className="w-4 h-4" />
-        Top Up Wallet
-      </button> */}
                 <button
                   onClick={() => dispatch(openModal())}
                   className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium"
@@ -253,7 +126,7 @@ export default function PaymentsPage() {
                   <Plus className="w-4 h-4" />
                   Top Up Wallet
                 </button>
-                {/* <button className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium w-full"> */}
+
                 <button
                   onClick={() => dispatch(openRefundModal())}
                   className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium"
@@ -262,16 +135,16 @@ export default function PaymentsPage() {
                   Request Refund
                 </button>
               </div>
+
             </div>
           </div>
 
-          {/* Transaction History */}
           <div className="mt-10">
             <h2 className="text-xl font-bold mb-4">Transaction History</h2>
             <TransactionTable transactions={transactions}/>
           </div>
         </div>
-        <TopUpModal fetchTransactions={fetchData} />
+        <TopUpModal fetchTransactions={fetchTransactionData} />
         <RefundModal/>
       </main>
     </div>

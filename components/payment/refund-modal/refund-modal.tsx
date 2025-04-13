@@ -17,17 +17,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { closeRefundModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import { useState } from "react";
+import { requestRefund } from "@/components/handlers";
 import { useAppSelector } from "@/hooks/useReduxHooks";
 
 export function RefundModal() {
   const [transactionAmount, setTransactionAmount] = useState<string>('0');
   const [text, setText] = useState<string>('');
+  const [refundMessage, setRefundMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const dispatch = useDispatch();
   const { isOpen, isRefundModalOpen, reason, amount, userBalance } = useSelector(
     (state: RootState) => state.topUpModal
   );
-    const { user, token } = useAppSelector((state) => state.auth);
-    const id = user?._id;
+
+    let userWallet: any;
+    const getUserFromLocalStorage = localStorage.getItem("userWallet");
+    if (getUserFromLocalStorage) {
+      const user = JSON.parse(getUserFromLocalStorage)
+      userWallet = user.data;
+    }
+    const id = userWallet.user.userId
 
 
   // Close modal with escape key
@@ -45,41 +54,24 @@ export function RefundModal() {
     setText(event.target.value);
     dispatch(setReason(text));
   };
-    const handleAmount = (e:any) => {
-      setTransactionAmount(e.target.value);
-      dispatch(setAmount(Number(e.target.value)))
-    }
-    const handleProceed =  async () => {
-        const body = {
-            userId: id,
-            amount: amount,
-            reason: reason
-          }
-        try {
-            const response = await fetch("https://limpiar-backend.onrender.com/api/wallets/request-refund", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`, // Set the Bearer token
-              },
-              body: JSON.stringify(body),
-            })
-      
-            const data = await response.json();
-            console.log(data);
-      
-            if (!response.ok) {
-              throw new Error(data.message || "Unable to process payment at the moment")
-            }
-          } catch (err) {
-            // setError(err instanceof Error ? err.message : "An error occurred")
-            console.log(err)
-            // dispatch(loginStart())
-          } finally {
-            // setIsLoading(false)
-            dispatch(closeRefundModal())
-          }
-    }
+
+  const handleAmount = (e:any) => {
+    setTransactionAmount(e.target.value);
+    dispatch(setAmount(Number(e.target.value)))
+  }
+
+  const handleProceed =  async () => {
+    const body = {
+        userId: id,
+        amount: amount,
+        reason: reason
+      }
+    const {data, error} = await requestRefund({body});
+    if (data) setRefundMessage(data);
+    if (error) setErrorMessage(error);
+
+    dispatch(closeRefundModal())
+  }
 
   return (
     <Dialog open={isRefundModalOpen} onOpenChange={() => dispatch(closeRefundModal())}>

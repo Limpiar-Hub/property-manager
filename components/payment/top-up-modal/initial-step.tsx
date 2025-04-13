@@ -3,6 +3,7 @@
 import { useDispatch, useSelector, } from "react-redux";
 import { useAppSelector } from "@/hooks/useReduxHooks";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { createPayment } from "@/components/handlers";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,53 +29,22 @@ export function InitialStep({ fetchTransactions }: { fetchTransactions: () => vo
   
 
   const handleProceed = async () => {
-    // console.log(email, id, currency, amount);
-      const body = {
-        userId: id,
-        email: email,
-        amount: amount,
-        currency: "usd"
-      }
-      try {
-        const response = await fetch("https://limpiar-backend.onrender.com/api/payments/create-payment", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Set the Bearer token
-          },
-          body: JSON.stringify(body),
-        })
-  
-        const data = await response.json();
-  
-        if (!response.ok) {
-          throw new Error(data.message || "Unable to process payment at the moment")
-        }
+    const body = {
+      userId: id,
+      email: email,
+      amount: amount,
+      currency: "usd"
+    }
 
-        if (data.success === true) {
-          
-          window.location.href = data.checkoutUrl          
-          // Store token in Redux
-          // dispatch(loginSuccess({ token: data.token }))
-          
-          // Redirect to OTP verification page
-          // router.push("/verify-otp")
-        } else {
-          throw new Error("Unexpected response from server")
-        }
-        
-        fetchTransactions();
-      } catch (err) {
-        // setError(err instanceof Error ? err.message : "An error occurred")
-        console.log(err)
-        // dispatch(loginStart())
-      } finally {
-        // setIsLoading(false)
-        console.log('finished');
-      }
-    // } else if (paymentMethod === "ahc") {
-    //   dispatch(setStep("ahcTransfer"));
-    // }
+    const {data, error} = await createPayment({body});
+    if (data.success === true) {
+      
+      window.location.href = data.checkoutUrl          
+    } else {
+      console.log(data.message);
+    }
+    
+    fetchTransactions();
   };
 
   const handleChange = (e:any) => {
@@ -112,8 +82,11 @@ export function InitialStep({ fetchTransactions }: { fetchTransactions: () => vo
             <RadioGroupItem value="debit" id="debit" />
             <Label htmlFor="debit">Debit / Credit Card</Label>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="ahc" id="ahc" />
+          <div
+            className="flex items-center space-x-2 opacity-50 pointer-events-none"
+            aria-disabled="true"
+          >
+            <RadioGroupItem value="ahc" id="ahc" disabled />
             <Label htmlFor="ahc">A/C Transfer</Label>
           </div>
         </RadioGroup>

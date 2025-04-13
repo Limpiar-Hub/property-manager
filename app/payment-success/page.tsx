@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppSelector } from "@/hooks/useReduxHooks";
+import { verifyStripePayment } from '@/components/handlers';
 
 
 const PaymentSuccess = () => {
@@ -16,35 +17,18 @@ const PaymentSuccess = () => {
     if (!session_id) return;
 
     const verifyPayment = async () => {
-      try {
-        // Using the correct URL
-        const res = await fetch(`https://limpiar-backend.onrender.com/api/payments/success/${session_id}`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`, // Set the Bearer token
-            },
-          });;
-
-        if (!res.ok) {
-          throw new Error('Failed to verify payment');
-        }
-
-        const data = await res.json();
-        console.log('Payment verification response:', data);
-
-        if (data.success === true) {
-          // Redirect to the transactions page if payment was successful
-          router.push('/payment');
-        } else {
-          // Redirect to a failure page if payment was not successful
-          router.push('/payment');
-        }
-      } catch (err) {
-        console.error('Payment verification failed:', err);
+      const {data, error} = await verifyStripePayment({session_id});
+      if (data.success === true) {
+        router.push('/payment');
+      } else {
         router.push('/payment');
       }
-    };
 
+      if (error) {
+        router.push('/payment');
+      }
+    }
+      
     verifyPayment();
   }, [searchParams, router]);
 
