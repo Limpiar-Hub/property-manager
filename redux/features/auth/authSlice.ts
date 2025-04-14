@@ -4,7 +4,7 @@ import {
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"; 
 
 // Types
 interface User {
@@ -158,6 +158,7 @@ export const verifyOtp = createAsyncThunk(
       }
 
       const data: VerifyOtpResponse = await response.json();
+      localStorage.setItem("userWallet", JSON.stringify({ data }))
       return data;
     } catch (error) {
       return rejectWithValue(

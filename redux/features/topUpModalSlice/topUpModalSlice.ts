@@ -4,16 +4,22 @@ export type ModalStep = "initial" | "debitCard" | "ahcTransfer"
 
 interface TopUpModalState {
   isOpen: boolean
+  isRefundModalOpen: boolean
+  reason: string
   currentStep: ModalStep
-  amount: string
+  amount: number
   paymentMethod: "debit" | "ahc" | null
+  userBalance: number
 }
 
 const initialState: TopUpModalState = {
   isOpen: false,
+  isRefundModalOpen: false,
+  reason: '',
   currentStep: "initial",
-  amount: "",
+  amount: 0,
   paymentMethod: null,
+  userBalance: 0
 }
 
 const topUpModalSlice = createSlice({
@@ -23,19 +29,31 @@ const topUpModalSlice = createSlice({
     openModal: (state) => {
       state.isOpen = true
       state.currentStep = "initial"
-      state.amount = ""
-      state.paymentMethod = null
+      // state.amount = 0
+      // state.paymentMethod = null
     },
     closeModal: (state) => {
       state.isOpen = false
       state.currentStep = "initial"
-      state.amount = ""
+      state.amount = 0
       state.paymentMethod = null
+    },
+    openRefundModal: (state) => {
+      state.isRefundModalOpen = true
+    },
+    setUserBalance: (state, action: PayloadAction<number>) => {
+      state.userBalance = action.payload
+    },
+    closeRefundModal: (state) => {
+      state.isRefundModalOpen = false
+    },
+    setReason: (state, action: PayloadAction<string>) => {
+      state.reason = action.payload
     },
     setStep: (state, action: PayloadAction<ModalStep>) => {
       state.currentStep = action.payload
     },
-    setAmount: (state, action: PayloadAction<string>) => {
+    setAmount: (state, action: PayloadAction<number>) => {
       state.amount = action.payload
     },
     setPaymentMethod: (state, action: PayloadAction<"debit" | "ahc">) => {
@@ -47,7 +65,7 @@ const topUpModalSlice = createSlice({
   },
 })
 
-export const { openModal, closeModal, setStep, setAmount, setPaymentMethod, goBack } = topUpModalSlice.actions
+export const { openModal, closeModal, openRefundModal, closeRefundModal, setUserBalance, setReason, setStep, setAmount, setPaymentMethod, goBack } = topUpModalSlice.actions
 
 export default topUpModalSlice.reducer
 

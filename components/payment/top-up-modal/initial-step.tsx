@@ -1,7 +1,9 @@
 "use client";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, } from "react-redux";
+import { useAppSelector } from "@/hooks/useReduxHooks";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { createPayment } from "@/components/handlers";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,20 +13,44 @@ import {
   setPaymentMethod,
   setStep,
 } from "@/redux/features/topUpModalSlice/topUpModalSlice";
+import { constants } from "buffer";
+import { useState } from "react";
 
-export function InitialStep() {
+export function InitialStep({ fetchTransactions }: { fetchTransactions: () => void }) {
   const dispatch = useDispatch();
-  const { amount, paymentMethod } = useSelector(
+  const { amount, paymentMethod, userBalance } = useSelector(
     (state: RootState) => state.topUpModal
   );
+  const [transactionAmount, setTransactionAmount] = useState<string>('0');
+  const { user, token } = useAppSelector((state) => state.auth);
+  const email = user?.email;
+  const id = user?._id;
+  const currency = 'usd'
+  
 
-  const handleProceed = () => {
-    if (paymentMethod === "debit") {
-      dispatch(setStep("debitCard"));
-    } else if (paymentMethod === "ahc") {
-      dispatch(setStep("ahcTransfer"));
+  const handleProceed = async () => {
+    const body = {
+      userId: id,
+      email: email,
+      amount: amount,
+      currency: "usd"
     }
+
+    const {data, error} = await createPayment({body});
+    if (data.success === true) {
+      
+      window.location.href = data.checkoutUrl          
+    } else {
+      console.log(data.message);
+    }
+    
+    fetchTransactions();
   };
+
+  const handleChange = (e:any) => {
+    setTransactionAmount(e.target.value);
+    dispatch(setAmount(Number(e.target.value)))
+  }
 
   return (
     <div className="grid gap-4 py-4">
@@ -37,10 +63,11 @@ export function InitialStep() {
         <Input
           id="amount"
           placeholder="Enter amount"
-          value={amount}
-          onChange={(e) => dispatch(setAmount(e.target.value))}
+          type="number"
+          value={transactionAmount}
+          onChange={handleChange}
         />
-        <p className="text-sm text-gray-500">Available Balance: $1000.00</p>
+        <p className="text-sm text-gray-500">Available Balance: ${userBalance}</p>
       </div>
 
       <div className="grid gap-2">
@@ -55,8 +82,11 @@ export function InitialStep() {
             <RadioGroupItem value="debit" id="debit" />
             <Label htmlFor="debit">Debit / Credit Card</Label>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="ahc" id="ahc" />
+          <div
+            className="flex items-center space-x-2 opacity-50 pointer-events-none"
+            aria-disabled="true"
+          >
+            <RadioGroupItem value="ahc" id="ahc" disabled />
             <Label htmlFor="ahc">A/C Transfer</Label>
           </div>
         </RadioGroup>
