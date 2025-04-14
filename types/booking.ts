@@ -40,7 +40,7 @@ export interface Property {
     updatedAt: string;
   }
   
-  export type BookingStatus = "active" | "pending" | "completed" | "cancelled";
+  export type BookingStatus = "confirmed" | "pending" | "completed" | "cancelled";
   
   export interface TimelineEvent {
     date: string;

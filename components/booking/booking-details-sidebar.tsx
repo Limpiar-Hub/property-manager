@@ -1,10 +1,14 @@
-
-
 "use client";
 import { useEffect } from "react";
 import { X, MessageSquare, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Booking, TimelineEvent } from "@/types/booking";
+import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "@/hooks/useReduxHooks";
+import { createChatThread, setSelectedChat } from "@/redux/features/chat/chatSlice";
+import { RootState } from "@/redux/store";
 
 interface BookingDetailsSidebarProps {
   booking: Booking;
@@ -15,6 +19,12 @@ export default function BookingDetailsSidebar({
   booking,
   onClose,
 }: BookingDetailsSidebarProps) {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const chats = useAppSelector((state) => state.chat.chats || []);
+  const token = useAppSelector((state) => state.auth.token);
+    const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const sidebar = document.getElementById("booking-sidebar");
@@ -29,7 +39,74 @@ export default function BookingDetailsSidebar({
     };
   }, [onClose]);
 
-  // Demo timeline data (can be replaced with real data if available)
+ 
+
+
+  // Update the handleSendMessage function in booking-details-sidebar.tsx
+const handleSendMessage = async () => {
+  try {
+    const cleanerId = booking.cleanerId?._id || "67a7e709b5df23292f632874";
+    const propertyManagerId = currentUserId; 
+    
+    if (!token) {
+      console.error("Token is missing. Unable to create chat thread.");
+      return;
+    }
+
+    // First check if a chat already exists between these participants for this booking
+    // Assuming chats is fetched from a Redux store or API
+
+
+    const existingChat = chats.find(chat => 
+      chat.participants.includes(cleanerId) && 
+      propertyManagerId && chat.participants.includes(propertyManagerId) &&
+      chat.taskId === booking._id
+    );
+
+    if (existingChat) {
+      console.log("Existing chat found:", existingChat);
+      // Navigate to existing chat
+      dispatch(
+        setSelectedChat({
+          chatId: existingChat.id,
+          cleanerName: booking.cleanerId?.fullName || "Unknown Cleaner",
+          cleanerAvatar: booking.cleanerId?.avatar || "",
+        })
+      );
+      router.push("/inbox");
+      return;
+    }
+
+    console.log("Creating new chat thread...");
+    const response = await dispatch(
+      createChatThread({
+        participantIds: [propertyManagerId!, cleanerId!],
+        taskId: booking._id,
+        token,
+      }) as any
+    );
+
+    const newChat = response.payload;
+    if (newChat) {
+      console.log("New chat created:", newChat);
+      dispatch(
+        setSelectedChat({
+          chatId: newChat._id,
+          cleanerName: booking.cleanerId?.fullName || "Unknown Cleaner",
+          cleanerAvatar: booking.cleanerId?.avatar || "",
+        })
+      );
+      router.push("/inbox");
+    } else {
+      console.error("Failed to create chat thread.");
+    }
+  } catch (error) {
+    console.error("Error creating chat thread:", error);
+  }
+};
+
+
+ 
   const demoTimeline: TimelineEvent[] = [
     {
       date: new Date(booking.createdAt).toLocaleDateString("en-US", {
@@ -149,7 +226,9 @@ export default function BookingDetailsSidebar({
       className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-lg z-50 flex flex-col"
     >
       <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
-        <h2 className="text-base font-semibold text-gray-900">Booking Details</h2>
+        <h2 className="text-base font-semibold text-gray-900">
+          Booking Details
+        </h2>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
           <X className="h-5 w-5" />
         </button>
@@ -181,9 +260,19 @@ export default function BookingDetailsSidebar({
                 {booking.cleanerId?.fullName || "Not assigned"}
               </span>
             </div>
+         
+              {booking.status.toLowerCase() === "confirmed" && booking.cleanerId && (
+    <Button
+      className="mt-4 border bg-white text-black flex items-center gap-2"
+      onClick={handleSendMessage}
+    >
+      <MessageSquare className="h-4 w-4" />
+      Send Message
+    </Button>
+  )}
           </div>
 
-          {booking.cleanerId?.phoneNumber && (
+          {/* {booking.cleanerId?.phoneNumber && (
             <a
               href={`tel:${booking.cleanerId.phoneNumber}`}
               className="w-full flex items-center justify-center gap-2 text-sm text-gray-700 border border-gray-200 rounded-md py-2 mt-3 hover:bg-gray-50"
@@ -191,7 +280,7 @@ export default function BookingDetailsSidebar({
               <Phone className="h-4 w-4" />
               Call Cleaner
             </a>
-          )}
+          )} */}
         </div>
 
         <div className="border-t border-gray-100 px-5 py-4">
@@ -303,7 +392,9 @@ export default function BookingDetailsSidebar({
                     )}
                     {event.company && (
                       <span>
-                        <span className="text-blue-600 ml-1">{event.company}</span>
+                        <span className="text-blue-600 ml-1">
+                          {event.company}
+                        </span>
                       </span>
                     )}
                   </div>

@@ -17,7 +17,7 @@ export default function BookingsPage() {
   const managerId = user?._id;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<BookingStatus>("active");
+  const [activeTab, setActiveTab] = useState<BookingStatus>("confirmed");
   const [bookings, setBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export default function BookingsPage() {
   };
 
   const counts = {
-    active: bookings.filter((b) => b.status?.toLowerCase() === "active").length,
+    confirmed: bookings.filter((b) => b.status?.toLowerCase() === "confirmed").length,
     pending: bookings.filter((b) => b.status?.toLowerCase() === "pending")
       .length,
     completed: bookings.filter((b) => b.status?.toLowerCase() === "completed")

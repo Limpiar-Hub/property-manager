@@ -1,47 +1,66 @@
-"use client"
+// }
 
-import type React from "react"
+"use client";
 
-import { useState } from "react"
-import { useDispatch } from "react-redux"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { addTicket } from "@/redux/features/tickets/ticketSlice"
-import type { TicketCategory } from "@/redux/features/tickets/ticketSlice"
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { createTicket } from "@/redux/features/tickets/ticketSlice";
+import type { RootState } from "@/redux/store";
 
 interface NewTicketDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
-  const dispatch = useDispatch()
-  const [title, setTitle] = useState("")
-  const [category, setCategory] = useState<TicketCategory>("Payment")
-  const [description, setDescription] = useState("")
+  const [description, setDescription] = useState("");
+  const dispatch = useDispatch();
+  const userId = useSelector((state: RootState) => state.auth.user?._id);
+  const token = useSelector((state: RootState) => state.auth.token);
+  const loading = useSelector((state: RootState) => state.tickets.loading);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    dispatch(
-      addTicket({
-        id: Math.random().toString(),
-        title,
-        description,
-        category,
-        status: "open",
-        createdAt: new Date().toLocaleString(),
-        userId: "1",
-        userAvatar: "/placeholder.svg",
-      }),
-    )
-    onOpenChange(false)
-    setTitle("")
-    setCategory("Payment")
-    setDescription("")
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!description.trim()) {
+      alert("Please enter a description.");
+      return;
+    }
+
+    if (!userId || !token) {
+      alert("User is not authenticated.");
+      return;
+    }
+
+    try {
+      const response = await dispatch(
+        createTicket({
+          userId,
+          messageText: description,
+          token,
+        }) as any
+      );
+
+      if (response.payload) {
+        alert("Support ticket created successfully.");
+        setDescription("");
+        onOpenChange(false); // Close the dialog
+      } else {
+        alert("Failed to create support ticket.");
+      }
+    } catch (error) {
+      console.error("Error creating support ticket:", error);
+      alert("Failed to create support ticket.");
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -50,29 +69,6 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
           <DialogTitle>New Ticket</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <label htmlFor="title">Ticket Title</label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter Ticket Title"
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <label htmlFor="category">Category</label>
-            <Select value={category} onValueChange={(value: TicketCategory) => setCategory(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Payment">Payment</SelectItem>
-                <SelectItem value="Bookings">Bookings</SelectItem>
-                <SelectItem value="Property">Property</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div className="grid gap-2">
             <label htmlFor="description">Ticket Description</label>
             <Textarea
@@ -83,12 +79,11 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
               required
             />
           </div>
-          <Button type="submit" className="w-full">
-            Submit Ticket
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Submitting..." : "Submit Ticket"}
           </Button>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

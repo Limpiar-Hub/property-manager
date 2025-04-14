@@ -73,7 +73,7 @@ export const bookingSlice = createSlice({
       state.property = null
       state.date = { type: null }
       state.time = ""
-      state.notes = ""
+      // state.notes = ""
     },
     resetBooking: () => initialState,
     setDateType: (state, action: PayloadAction<DateType>) => {

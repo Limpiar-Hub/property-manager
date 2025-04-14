@@ -2,13 +2,13 @@
 
 // import type { BookingStatus } from "@/lib/types"
 
-export type BookingStatus = "active" | "pending" | "completed" | "cancelled"
+export type BookingStatus = "confirmed" | "pending" | "completed" | "cancelled"
 
 interface BookingTabsProps {
   activeTab: BookingStatus
   setActiveTab: (tab: BookingStatus) => void
   counts: {
-    active: number
+    confirmed: number
     pending: number
     completed: number
     cancelled: number
@@ -17,7 +17,7 @@ interface BookingTabsProps {
 
 export default function BookingTabs({ activeTab, setActiveTab, counts }: BookingTabsProps) {
   const tabs = [
-    { id: "active", label: "Active", count: counts.active },
+    { id: "confirmed", label: "Active", count: counts.confirmed },
     { id: "pending", label: "Pending", count: counts.pending },
     { id: "completed", label: "Completed", count: counts.completed },
     { id: "cancelled", label: "Cancelled", count: counts.cancelled },
