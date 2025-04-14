@@ -177,7 +177,7 @@ import { useState } from "react";
 import { Property } from "@/types/property";
 
 interface PropertyListingProps {
-  propertyData: Property[];
+  propertyData: Property[] | never;
   count: number;
 }
 
