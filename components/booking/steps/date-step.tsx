@@ -43,8 +43,9 @@ export default function DateStep() {
 
           <div className="min-h-[400px]">
             <Calendar
-              // type="one-time"
+              type="one-time"
               onSelect={(date) => dispatch(setSelectedDate(date))}
+              onRangeSelect={() => {}}
               selectedDate={date.selectedDate}
             />
           </div>
