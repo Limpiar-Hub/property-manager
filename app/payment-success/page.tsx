@@ -2,14 +2,12 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAppSelector } from "@/hooks/useReduxHooks";
 import { verifyStripePayment } from '@/components/handlers';
 
 
 const PaymentSuccess = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, token } = useAppSelector((state) => state.auth);
 
 
   useEffect(() => {

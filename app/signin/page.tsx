@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import LoginForm from "@/components/LoginForm";
-import OtpInput from "@/components/otpInput";
 
 export default function Home() {
   return (

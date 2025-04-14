@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Plus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import { openModal } from "@/redux/features/booking/bookingSlice";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import BookingTabs from "@/components/booking/booking-tabs";
 import axios from "axios";
-import { BookingStatus } from "@/types/booking";
+import { BookingStatus, Booking } from "@/types/booking";
 
 export default function BookingsPage() {
   const dispatch = useAppDispatch();
@@ -18,16 +18,15 @@ export default function BookingsPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<BookingStatus>("confirmed");
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
   });
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setIsLoading(true);
       if (!token || !managerId) return;
@@ -52,16 +51,15 @@ export default function BookingsPage() {
         }));
       }
     } catch (err) {
-      setError("Failed to fetch bookings");
       console.error("Error fetching bookings:", err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token, managerId, activeTab, pagination.page, pagination.limit]);
 
   useEffect(() => {
     fetchBookings();
-  }, [token, managerId, activeTab, pagination.page, pagination.limit]);
+  }, [fetchBookings]);
 
   const handlePageChange = (newPage: number) => {
     if (
@@ -81,7 +79,8 @@ export default function BookingsPage() {
   };
 
   const counts = {
-    confirmed: bookings.filter((b) => b.status?.toLowerCase() === "confirmed").length,
+    confirmed: bookings.filter((b) => b.status?.toLowerCase() === "confirmed")
+      .length,
     pending: bookings.filter((b) => b.status?.toLowerCase() === "pending")
       .length,
     completed: bookings.filter((b) => b.status?.toLowerCase() === "completed")

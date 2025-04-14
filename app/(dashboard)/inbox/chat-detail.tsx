@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,29 +11,30 @@ import {
   markChatAsRead,
   setSelectedChat,
 } from "@/redux/features/chat/chatSlice";
-import type { RootState } from "@/redux/store";
+import type { RootState, AppDispatch } from "@/redux/store";
 import Image from "next/image";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 
 export function ChatDetail() {
   const [message, setMessage] = useState("");
-  const dispatch = useDispatch();
-  const selectedChatId = useSelector(
+  const dispatch: AppDispatch = useAppDispatch();
+  const selectedChatId = useAppSelector(
     (state: RootState) => state.chat.selectedChatId
   );
-  const chat = useSelector((state: RootState) =>
+  const chat = useAppSelector((state: RootState) =>
     state.chat.chats.find((c) => c.id === selectedChatId)
   );
-  const loading = useSelector((state: RootState) => state.chat.loading);
-  const token = useSelector((state: RootState) => state.auth.token);
-  const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
+  const loading = useAppSelector((state: RootState) => state.chat.loading);
+  const token = useAppSelector((state: RootState) => state.auth.token);
+  const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
     if (selectedChatId && token) {
       console.log("Fetching messages for chat:", selectedChatId);
-      dispatch(fetchChatMessages({ chatId: selectedChatId, token }) as any);
+      dispatch(fetchChatMessages({ chatId: selectedChatId, token })).unwrap();
       dispatch(markChatAsRead(selectedChatId));
     }
   }, [selectedChatId, dispatch, token]);
@@ -68,8 +68,8 @@ export function ChatDetail() {
           text: message,
           chatId: selectedChatId,
           token,
-        }) as any
-      );
+        })
+      ).unwrap();
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);

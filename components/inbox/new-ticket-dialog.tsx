@@ -1,9 +1,7 @@
-// }
 
 "use client";
 
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createTicket } from "@/redux/features/tickets/ticketSlice";
 import type { RootState } from "@/redux/store";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 
 interface NewTicketDialogProps {
   open: boolean;
@@ -22,10 +21,10 @@ interface NewTicketDialogProps {
 
 export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
   const [description, setDescription] = useState("");
-  const dispatch = useDispatch();
-  const userId = useSelector((state: RootState) => state.auth.user?._id);
-  const token = useSelector((state: RootState) => state.auth.token);
-  const loading = useSelector((state: RootState) => state.tickets.loading);
+  const dispatch = useAppDispatch();
+  const userId = useAppSelector((state: RootState) => state.auth.user?._id);
+  const token = useAppSelector((state: RootState) => state.auth.token);
+  const loading = useAppSelector((state: RootState) => state.tickets.loading);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

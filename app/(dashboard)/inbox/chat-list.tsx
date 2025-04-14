@@ -1,24 +1,28 @@
 "use client";
 
-import { useSelector, useDispatch } from "react-redux";
 import { Avatar } from "@/components/ui/avatar";
 import { setSelectedChat } from "@/redux/features/chat/chatSlice";
 import type { RootState } from "@/redux/store";
 import Image from "next/image";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
+
+// Define a type for participantInfo
+type ParticipantInfo = {
+  name: string;
+  avatar: string;
+};
 
 export function ChatList() {
-  const dispatch = useDispatch();
-  const chats = useSelector((state: RootState) => state.chat.chats);
-  
-  const selectedChatId = useSelector(
+  const dispatch = useAppDispatch();
+  const chats = useAppSelector((state: RootState) => state.chat.chats);
+
+  const selectedChatId = useAppSelector(
     (state: RootState) => state.chat.selectedChatId
   );
-  const loading = useSelector((state: RootState) => state.chat.loading);
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
-  const handleSelectChat = (chatId: string, participantInfo: any) => {
-    console.log("Selecting chat:", chatId);
+  const loading = useAppSelector((state: RootState) => state.chat.loading);
+  const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
+
+  const handleSelectChat = (chatId: string, participantInfo: ParticipantInfo) => {
     dispatch(
       setSelectedChat({
         chatId,
@@ -48,11 +52,10 @@ export function ChatList() {
     <div className="divide-y">
       {chats.map((chat) => {
         const otherParticipantId =
-          chat.participants.find((id) => id !== currentUserId) ||
-          "";
-        const participantInfo = chat.participantInfo[otherParticipantId] || {
-          name: "Unknown",
-          avatar: "/placeholder.svg",
+          chat.participants.find((id) => id !== currentUserId) || "";
+        const participantInfo: ParticipantInfo = {
+          name: chat.participantInfo[otherParticipantId]?.name || "Unknown",
+          avatar: chat.participantInfo[otherParticipantId]?.avatar || "/placeholder.svg",
         };
 
         return (

@@ -150,7 +150,7 @@ export function OtpVerificationForm() {
       // await dispatch(resendOtp({ phoneNumber: getPhoneNumber() })).unwrap();
 
       setCountdown(60);
-    } catch (err) {
+    } catch (error) {
       setError("Failed to resend code. Please try again.");
     } finally {
       setIsResending(false);

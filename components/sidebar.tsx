@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import {
   Building,
   MessageCircle,
-  FileText,
   Activity,
   Calendar,
   CreditCard,
@@ -19,10 +18,9 @@ import {
 import { cn } from "@/lib/utils";
 
 // import { useRouter } from "next/navigation"
-import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks"
+import { useAppDispatch } from "@/hooks/useReduxHooks"
 
 import { useRouter } from "next/navigation";
-import { RootState } from "@/redux/store";
 import { logout } from "@/redux/features/auth/authSlice";
 
 const navItems = [

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 
 export default function TitleInput() {
   const dispatch = useAppDispatch()
-  const { title, units } = useAppSelector((state) => state.property)
+  const { title } = useAppSelector((state) => state.property)
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setTitle(e.target.value))
