@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import { resetProperty } from "@/redux/features/addProperty/propertySlice";
 import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import PropertyListing from "../property-list/page";
 import Spinner from "@/components/spinner";
 import { Property } from "@/types/property";
 
 interface DecodedToken {
   userId: string;
-  [key: string]: any;
+  exp: number;
+  iat: number;
 }
 
 export default function Home() {
@@ -24,7 +25,9 @@ export default function Home() {
 
   const { user, token } = useAppSelector((state) => state.auth);
 
-  const decodedToken = token ? jwtDecode<DecodedToken>(token) : null;
+  const decodedToken: DecodedToken | null = token
+    ? jwtDecode<DecodedToken>(token)
+    : null;
   const userId = decodedToken?.userId;
 
   useEffect(() => {
@@ -107,7 +110,7 @@ export default function Home() {
           {/* Steps Section */}
           <div className="max-w-2xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">
-              Add your property in few simple steps
+              Add your property in a few simple steps
             </h2>
 
             <div className="space-y-6 md:space-y-8">
@@ -157,7 +160,7 @@ export default function Home() {
                     Location
                   </h3>
                   <p className="text-gray-600 text-sm md:text-base">
-                    Add location of your property.
+                    Add the location of your property.
                   </p>
                   <div className="h-px bg-gray-200 mt-4 md:mt-6"></div>
                 </div>

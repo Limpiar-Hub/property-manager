@@ -29,7 +29,7 @@ export function InitialStep({ fetchTransactions }: { fetchTransactions: () => vo
       currency: "usd",
     };
 
-    const { data } = await createPayment({ body });
+    const { data } = await createPayment({ body }) as { data: { success: boolean; checkoutUrl: string; message: string } };
     if (data.success === true) {
       window.location.href = data.checkoutUrl;
     } else {

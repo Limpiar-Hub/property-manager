@@ -16,7 +16,7 @@ const PaymentSuccess = () => {
 
     const verifyPayment = async () => {
       const {data, error} = await verifyStripePayment({session_id});
-      if (data.success === true) {
+      if ((data as { success: boolean }).success === true) {
         router.push('/payment');
       } else {
         router.push('/payment');

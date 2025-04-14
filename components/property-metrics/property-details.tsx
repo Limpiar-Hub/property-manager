@@ -1,6 +1,5 @@
 "use client";
 
-// import { useState } from "react";
 import Image from "next/image";
 import { MapPinIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,10 +7,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAppSelector } from "@/hooks/useReduxHooks";
 import { useState } from "react";
 
-export default function PropertyDetails({PropertyDetailsData}: any) {
+// Define the type for PropertyDetailsData
+export type PropertyDetailsData = {
+  name: string;
+  address: string;
+  images: string[];
+};
+
+interface PropertyDetailsProps {
+  PropertyDetailsData: PropertyDetailsData;
+}
+
+export default function PropertyDetails({
+  PropertyDetailsData,
+}: PropertyDetailsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  // const [showAllPhotos, setShowAllPhotos] = useState(false);
   const { user } = useAppSelector((state) => state.auth);
 
   const getInitials = (fullName: string) => {
@@ -44,90 +55,92 @@ export default function PropertyDetails({PropertyDetailsData}: any) {
           {/* Image Gallery Section */}
           <div className="space-y-3">
             <div className="relative aspect-[4/3] md:aspect-video w-full overflow-hidden rounded-lg">
-            {isLoading && !hasError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-              </div>
-            )}
+              {isLoading && !hasError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+                </div>
+              )}
 
-            {imageId1 && (
-              <Image
-                src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId1}`}
-                alt="Property"
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority
-                onLoad={() => setIsLoading(false)}
-                onError={() => {
-                  setHasError(true);
-                  setIsLoading(false);
-                }}
-                className={`object-cover transition-opacity duration-500 ${
-                  isLoading ? "opacity-0" : "opacity-100"
-                }`}
-              />
-            )}
+              {imageId1 && (
+                <Image
+                  src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId1}`}
+                  alt="Property"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority
+                  onLoad={() => setIsLoading(false)}
+                  onError={() => {
+                    setHasError(true);
+                    setIsLoading(false);
+                  }}
+                  className={`object-cover transition-opacity duration-500 ${
+                    isLoading ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative aspect-[4/3] md:aspect-video w-full overflow-hidden rounded-lg">
-              {isLoading && !hasError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-              </div>
-            )}
+                {isLoading && !hasError && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+                  </div>
+                )}
 
-            {imageId2 && (
-              <Image
-                src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId2}`}
-                alt="Property"
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority
-                onLoad={() => setIsLoading(false)}
-                onError={() => {
-                  setHasError(true);
-                  setIsLoading(false);
-                }}
-                className={`object-cover transition-opacity duration-500 ${
-                  isLoading ? "opacity-0" : "opacity-100"
-                }`}
-              />
-            )}
+                {imageId2 && (
+                  <Image
+                    src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId2}`}
+                    alt="Property"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority
+                    onLoad={() => setIsLoading(false)}
+                    onError={() => {
+                      setHasError(true);
+                      setIsLoading(false);
+                    }}
+                    className={`object-cover transition-opacity duration-500 ${
+                      isLoading ? "opacity-0" : "opacity-100"
+                    }`}
+                  />
+                )}
               </div>
               <div className="relative aspect-[4/3] md:aspect-video w-full overflow-hidden rounded-lg group cursor-pointer">
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 text-white text-sm font-medium">
                   Show all photos
                 </div>
                 {isLoading && !hasError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-              </div>
-            )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+                  </div>
+                )}
 
-            {imageId3 && (
-              <Image
-                src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId3}`}
-                alt="Property"
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority
-                onLoad={() => setIsLoading(false)}
-                onError={() => {
-                  setHasError(true);
-                  setIsLoading(false);
-                }}
-                className={`object-cover transition-opacity duration-500 ${
-                  isLoading ? "opacity-0" : "opacity-100"
-                }`}
-              />
-            )}
+                {imageId3 && (
+                  <Image
+                    src={`https://limpiar-backend.onrender.com/api/properties/gridfs/files/${imageId3}`}
+                    alt="Property"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority
+                    onLoad={() => setIsLoading(false)}
+                    onError={() => {
+                      setHasError(true);
+                      setIsLoading(false);
+                    }}
+                    className={`object-cover transition-opacity duration-500 ${
+                      isLoading ? "opacity-0" : "opacity-100"
+                    }`}
+                  />
+                )}
               </div>
             </div>
           </div>
 
           {/* Property Details Section */}
           <div className="flex flex-col">
-            <h3 className="text-2xl font-bold mb-2">{PropertyDetailsData.name}</h3>
+            <h3 className="text-2xl font-bold mb-2">
+              {PropertyDetailsData.name}
+            </h3>
             <div className="flex items-center text-gray-500 mb-6">
               <MapPinIcon className="h-4 w-4 mr-1 flex-shrink-0" />
               <span className="text-sm">{PropertyDetailsData.address}</span>
@@ -137,7 +150,7 @@ export default function PropertyDetails({PropertyDetailsData}: any) {
               <Avatar className="h-12 w-12 mr-4 border">
                 <AvatarImage src="/placeholder-user.jpg" alt="Darren Smith" />
                 <AvatarFallback>
-                {user?.fullName ? getInitials(user.fullName) : "NA"}
+                  {user?.fullName ? getInitials(user.fullName) : "NA"}
                 </AvatarFallback>
               </Avatar>
               <div>

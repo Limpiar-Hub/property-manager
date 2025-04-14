@@ -6,8 +6,12 @@ import { useAppSelector } from "@/hooks/useReduxHooks";
 // import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 
+
 interface Property {
   id: string;
+  name: string;
+  address: string;
+  images: string[];
 }
 
 interface Booking {

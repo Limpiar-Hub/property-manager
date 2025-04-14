@@ -1,196 +1,356 @@
-let userWallet: any;
-  const getUserFromLocalStorage = localStorage.getItem("userWallet");
-  if (getUserFromLocalStorage) {
-    const user = JSON.parse(getUserFromLocalStorage)
-    userWallet = user.data;
-  }
-
-export const AddNewProperty = async (formData: any, token: string) => {
-    let result = {
-        data: null,
-        error: null
-    }
-    try {
-        const response = await fetch("https://limpiar-backend.onrender.com/api/properties", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${userWallet.token}`, // Set the Bearer token
-          },
-          body: formData,
-        });
-
-        const data = await response.json();
-        result.data = data
-  
-        if (!response.ok) {
-          throw new Error(data.message || "Unable to add Property");
-        }
-
-    } catch (err: any) {
-        console.log(err);
-        result.error = err
-    } finally {
-        return result
-    }
+interface UserWallet {
+  token: string;
+  wallet: {
+    _id: string;
+    transactions: Record<string, WalletTransaction[]>;
+  };
+  user: {
+    userId: string;
+  };
+  data?: string;
 }
 
-// PAYMENT MODULE HANDLERS
-export const fetchUserBalanceData = async () => {
+interface WalletTransaction {
+  _id?: string;
+  id?: string;
+  amount: number;
+  currency?: string;
+  status?: string;
+  description?: string;
+  transactionId?: string;
+  timestamp: string;
+  from?: string;
+}
+
+interface PaymentTransaction {
+  _id?: string;
+  id?: string;
+  amount: number;
+  currency?: string;
+  status?: string;
+  description?: string;
+  paymentIntentId?: string;
+  reference?: string;
+  createdAt: string;
+  created?: string;
+}
+
+interface StandardizedTransaction {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string;
+  reference: string;
+  createdAt: string;
+  method: string;
+}
+
+interface RequestResult<T> {
+  data: T | null;
+  error: string | null;
+}
+
+// Get user wallet from localStorage
+let userWallet: UserWallet | null = null;
+const getUserFromLocalStorage = localStorage.getItem("userWallet");
+if (getUserFromLocalStorage) {
+  const user = JSON.parse(getUserFromLocalStorage);
+  userWallet = user.data;
+}
+
+export const AddNewProperty = async (
+  formData: FormData
+): Promise<RequestResult<unknown>> => {
+  const result: RequestResult<unknown> = {
+    data: null,
+    error: null,
+  };
+
+  if (!userWallet) {
+    result.error = "User not authenticated";
+    return result;
+  }
+
   try {
-    const GetWalletBalance = await fetch(`https://limpiar-backend.onrender.com/api/wallets/balances/${userWallet.wallet._id
-    }`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${userWallet.token}`
+    const response = await fetch(
+      "https://limpiar-backend.onrender.com/api/properties",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${userWallet.token}`,
+        },
+        body: formData,
       }
-    }); 
+    );
+
+    const data = await response.json();
+    result.data = data;
+
+    if (!response.ok) {
+      throw new Error(data.message || "Unable to add Property");
+    }
+  } catch (err) {
+    console.log(err);
+    result.error = err instanceof Error ? err.message : String(err);
+  }
+
+  return result;
+};
+
+// PAYMENT MODULE HANDLERS
+export const fetchUserBalanceData = async (): Promise<
+  RequestResult<number>
+> => {
+  if (!userWallet) {
+    return { data: null, error: "User not authenticated" };
+  }
+
+  try {
+    const GetWalletBalance = await fetch(
+      `https://limpiar-backend.onrender.com/api/wallets/balances/${userWallet.wallet._id}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${userWallet.token}`,
+        },
+      }
+    );
 
     const res = await GetWalletBalance.json();
 
     if (!GetWalletBalance.ok) {
-      throw new Error(res.message || "Login failed")
+      throw new Error(res.message || "Login failed");
     }
 
-    return {data: res.wallet.balance, err: null}
-  } catch (err:any) {
-    return {data: null, err: err.message}
+    return { data: res.wallet.balance, error: null };
+  } catch (err) {
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
-}
+};
 
-export const fetchTransactionData = async () => {
+export const fetchTransactionData = async (): Promise<
+  RequestResult<StandardizedTransaction[]>
+> => {
+  if (!userWallet) {
+    return { data: null, error: "User not authenticated" };
+  }
+
   try {
-    const [GetPaymentTransactions, GetWalletTransactions] = await  Promise.all([
-      fetch(`https://limpiar-backend.onrender.com/api/payments/user/${userWallet.user.userId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${userWallet.token}`
+    const [GetPaymentTransactions, GetWalletTransactions] = await Promise.all([
+      fetch(
+        `https://limpiar-backend.onrender.com/api/payments/user/${userWallet.user.userId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${userWallet.token}`,
+          },
         }
-      }), 
+      ),
 
-      fetch(`https://limpiar-backend.onrender.com/api/wallets/${userWallet.wallet._id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${userWallet.token}`
+      fetch(
+        `https://limpiar-backend.onrender.com/api/wallets/${userWallet.wallet._id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${userWallet.token}`,
+          },
         }
-      })
+      ),
     ]);
-    
 
     const res1 = await GetPaymentTransactions.json();
     const res2 = await GetWalletTransactions.json();
 
     if (!GetPaymentTransactions.ok) {
-      throw new Error(res1.message || "Unable to get Transaction History")
+      throw new Error(res1.message || "Unable to get Transaction History");
     }
     if (!GetWalletTransactions.ok) {
-      throw new Error(res2.message || "Unable to get Transaction History")
+      throw new Error(res2.message || "Unable to get Transaction History");
     }
 
-    const Walletobj = await res2.wallet.transactions
-    const WalletTransactions = Object.keys(Walletobj).flatMap((wallet: any) => {
+    const Walletobj = res2.wallet.transactions;
+    const WalletTransactions: StandardizedTransaction[] = Object.keys(
+      Walletobj
+    ).flatMap((wallet: string) => {
       if (Walletobj[wallet].length === 0) return [];
-      return Walletobj[wallet].map((txn: any) => {
+      return Walletobj[wallet].map((txn: WalletTransaction) => {
         return {
-          id: txn._id || txn.id,
+          id: txn._id || txn.id || "unknown",
           amount: txn.amount,
           currency: txn.currency || "USD",
           status: txn.status || "N/A",
-          description: wallet === 'refunds' ? `Refund of ${txn.amount} from ${txn.from}` : txn.description || "No description provided", // Fallback description
+          description:
+            wallet === "refunds" && txn.from
+              ? `Refund of ${txn.amount} from ${txn.from}`
+              : txn.description || "No description provided",
           reference: txn.transactionId || "N/A",
           createdAt: txn.timestamp,
           method: "wallet",
-        }
-      })
+        };
+      });
     });
 
-    const PaymentTransactions = res1.data.map((txn: any) => {
-      return {
-        id: txn._id || txn.id,
-        amount: txn.amount,
-        currency: txn.currency || "USD",
-        status: txn.status || "N/A",
-        description: txn.description || `Payment of ${txn.amount} ${txn.currency}`, // Fallback description
-        reference: txn.paymentIntentId || txn.reference,
-        createdAt: txn.createdAt || txn.created,
-        method: "stripe",
+    const PaymentTransactions: StandardizedTransaction[] = res1.data.map(
+      (txn: PaymentTransaction) => {
+        return {
+          id: txn._id || txn.id || "unknown",
+          amount: txn.amount,
+          currency: txn.currency || "USD",
+          status: txn.status || "N/A",
+          description:
+            txn.description ||
+            `Payment of ${txn.amount} ${txn.currency || "USD"}`,
+          reference: txn.paymentIntentId || txn.reference || "N/A",
+          createdAt: txn.createdAt || txn.created || new Date().toISOString(),
+          method: "stripe",
+        };
       }
-    });
-
-    const combinedTransactions = [...WalletTransactions, ...PaymentTransactions].flat();
-    combinedTransactions.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    return {data:combinedTransactions, err: null}
-  } catch (err:any) {
-    return {data: null, err: err.message}
+    const combinedTransactions = [
+      ...WalletTransactions,
+      ...PaymentTransactions,
+    ];
+    combinedTransactions.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return { data: combinedTransactions, error: null };
+  } catch (err) {
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
+};
+
+interface PaymentBody {
+  userId?: string;
+  amount: number;
+  email?: string;
+  currency: string;
 }
 
-export const createPayment = async ({body}: {body: {userId: string | undefined, amount: number, email: string | undefined, currency: string}} ) => {
+export const createPayment = async ({
+  body,
+}: {
+  body: PaymentBody;
+}): Promise<RequestResult<unknown>> => {
+  if (!userWallet) {
+    return { data: null, error: "User not authenticated" };
+  }
+
   try {
-    const response = await fetch("https://limpiar-backend.onrender.com/api/payments/create-payment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${userWallet.token}`, // Set the Bearer token
-      },
-      body: JSON.stringify(body),
-    })
+    const response = await fetch(
+      "https://limpiar-backend.onrender.com/api/payments/create-payment",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${userWallet.token}`,
+        },
+        body: JSON.stringify(body),
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || "Unable to process payment at the moment")
+      throw new Error(
+        data.message || "Unable to process payment at the moment"
+      );
     }
 
-    return {data: data, error: null}
-  } catch (err: any) {
-    console.log(err)
-    return {data: null, error: err.message}
-  } 
-} 
+    return { data, error: null };
+  } catch (err) {
+    console.log(err);
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+};
 
-export const verifyStripePayment = async ({session_id}: {session_id: string}) => {
+export const verifyStripePayment = async ({
+  session_id,
+}: {
+  session_id: string;
+}): Promise<RequestResult<unknown>> => {
+  if (!userWallet) {
+    return { data: null, error: "User not authenticated" };
+  }
+
   try {
-    const res = await fetch(`https://limpiar-backend.onrender.com/api/payments/success/${session_id}`, {
+    const res = await fetch(
+      `https://limpiar-backend.onrender.com/api/payments/success/${session_id}`,
+      {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${userWallet.token}`
+          Authorization: `Bearer ${userWallet.token}`,
         },
-      });;
+      }
+    );
 
     if (!res.ok) {
-      throw new Error('Failed to verify payment');
+      throw new Error("Failed to verify payment");
     }
 
     const data = await res.json();
-    return {data: data, error: null}
-  } catch (err: any) {
-    return {data: null, error: err.message}
+    return { data, error: null };
+  } catch (err) {
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
+};
+
+interface RefundBody {
+  userId?: string;
+  amount: number;
+  reason: string;
 }
 
-export const requestRefund = async ({body}: {body: {userId: string | undefined, amount: number, reason: string}} ) => {
+export const requestRefund = async ({
+  body,
+}: {
+  body: RefundBody;
+}): Promise<RequestResult<string>> => {
+  if (!userWallet) {
+    return { data: null, error: "User not authenticated" };
+  }
+
   try {
-    const response = await fetch("https://limpiar-backend.onrender.com/api/wallets/request-refund", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${userWallet.token}`
-      },
-      body: JSON.stringify(body),
-    })
-    
-    const data = await response.json(); 
-    
+    const response = await fetch(
+      "https://limpiar-backend.onrender.com/api/wallets/request-refund",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${userWallet.token}`,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(data.message || "Unable to process request at the moment");
+      throw new Error(
+        data.message || "Unable to process request at the moment"
+      );
     }
 
-    console.log(data.message)
-    return {data: data.message, error: null}
-  } catch (err: any) {
-    return {data: null, error: err.message}
+    return { data: data.message, error: null };
+  } catch (err) {
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
-}
+};

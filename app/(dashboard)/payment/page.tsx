@@ -15,6 +15,17 @@ type Transaction = {
   amount: number;
   date: string;
   description: string;
+  paymentMethod: string;
+  status: "pending" | "succeeded" | "Rejected" | "completed";
+};
+
+// Define the API response type for transaction data
+type TransactionApiResponse = {
+  id: string;
+  amount: number;
+  date?: string;
+  description?: string;
+  paymentMethod?: string;
   status: string;
 };
 
@@ -41,7 +52,7 @@ const RefundModal = dynamic(
 export default function PaymentsPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [transactions, setTransactions] = useState<Transaction[]>([]); // Typed transactions
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -52,7 +63,18 @@ export default function PaymentsPage() {
         fetchUserBalanceData(),
       ]);
 
-      if (transactionsRes.data) setTransactions(transactionsRes.data);
+      if (transactionsRes.data) {
+        setTransactions(
+          transactionsRes.data.map((transaction: TransactionApiResponse) => ({
+            id: transaction.id,
+            amount: transaction.amount,
+            date: transaction.date || "",
+            description: transaction.description || "",
+            paymentMethod: transaction.paymentMethod || "",
+            status: transaction.status as "pending" | "succeeded" | "Rejected" | "completed",
+          }))
+        );
+      }
       if (balanceRes.data) {
         setWalletBalance(balanceRes.data);
         dispatch(setUserBalance(balanceRes.data));
@@ -60,7 +82,7 @@ export default function PaymentsPage() {
     };
 
     getData().finally(() => setIsLoading(false));
-  }, [dispatch]); // Added `dispatch` to the dependency array
+  }, [dispatch]);
 
   return (
     <div className="flex bg-gray-50">
