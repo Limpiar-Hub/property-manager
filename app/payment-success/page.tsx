@@ -1,15 +1,21 @@
-
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyStripePayment } from '@/components/handlers';
 
-const PaymentSuccess = () => {
+const PaymentSuccessContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const session_id = searchParams.get("session_id");
     if (!session_id) return;
 
@@ -30,9 +36,17 @@ const PaymentSuccess = () => {
     };
 
     verifyPayment();
-  }, [searchParams, router]);
+  }, [searchParams, router, isClient]);
 
-  return null; // No UI – user will be redirected
+  return null;
+};
+
+const PaymentSuccess = () => {
+  return (
+    <Suspense fallback={null}>
+      <PaymentSuccessContent />
+    </Suspense>
+  );
 };
 
 export default PaymentSuccess;
