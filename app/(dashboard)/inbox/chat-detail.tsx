@@ -51,30 +51,65 @@ export function ChatDetail() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !selectedChatId || !token) return;
-
+  
+    if (!message.trim() || !selectedChatId || !token || !chat) {
+      console.error("Missing message content, chat ID, or token.");
+      return;
+    }
+  
+    // Ensure chat has more than one participant
+    const otherParticipantId =
+      chat.participants.length > 1
+        ? chat.participants.find((id) => id !== chat.participants[0]) // Just using the first participant as reference
+        : null;
+  
+    // Log participants for debugging
+    console.log("Chat participants:", chat.participants);
+    console.log("Other participant ID:", otherParticipantId);
+  
+    // Check if other participant exists
+    if (!otherParticipantId) {
+      console.error("No other participant found or chat is not properly initialized", {
+        participants: chat.participants,
+      });
+      alert("No other participant found or the chat is not properly initialized.");
+      return;
+    }
+  
     try {
-      const otherParticipantId = chat?.participants.find(
-        (id) => id !== currentUserId
-      );
-      if (!otherParticipantId) {
-        console.error("No other participant found");
-        return;
-      }
-
-      await dispatch(
-        sendChatMessage({
+      // Send the chat message to the other participant using the backend API
+      const response = await fetch('https://limpiar-backend.onrender.com/api/chats/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // If you're using token-based authentication
+        },
+        body: JSON.stringify({
           receiverId: otherParticipantId,
           text: message,
           chatId: selectedChatId,
-          token,
         })
-      ).unwrap();
-      setMessage("");
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error sending message: ${response.statusText}`);
+      }
+  
+      const responseData = await response.json();
+      console.log("Message sent successfully:", responseData);
+  
+      setMessage("");  // Clear message input after sending
     } catch (error) {
       console.error("Error sending message:", error);
+      alert("An error occurred while sending your message. Please try again.");
     }
   };
+  
+  
+  
+  
+  
+  
 
   if (!selectedChatId) {
     return (

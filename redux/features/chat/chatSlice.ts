@@ -2,9 +2,14 @@ import { RootState } from "@/redux/store";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { use } from "react";
+import { format } from 'date-fns';
+
+
+
 
 export interface ChatMessage {
   id: string;
+  chatId: string;
   senderId: string;
   receiverId: string;
   text: string;
@@ -12,6 +17,7 @@ export interface ChatMessage {
   isRead: boolean;
   senderName?: string;
   senderAvatar?: string;
+  timestamp?: string; 
 }
 
 export interface Chat {
@@ -63,18 +69,18 @@ export const createChatThread = createAsyncThunk(
     { getState, rejectWithValue }
   ) => {
     try {
-      // Check if the chat already exists in the state
       const state = getState() as RootState;
-      const existingChat = state.chat.chats.find((chat) =>
-        chat.participants.every((id) => participantIds.includes(id))
-      );
+
+      const existingChat = state.chat.chats.find((chat) => {
+        const existingSorted = [...chat.participants].sort().join(",");
+        const newSorted = [...participantIds].sort().join(",");
+        return existingSorted === newSorted;
+      });
 
       if (existingChat) {
-        // If the chat already exists, return it
         return existingChat;
       }
 
-      // If the chat does not exist, create a new one
       const response = await axios.post(
         "https://limpiar-backend.onrender.com/api/chats/thread",
         {
@@ -88,13 +94,14 @@ export const createChatThread = createAsyncThunk(
         }
       );
 
-      return response.data; // Assuming the response contains the new chat thread
+      return response.data;
     } catch (error: any) {
       console.error("Error creating chat thread:", error);
       return rejectWithValue(error.response?.data || "Failed to create chat thread");
     }
   }
 );
+
 
 
 
@@ -156,10 +163,11 @@ export const fetchChatMessages = createAsyncThunk(
           id: msg._id,
           senderId: msg.senderId,
           text: msg.text,
-          createdAt: msg.timestamp,
+          createdAt: format(new Date(msg.timestamp), 'MMMM dd, yyyy hh:mm a'),
           isRead: false,
         })),
       };
+      
     } catch (error: any) {
       console.error("Error fetching chat messages:", error);
       return rejectWithValue(error.response?.data || "Failed to fetch messages");
@@ -264,12 +272,18 @@ const chatSlice = createSlice({
       .addCase(sendChatMessage.fulfilled, (state, action) => {
         state.loading = false;
         const { chatId } = action.meta.arg;
+      
         const chat = state.chats.find((c) => c.id === chatId);
         if (chat) {
-          chat.messages.push(action.payload);
-          chat.lastMessage = action.payload;
+          const messageWithChatId = {
+            ...action.payload,
+            chatId, 
+          };
+          chat.messages.push(messageWithChatId);
+          chat.lastMessage = messageWithChatId;
         }
       })
+      
       .addCase(sendChatMessage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to send message";
