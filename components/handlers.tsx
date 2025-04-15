@@ -53,7 +53,9 @@ interface RequestResult<T> {
 
 // Get user wallet from localStorage
 let userWallet: UserWallet | null = null;
-const getUserFromLocalStorage = localStorage.getItem("userWallet");
+const getUserFromLocalStorage = typeof window !== 'undefined'
+? JSON.parse(localStorage.getItem('userWallet') || '{}')
+: null;
 if (getUserFromLocalStorage) {
   const user = JSON.parse(getUserFromLocalStorage);
   userWallet = user.data;
@@ -277,11 +279,12 @@ export const createPayment = async ({
 };
 
 export const verifyStripePayment = async ({
-  session_id,
+  session_id, token
 }: {
   session_id: string;
+  token: string | null;
 }): Promise<RequestResult<unknown>> => {
-  if (!userWallet) {
+  if (!token) {
     return { data: null, error: "User not authenticated" };
   }
 
@@ -291,7 +294,7 @@ export const verifyStripePayment = async ({
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${userWallet.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
