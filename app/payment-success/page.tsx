@@ -1,11 +1,22 @@
-
 'use client';
+export const dynamic = 'force-dynamic';
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyStripePayment } from '@/components/handlers';
+import { useAppSelector } from "@/hooks/useReduxHooks";
+import { Suspense } from 'react';
 
-const PaymentSuccess = () => {
+const PaymentSuccessPage = () => {
+  return (
+    <Suspense fallback={null}>
+      <PaymentSuccessInner />
+    </Suspense>
+  );
+};
+
+const PaymentSuccessInner = () => {
+  const { token } = useAppSelector((state) => state.auth);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -15,7 +26,7 @@ const PaymentSuccess = () => {
 
     const verifyPayment = async () => {
       try {
-        const { data, error } = await verifyStripePayment({ session_id }) as { data: { success: boolean }, error: string };
+        const { data, error } = await verifyStripePayment({ session_id, token }) as { data: { success: boolean }, error: string };
 
         if (data.success) {
           router.push('/payment');
@@ -30,9 +41,9 @@ const PaymentSuccess = () => {
     };
 
     verifyPayment();
-  }, [searchParams, router]);
+  }, [searchParams, router, token]);
 
   return null; // No UI – user will be redirected
 };
 
-export default PaymentSuccess;
+export default PaymentSuccessPage;
