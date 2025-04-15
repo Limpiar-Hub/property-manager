@@ -1,5 +1,4 @@
 import { Check } from "lucide-react"
-import { Loader } from "lucide-react"
 import { Button } from "./ui/button"
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks"
 import { resetProperty } from "@/redux/features/addProperty/propertySlice"

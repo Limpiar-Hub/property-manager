@@ -1,23 +1,22 @@
+
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Search, Plus, MessageSquare, TicketCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TicketList } from "./ticket-list";
 import { TicketDetail } from "./ticket-detail";
 import { ChatList } from "./chat-list";
 import { ChatDetail } from "./chat-detail";
 import dynamic from "next/dynamic";
-import {
-  setFilter,
-  fetchTicketThreads,
-} from "@/redux/features/tickets/ticketSlice";
+import { fetchTicketThreads } from "@/redux/features/tickets/ticketSlice";
 import { fetchAllThreads } from "@/redux/features/chat/chatSlice";
 import type { RootState } from "@/redux/store";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 
 const NewTicketDialog = dynamic(
   () =>
@@ -30,41 +29,35 @@ const NewTicketDialog = dynamic(
 export function InboxContent() {
   const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"tickets" | "chats">("chats");
-  const dispatch = useDispatch();
-  const token = useSelector((state: RootState) => state.auth.token);
-  const chatLoading = useSelector((state: RootState) => state.chat.loading);
-  const ticketLoading = useSelector(
+  const dispatch = useAppDispatch();
+  const token = useAppSelector((state: RootState) => state.auth.token);
+  const chatLoading = useAppSelector((state: RootState) => state.chat.loading);
+  const ticketLoading = useAppSelector(
     (state: RootState) => state.tickets.loading
   );
-  const selectedTicketId = useSelector(
+  const selectedTicketId = useAppSelector(
     (state: RootState) => state.tickets.selectedTicketId
   );
-  const selectedChatId = useSelector(
+  const selectedChatId = useAppSelector(
     (state: RootState) => state.chat.selectedChatId
   );
-  const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
+  const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
-    if (token) {
+    if (token && currentUserId) {
       if (activeTab === "chats") {
-        dispatch(fetchAllThreads({ userId: currentUserId || "", token }) as any);
+        dispatch(fetchAllThreads({ userId: currentUserId, token }));
       } else {
-        dispatch(
-          fetchTicketThreads({
-            userId: currentUserId || "",
-            token,
-          }) as any
-        );
+        dispatch(fetchTicketThreads({ userId: currentUserId, token }));
       }
     }
-  }, [dispatch, token, activeTab]);
+  }, [dispatch, token, activeTab, currentUserId]);
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
       {/* Left side - List */}
-
       {(!isMobile ||
         (activeTab === "tickets" && !selectedTicketId) ||
         (activeTab === "chats" && !selectedChatId)) && (
@@ -130,7 +123,6 @@ export function InboxContent() {
       )}
 
       {/* Right side - Detail */}
-
       <div
         className={`flex-1 ${
           isMobile

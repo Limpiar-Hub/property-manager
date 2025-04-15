@@ -1,11 +1,15 @@
-import PropertyInfo from "@/components/property-metrics/property-info";
+"use client";
 
-export default async function PropertyMetrics({ params }: { params: { id: string } }) {
-    const {id} = await params;
-    return (
-        <div>
-            {/* Pass the id as a prop to the Client Component */}
-            <PropertyInfo id={id} />
-        </div>
-    );
+import PropertyInfo from "@/components/property-metrics/property-info";
+import { useParams } from "next/navigation";
+
+export default function PropertyMetrics() {
+  const params = useParams();
+  const id = params.id as string;
+
+  return (
+    <div>
+      <PropertyInfo id={id} />
+    </div>
+  );
 }

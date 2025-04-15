@@ -20,7 +20,7 @@ export default function DashboardLayout({
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true); 
+    setIsClient(true);
 
     if (token) {
       dispatch(checkTokenExpiration());
@@ -29,8 +29,7 @@ export default function DashboardLayout({
     if (!isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, token, dispatch]);
-
+  }, [isAuthenticated, token, dispatch, router]); // Added `router` to the dependency array
 
   if (!isClient) {
     return (
@@ -39,7 +38,6 @@ export default function DashboardLayout({
       </div>
     );
   }
-
 
   if (!isAuthenticated) {
     return null;

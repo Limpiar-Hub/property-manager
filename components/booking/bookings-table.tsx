@@ -1,10 +1,9 @@
-
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
 import BookingDetailsSidebar from "./booking-details-sidebar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { BookingStatus } from "@/types/booking";
+import { Booking, BookingStatus } from "@/types/booking";
 import ConfirmCancelModal from "./confirm-cancel-modal";
 import axios from "axios";
 import { useAppSelector } from "@/hooks/useReduxHooks";
@@ -13,7 +12,7 @@ import { toast } from "sonner";
 interface BookingsTableProps {
   activeTab: BookingStatus;
   searchQuery: string;
-  bookings: any[];
+  bookings: Booking[];
   currentPage: number;
   rowsPerPage: number;
   totalBookings: number;
@@ -32,7 +31,7 @@ export default function BookingsTable({
   onRowsPerPageChange,
 }: BookingsTableProps) {
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
-  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const { token } = useAppSelector((state) => state.auth);
@@ -58,7 +57,7 @@ export default function BookingsTable({
     );
   };
 
-  const handleBookingClick = (booking: any) => {
+  const handleBookingClick = (booking: Booking) => {
     setSelectedBooking(booking);
   };
 
@@ -179,7 +178,7 @@ export default function BookingsTable({
                   </td>
                   <td className="p-3 sm:p-4 border border-gray-200">
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      booking.status === 'active' ? 'bg-green-100 text-green-800' :
+                      booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
                       booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       booking.status === 'completed' ? 'bg-blue-100 text-blue-800' :
                       'bg-red-100 text-red-800'

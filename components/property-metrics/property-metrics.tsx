@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -5,14 +6,23 @@ import { ArrowUpIcon, CopyIcon, BarChart4Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function PropertyMetrics({bookings}: any) {
+export interface Booking {
+  id: string;
+  status: string;
+  // Add other booking properties as needed
+}
+
+export interface PropertyMetricsProps {
+  bookings: Booking[];
+}
+
+export default function PropertyMetrics({ bookings }: PropertyMetricsProps) {
   const [timeframe, setTimeframe] = useState("This Week")
 
-  const countActive = bookings.filter((book: any) => book.status.toLowerCase().includes("confirm"));
-  const countPending = bookings.filter((book: any) => book.status.toLowerCase().includes("pend"));
-  const countCancelled = bookings.filter((book: any) => book.status.toLowerCase().includes("cancel"));
-  const countCompleted = bookings.filter((book: any) => book.status.toLowerCase().includes("complete"));
-
+  const countActive = bookings.filter((book) => book.status.toLowerCase().includes("confirm"));
+  const countPending = bookings.filter((book) => book.status.toLowerCase().includes("pend"));
+  const countCancelled = bookings.filter((book) => book.status.toLowerCase().includes("cancel"));
+  // Removed unused countCompleted as it wasn't being used in the component
 
   return (
     <div className="mb-8">
@@ -113,4 +123,3 @@ export default function PropertyMetrics({bookings}: any) {
     </div>
   )
 }
-

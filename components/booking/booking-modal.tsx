@@ -6,7 +6,6 @@ import { X } from "lucide-react";
 import ServiceTypeStep from "./steps/service-type-step";
 import PropertyStep from "./steps/property-step";
 import DateStep from "./steps/date-step";
-import NotesStep from "./steps/notes-step";
 import BookingPreview from "./booking-preview";
 import ProgressSteps from "./progress-steps";
 import dynamic from "next/dynamic";

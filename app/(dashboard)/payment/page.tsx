@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, RefreshCcw} from "lucide-react";
+import { Plus, RefreshCcw } from "lucide-react";
 import { TransactionTable } from "@/components/payment/transaction-table";
 import { fetchTransactionData, fetchUserBalanceData } from "@/components/handlers";
 import { useDispatch } from "react-redux";
@@ -10,6 +10,24 @@ import { openModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import { setUserBalance } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import dynamic from "next/dynamic";
 
+type Transaction = {
+  id: string;
+  amount: number;
+  date: string;
+  description: string;
+  paymentMethod: string;
+  status: "pending" | "succeeded" | "Rejected" | "completed";
+};
+
+// Define the API response type for transaction data
+type TransactionApiResponse = {
+  id: string;
+  amount: number;
+  date?: string;
+  description?: string;
+  paymentMethod?: string;
+  status: string;
+};
 
 const TopUpModal = dynamic(
   () =>
@@ -33,9 +51,8 @@ const RefundModal = dynamic(
 
 export default function PaymentsPage() {
   const [walletBalance, setWalletBalance] = useState(0);
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -43,32 +60,38 @@ export default function PaymentsPage() {
     const getData = async () => {
       const [transactionsRes, balanceRes] = await Promise.all([
         fetchTransactionData(),
-        fetchUserBalanceData()
+        fetchUserBalanceData(),
       ]);
-  
-      if (transactionsRes.data) setTransactions(transactionsRes.data);
-      if (transactionsRes.err) setError(transactionsRes.err);
-  
+
+      if (transactionsRes.data) {
+        setTransactions(
+          transactionsRes.data.map((transaction: TransactionApiResponse) => ({
+            id: transaction.id,
+            amount: transaction.amount,
+            date: transaction.date || "",
+            description: transaction.description || "",
+            paymentMethod: transaction.paymentMethod || "",
+            status: transaction.status as "pending" | "succeeded" | "Rejected" | "completed",
+          }))
+        );
+      }
       if (balanceRes.data) {
         setWalletBalance(balanceRes.data);
         dispatch(setUserBalance(balanceRes.data));
       }
-      if (balanceRes.err) setError(balanceRes.err);
     };
 
-    setIsLoading(false);
-  
-    getData();
-  }, []);
+    getData().finally(() => setIsLoading(false));
+  }, [dispatch]);
 
   return (
-    <div className="flex  bg-gray-50">
+    <div className="flex bg-gray-50">
       {/* Main content */}
       <main className="flex-1 overflow-auto pb-20 md:pb-0">
         {/* Content */}
         <div className="p-6">
           <h1 className="text-2xl font-bold mb-8">Payments</h1>
-          <div className="flex flex-col items-center justify-center ">
+          <div className="flex flex-col items-center justify-center">
             <div className="max-w-md w-full mx-auto">
               <div className="bg-[#2D82FF] rounded-lg p-6 text-white relative overflow-hidden shadow-lg">
                 {/* Wave pattern background */}
@@ -114,7 +137,13 @@ export default function PaymentsPage() {
 
                 <div className="relative z-10 text-center">
                   <p className="text-lg mb-2">Wallet Balance</p>
-                  <p className="text-4xl font-bold">${isLoading ? <span className="text-xl">Loading...</span>: walletBalance}</p>
+                  <p className="text-4xl font-bold">
+                    {isLoading ? (
+                      <span className="text-xl">Loading...</span>
+                    ) : (
+                      `$${walletBalance}`
+                    )}
+                  </p>
                 </div>
               </div>
 
@@ -135,17 +164,16 @@ export default function PaymentsPage() {
                   Request Refund
                 </button>
               </div>
-
             </div>
           </div>
 
           <div className="mt-10">
             <h2 className="text-xl font-bold mb-4">Transaction History</h2>
-            <TransactionTable transactions={transactions}/>
+            <TransactionTable transactions={transactions} />
           </div>
         </div>
         <TopUpModal fetchTransactions={fetchTransactionData} />
-        <RefundModal/>
+        <RefundModal />
       </main>
     </div>
   );

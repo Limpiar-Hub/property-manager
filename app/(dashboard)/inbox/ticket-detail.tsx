@@ -11,13 +11,13 @@ import {
   createTicket,
   setSelectedTicket,
 } from "@/redux/features/tickets/ticketSlice";
-import type { RootState } from "@/redux/store";
+import type { RootState, AppDispatch } from "@/redux/store";
 import Image from "next/image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function TicketDetail() {
   const [reply, setReply] = useState("");
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
   const selectedTicketId = useSelector(
     (state: RootState) => state.tickets.selectedTicketId
   );
@@ -55,11 +55,11 @@ export function TicketDetail() {
     try {
       await dispatch(
         createTicket({
-          userId: ticket.userId, 
+          userId: ticket.userId,
           messageText: reply,
           token: token || "",
-        }) as any
-      );
+        })
+      ).unwrap(); // Use `.unwrap()` to handle the result properly
       setReply("");
     } catch (error) {
       console.error("Error sending ticket reply:", error);

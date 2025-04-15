@@ -10,7 +10,6 @@ import TitleInput from "@/components/property-form/title-input"
 import LocationForm from "@/components/property-form/location-form"
 import ImageUpload from "@/components/property-form/image-upload"
 import Preview from "@/components/property-form/preview"
-import dynamic from "next/dynamic";
 import SuccessAddNewProperty from "@/components/successAddNewProperty"
 
 

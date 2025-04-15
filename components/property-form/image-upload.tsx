@@ -10,13 +10,11 @@ import Image from "next/image";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useImageContext } from "../imageFileProvider";
-import SuccessAddNewProperty from "../successAddNewProperty";
 
 export default function ImageUpload() {
-  const { addFiles, removeFile } = useImageContext();
+  const { addFiles } = useImageContext();
   const dispatch = useAppDispatch();
   const images = useAppSelector((state) => state.property.images);
-  const {openModal} = useAppSelector((state) => state.property);
   const [uploading, setUploading] = useState(false);
 
   const onDrop = useCallback(
@@ -26,7 +24,7 @@ export default function ImageUpload() {
       setTimeout(() => {
         acceptedFiles.forEach((file) => {
           const imageUrl = URL.createObjectURL(file);
-          addFiles(acceptedFiles);
+          addFiles(acceptedFiles); // Add files to the context
           dispatch(
             addImage({
               url: imageUrl,
@@ -37,7 +35,7 @@ export default function ImageUpload() {
         setUploading(false);
       }, 1000);
     },
-    [dispatch, images.length]
+    [dispatch, images.length, addFiles] // Added 'addFiles' to the dependency array
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -49,12 +47,6 @@ export default function ImageUpload() {
   const handleRemoveImage = (url: string) => {
     dispatch(removeImage(url));
   };
-
-  // if (openModal) {
-  //     return (
-  //       <SuccessAddNewProperty/>
-  //     )
-  //   }
 
   return (
     <div className="w-full max-w-4xl mx-auto">

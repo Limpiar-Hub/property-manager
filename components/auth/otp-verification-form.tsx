@@ -145,18 +145,17 @@ export function OtpVerificationForm() {
       setIsResending(true);
       setError("");
 
-      // gonna Implement resend code logic here
+      // Implement resend code logic here
       // This would typically call an API endpoint to resend the OTP
       // await dispatch(resendOtp({ phoneNumber: getPhoneNumber() })).unwrap();
 
       setCountdown(60);
-    } catch (err) {
+    } catch {
       setError("Failed to resend code. Please try again.");
     } finally {
       setIsResending(false);
     }
   };
-
 
   const formatPhoneNumber = (phone?: string) => {
     if (!phone) return "your phone";
