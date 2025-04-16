@@ -415,7 +415,7 @@ export const propertyCategories = [
       ],
     },
     {
-      id: "Agriculture",
+      id: "gricultural & Specialized Commercial3",
       name: "Agricultural & Specialized Commercial",
       description: "Corporate & Administrative",
       icon: "Wheat",
