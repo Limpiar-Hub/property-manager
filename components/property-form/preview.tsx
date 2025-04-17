@@ -141,7 +141,25 @@ export default function Preview() {
 
           {/* Property Details Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-2xl font-semibold mb-6">Property Detail</h2>
+            <h2 className="text-3xl font-semibold mb-6">Property Details</h2>
+            <div className="space-y-2">
+              <p className="flex justify-between">
+                <span className="text-xl font-semibold">Name</span>
+                <span className="relative max-w-[50%]">{property.title}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-xl font-semibold">Type</span>
+                <span className="relative max-w-[50%]">{property.category}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-xl font-semibold">Sub Type</span>
+                <span className="relative max-w-[50%]">{property.subCategory}</span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-xl font-semibold">Address</span>
+                <span className="relative max-w-[55%]">{property.location.address}</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
