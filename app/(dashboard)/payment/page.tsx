@@ -141,7 +141,7 @@ export default function PaymentsPage() {
                     {isLoading ? (
                       <span className="text-xl">Loading...</span>
                     ) : (
-                      `$${walletBalance}`
+                      `$${walletBalance.toLocaleString()}`
                     )}
                   </p>
                 </div>
