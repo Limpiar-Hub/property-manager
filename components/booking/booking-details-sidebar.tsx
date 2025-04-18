@@ -1,7 +1,5 @@
-
-
-
 "use client";
+
 import { useEffect } from "react";
 import Image from "next/image";
 import { X, MessageSquare } from "lucide-react";
@@ -11,7 +9,7 @@ import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "@/hooks/useReduxHooks";
-import { createChatThread, setSelectedChat } from "@/redux/features/chat/chatSlice";
+import { createChatThread, setSelectedChat, fetchAllThreads } from "@/redux/features/chat/chatSlice";
 import { RootState } from "@/redux/store";
 import { AppDispatch } from "@/redux/store";
 
@@ -44,7 +42,6 @@ export default function BookingDetailsSidebar({
     };
   }, [onClose]);
 
-  // Update the handleSendMessage function in booking-details-sidebar.tsx
   const handleSendMessage = async () => {
     try {
       if (!token) {
@@ -84,7 +81,6 @@ export default function BookingDetailsSidebar({
       }
   
       console.log("Creating new chat thread...");
-  
       const response = await dispatch(
         createChatThread({
           participantIds: [propertyManagerId, cleanerId],
@@ -97,9 +93,15 @@ export default function BookingDetailsSidebar({
   
       if (newChat) {
         console.log("New chat created:", newChat);
-        
+  
         // Ensure chat has both participants initialized
         if (newChat.participants && newChat.participants.length === 2) {
+          // Fetch all threads to update the chat list
+          console.log("Fetching all threads after creating new chat...");
+          const threadsResponse = await dispatch(fetchAllThreads({ userId: currentUserId, token }));
+          console.log("Threads fetched:", threadsResponse.payload);
+  
+          // Set the selected chat
           dispatch(
             setSelectedChat({
               chatId: newChat._id,
@@ -107,6 +109,9 @@ export default function BookingDetailsSidebar({
               cleanerAvatar: booking.cleanerId?.avatar || "",
             })
           );
+  
+          // Redirect to inbox
+          console.log("Redirecting to /inbox");
           router.push("/inbox");
         } else {
           console.error("Chat participants are not initialized correctly:", newChat);
@@ -121,8 +126,6 @@ export default function BookingDetailsSidebar({
       alert("An error occurred while creating the chat. Please try again.");
     }
   };
-  
-  
 
   const demoTimeline: TimelineEvent[] = [
     {
@@ -279,7 +282,7 @@ export default function BookingDetailsSidebar({
                 {booking.cleanerId?.fullName || "Not assigned"}
               </span>
             </div>
-         
+
             {booking.status.toLowerCase() === "confirmed" && booking.cleanerId && (
               <Button
                 className="mt-4 border bg-white text-black flex items-center gap-2"
