@@ -137,7 +137,8 @@ export const fetchTransactionData = async (): Promise<
   if (!userWallet) return { data: null, error: "User not authenticated" };
 
   try {
-    const [GetPaymentTransactions, GetWalletTransactions] = await Promise.all([
+    // Fetch both endpoints in parallel
+    const [paymentRes, walletRes] = await Promise.all([
       fetch(
         `https://limpiar-backend.onrender.com/api/payments/user/${userWallet.user.userId}`,
         {
@@ -158,53 +159,36 @@ export const fetchTransactionData = async (): Promise<
       ),
     ]);
 
-    const res1 = await GetPaymentTransactions.json();
-    const res2 = await GetWalletTransactions.json();
+    // Check responses before parsing JSON
+    if (!paymentRes.ok) {
+      const errorData = await safeParseJSON(paymentRes);
+      throw new Error(errorData?.message || "Unable to get Payment Transactions");
+    }
+    if (!walletRes.ok) {
+      const errorData = await safeParseJSON(walletRes);
+      throw new Error(errorData?.message || "Unable to get Wallet Transactions");
+    }
 
-    if (!GetPaymentTransactions.ok)
-      throw new Error(res1.message || "Unable to get Transaction History");
-    if (!GetWalletTransactions.ok)
-      throw new Error(res2.message || "Unable to get Transaction History");
+    // Safely parse JSON
+    const paymentData = await paymentRes.json();
+    const walletData = await walletRes.json();
 
-    const Walletobj = res2.wallet.transactions;
-    const WalletTransactions: StandardizedTransaction[] = Object.keys(
-      Walletobj
-    ).flatMap((wallet: string) => {
-      if (Walletobj[wallet].length === 0) return [];
-      return Walletobj[wallet].map((txn: WalletTransaction) => ({
-        id: txn._id || txn.id || "unknown",
-        amount: txn.amount,
-        currency: txn.currency || "USD",
-        status: txn.status || "N/A",
-        description:
-          wallet === "refunds" && txn.from
-            ? `Refund of ${txn.amount} from ${txn.from}`
-            : txn.description || "No description provided",
-        reference: txn.transactionId || "N/A",
-        createdAt: txn.timestamp,
-        method: "wallet",
-      }));
-    });
+    // Map wallet transactions
+    const walletTransactions: StandardizedTransaction[] = Object.keys(walletData.wallet.transactions || {})
+      .flatMap((walletType: string) => {
+        const transactions = walletData.wallet.transactions[walletType];
+        if (!transactions || transactions.length === 0) return [];
 
-    const PaymentTransactions: StandardizedTransaction[] = res1.data.map(
-      (txn: PaymentTransaction) => ({
-        id: txn._id || txn.id || "unknown",
-        amount: txn.amount,
-        currency: txn.currency || "USD",
-        status: txn.status || "N/A",
-        description:
-          txn.description || `Payment of ${txn.amount} ${txn.currency || "USD"}`,
-        reference: txn.paymentIntentId || txn.reference || "N/A",
-        createdAt: txn.createdAt || txn.created || new Date().toISOString(),
-        method: "stripe",
-      })
+        return transactions.map((txn: WalletTransaction) => formatWalletTransaction(txn, walletType));
+      });
+
+    // Map payment transactions
+    const paymentTransactions: StandardizedTransaction[] = (paymentData.data || []).map(
+      (txn: PaymentTransaction) => formatPaymentTransaction(txn)
     );
 
-    const combinedTransactions = [
-      ...WalletTransactions,
-      ...PaymentTransactions,
-    ];
-    combinedTransactions.sort(
+    // Combine and sort by latest first
+    const combinedTransactions = [...walletTransactions, ...paymentTransactions].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
@@ -213,6 +197,43 @@ export const fetchTransactionData = async (): Promise<
     return { data: null, error: err instanceof Error ? err.message : String(err) };
   }
 };
+
+// Helper: safely parse JSON (returns null if invalid)
+const safeParseJSON = async (response: Response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+// Helper: format wallet transaction
+const formatWalletTransaction = (txn: WalletTransaction, walletType: string): StandardizedTransaction => ({
+  id: txn._id || txn.id || "unknown",
+  amount: txn.amount ?? 0,
+  currency: txn.currency || "USD",
+  status: txn.status || "N/A",
+  description:
+    walletType === "refunds" && txn.from
+      ? `Refund of ${txn.amount} from ${txn.from}`
+      : txn.description || "No description provided",
+  reference: txn.transactionId || "N/A",
+  createdAt: txn.timestamp || new Date().toISOString(),
+  method: "wallet",
+});
+
+// Helper: format payment transaction
+const formatPaymentTransaction = (txn: PaymentTransaction): StandardizedTransaction => ({
+  id: txn._id || txn.id || "unknown",
+  amount: txn.amount ?? 0,
+  currency: txn.currency || "USD",
+  status: txn.status || "N/A",
+  description: txn.description || `Payment of ${txn.amount} ${txn.currency || "USD"}`,
+  reference: txn.paymentIntentId || txn.reference || "N/A",
+  createdAt: txn.createdAt || txn.created || new Date().toISOString(),
+  method: "stripe",
+});
+
 
 interface PaymentBody {
   userId?: string;

@@ -111,13 +111,14 @@ export default function SupportPage() {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        if (!token) {
+        if (!token || !userId) {
+          console.warn("Missing token or userId:", { token, userId });
           router.push("/login");
           return;
         }
-
+  
         const response = await fetch(
-          "https://limpiar-backend.onrender.com/api/chats/support/messages/",
+          `https://limpiar-backend.onrender.com/api/chats/threads/user/${userId}`,
           {
             method: "GET",
             headers: {
@@ -125,14 +126,24 @@ export default function SupportPage() {
             },
           }
         );
-
+  
         const result = await response.json();
-
+  
         if (!response.ok) {
           throw new Error(result.error || "Failed to fetch support chats");
         }
-
-        const sortedThreads = result.data
+  
+        // Handle both array and { data: [...] } responses
+        const chats = Array.isArray(result) ? result : result.data || [];
+        if (!Array.isArray(chats)) {
+          console.error("Expected chats to be an array, got:", result);
+          setThreads([]);
+          setFilteredThreads([]);
+          setUnreadTotal(0);
+          return;
+        }
+  
+        const sortedThreads = chats
           .map((chat: Chat) => {
             const updatedAtDate = new Date(chat.updatedAt);
             const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -150,7 +161,7 @@ export default function SupportPage() {
             (a: Chat, b: Chat) =>
               new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
           );
-
+  
         setThreads(sortedThreads);
         setFilteredThreads(sortedThreads);
         setUnreadTotal(
@@ -159,18 +170,18 @@ export default function SupportPage() {
             0
           )
         );
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching threads:", error);
-        setError("Error fetching threads.");
+        setError(error.message || "Error fetching threads.");
       } finally {
         setIsLoading(false);
       }
     };
-
+  
     fetchChats();
     const intervalId = setInterval(fetchChats, 5000);
     return () => clearInterval(intervalId);
-  }, [router, token]);
+  }, [router, token, userId]);
 
   useEffect(() => {
     const handleResize = () => {
