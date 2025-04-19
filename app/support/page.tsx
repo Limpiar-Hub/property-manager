@@ -73,6 +73,7 @@ export default function SupportPage() {
   const [searchResults, setSearchResults] = useState<Chat[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [senderProfiles, setSenderProfiles] = useState<{ [key: string]: { fullName: string; role: string } }>({});
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -133,7 +134,6 @@ export default function SupportPage() {
           throw new Error(result.error || "Failed to fetch support chats");
         }
   
-        // Handle both array and { data: [...] } responses
         const chats = Array.isArray(result) ? result : result.data || [];
         if (!Array.isArray(chats)) {
           console.error("Expected chats to be an array, got:", result);
@@ -320,6 +320,58 @@ export default function SupportPage() {
     return () => clearInterval(messageIntervalId);
   }, [selectedChatId, router, token]);
 
+  // Fetch sender profiles for messages with senderType: "user" and senderId !== userId
+  useEffect(() => {
+    const fetchSenderProfiles = async () => {
+      const uniqueSenderIds = [...new Set(messages
+        .filter(msg => msg.senderType === "user" && msg.senderId && msg.senderId !== userId)
+        .map(msg => msg.senderId as string))];
+
+      for (const senderId of uniqueSenderIds) {
+        if (!senderProfiles[senderId]) {
+          try {
+            const response = await fetch(
+              `https://limpiar-backend.onrender.com/api/users/${senderId}`,
+              {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              throw new Error(result.error || `Failed to fetch profile for user ${senderId}`);
+            }
+
+            setSenderProfiles(prev => ({
+              ...prev,
+              [senderId]: {
+                fullName: result.fullName || "Unknown",
+                role: result.role || "user",
+              },
+            }));
+          } catch (error) {
+            console.error(`Error fetching profile for user ${senderId}:`, error);
+            setSenderProfiles(prev => ({
+              ...prev,
+              [senderId]: {
+                fullName: "Unknown",
+                role: "user",
+              },
+            }));
+          }
+        }
+      }
+    };
+
+    if (messages.length > 0 && token) {
+      fetchSenderProfiles();
+    }
+  }, [messages, token, userId, senderProfiles]);
+
   const handleReply = async () => {
     if (!newMessage.trim() || !selectedChatId || !token) return;
 
@@ -329,6 +381,7 @@ export default function SupportPage() {
         text: newMessage,
         timestamp: new Date().toISOString(),
         senderType: "user",
+        senderId: userId,
       };
 
       setMessages((prevMessages) => [...prevMessages, newSentMessage]);
@@ -399,12 +452,14 @@ export default function SupportPage() {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch({ type: "auth/logout" });
     router.push("/login");
   };
 
   const activeThreads = filteredThreads.filter((chat) => chat.status === "active");
   const resolvedThreads = filteredThreads.filter((chat) => chat.status === "resolved");
+
+  const userFirstNameInitial = userProfile?.fullName?.split(" ")[0]?.charAt(0)?.toUpperCase() || "U";
 
   if (isLoading) {
     return (
@@ -420,6 +475,22 @@ export default function SupportPage() {
 
   return (
     <div className="relative flex flex-col h-screen bg-gradient-to-br from-gray-800 via-blue-900 to-blue-600 overflow-hidden">
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .fade-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
+
       {/* Topbar */}
       <motion.div
         initial={{ y: -50, opacity: 0 }}
@@ -829,65 +900,106 @@ export default function SupportPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                {messages.map((msg) => (
-                  <motion.div
-                    key={msg._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`space-y-2 flex items-start gap-3 ${
-                      msg.senderType === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {msg.senderType !== "user" && (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold">
-                        {msg.senderType === "bot" ? "B" : "S"}
-                      </div>
-                    )}
-                    <div
-                      className={`space-y-1 ${
-                        msg.senderType === "user" ? "text-right" : "text-left"
-                      }`}
+                {messages.map((msg, index) => {
+                  // Determine if the message is from the current user
+                  const isCurrentUserMessage = msg.senderId === userId;
+
+                  // For messages with senderType: "user" and not from the current user, check if the sender is an admin
+                  let isSenderAdmin = false;
+                  let senderInitial = "U";
+                  if (msg.senderType === "user" && !isCurrentUserMessage && msg.senderId) {
+                    const senderProfile = senderProfiles[msg.senderId];
+                    if (senderProfile) {
+                      isSenderAdmin = senderProfile.role.toLowerCase() === "admin";
+                      senderInitial = senderProfile.fullName.split(" ")[0]?.charAt(0)?.toUpperCase() || "U";
+                    }
+                  }
+
+                  // Alignment: Current user messages on the right, others (including admin users) on the left
+                  const alignClass = isCurrentUserMessage ? "justify-end" : "justify-start";
+
+                  // Determine avatar and styling
+                  let avatarLetter = "B"; // Default for bot
+                  let avatarColor = "bg-gradient-to-br from-blue-500 to-blue-700"; // Default for bot/support/admin
+                  let bubbleColor = "bg-gray-100 text-gray-800 rounded-br-none"; // Default for messages on the left
+
+                  if (isCurrentUserMessage) {
+                    // Current user's messages (on the right)
+                    avatarLetter = userFirstNameInitial;
+                    avatarColor = "bg-gradient-to-br from-blue-600 to-blue-800";
+                    bubbleColor = "bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-bl-none";
+                  } else if (msg.senderType === "bot") {
+                    avatarLetter = "B";
+                    avatarColor = "bg-gradient-to-br from-blue-500 to-blue-700";
+                    bubbleColor = "bg-gray-100 text-gray-800 rounded-br-none";
+                  } else if (msg.senderType === "support" || (msg.senderType === "user" && isSenderAdmin)) {
+                    avatarLetter = "A"; // Admin/Support
+                    avatarColor = "bg-gradient-to-br from-blue-500 to-blue-700";
+                    bubbleColor = "bg-gray-100 text-gray-800 rounded-br-none";
+                  } else if (msg.senderType === "user") {
+                    // Non-admin user messages (not current user)
+                    avatarLetter = senderInitial;
+                    avatarColor = "bg-gradient-to-br from-gray-600 to-gray-800";
+                    bubbleColor = "bg-gray-100 text-gray-800 rounded-br-none";
+                  }
+
+                  return (
+                    <motion.div
+                      key={msg._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`space-y-2 flex items-start gap-3 ${alignClass} fade-in`}
+                      style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <div className="text-xs text-gray-600 flex items-center gap-2">
-                        <span>
-                          {msg.senderType === "user"
-                            ? "You"
-                            : msg.senderType === "bot"
-                            ? "Bot"
-                            : "Support"}
-                        </span>
-                        <span>·</span>
-                        <span>
-                          {new Date(msg.timestamp).toLocaleString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                          })}
-                        </span>
-                      </div>
+                      {!isCurrentUserMessage && (
+                        <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold`}>
+                          {avatarLetter}
+                        </div>
+                      )}
                       <div
-                        className={`inline-block p-4 rounded-2xl max-w-lg shadow-sm ${
-                          msg.senderType === "user"
-                            ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white ml-auto"
-                            : "bg-gray-100 text-gray-800"
+                        className={`space-y-1 ${
+                          isCurrentUserMessage ? "text-right" : "text-left"
                         }`}
                       >
-                        {msg.text}
+                        <div className="text-xs text-gray-600 flex items-center gap-2">
+                          <span>
+                            {isCurrentUserMessage
+                              ? "You"
+                              : msg.senderType === "bot"
+                              ? "Bot"
+                              : msg.senderType === "support" || isSenderAdmin
+                              ? "Admin"
+                              : "User"}
+                          </span>
+                          <span>·</span>
+                          <span>
+                            {new Date(msg.timestamp).toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                            })}
+                          </span>
+                        </div>
+                        <div
+                          className={`inline-block p-4 rounded-2xl max-w-lg shadow-sm ${bubbleColor}`}
+                        >
+                          {msg.text}
+                        </div>
                       </div>
-                    </div>
-                    {msg.senderType === "user" && (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white font-semibold">
-                        U
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+                      {isCurrentUserMessage && (
+                        <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold`}>
+                          {avatarLetter}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
                 {isTyping && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-sm text-gray-500 italic flex items-center gap-2"
+                    className="text-sm text-gray-500 italic flex items-center gap-2 justify-start"
                   >
                     <span>Support is typing</span>
                     <span className="animate-pulse">...</span>
