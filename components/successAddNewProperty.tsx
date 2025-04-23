@@ -16,7 +16,7 @@ export default function SuccessAddNewProperty() {
             dispatch(closeModalFunc());
             dispatch(resetProperty());
         }, 1000);
-        router.push("/my-property");
+        router.push("/property-manager/my-property");
       }
 
     return (

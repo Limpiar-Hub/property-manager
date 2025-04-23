@@ -53,3 +53,12 @@ export interface Property {
     };
     company?: string;
   }
+
+  export type ServiceType = {
+    id: string
+    name: string
+    price: string
+    image: string
+  }
+
+  export type DateType = "one-time" | "multiple" | "routine"

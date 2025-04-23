@@ -56,7 +56,7 @@ export function LoginForm() {
         dispatch(loginSuccess({ token: data.token }))
 
         // Redirect to OTP verification page
-        router.push("/verify-otp")
+        router.push("/property-manager/verify-otp")
       } else {
         throw new Error("Unexpected response from server")
       }

@@ -44,7 +44,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     dispatch(logout());
-    router.push('/login');
+    router.push('/property-manager/login');
   };
 
   return (

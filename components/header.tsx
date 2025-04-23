@@ -29,7 +29,7 @@ export default function Header() {
 
   const handleLogout = () => {
     dispatch(logout());
-    router.push("/login"); // Redirect to login page after logout
+    router.push("/property-manager/login"); // Redirect to login page after logout
   };
 
   return (

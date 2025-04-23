@@ -17,7 +17,7 @@ export default function FormNavigation() {
 
   const handleBack = () => {
     if (step === 1) {
-      router.push("/my-property");
+      router.push("/property-manager/my-property");
     } else if (step === 1.5) {
       dispatch(setStep(1));
     } else if (step === 2) {

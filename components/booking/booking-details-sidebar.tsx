@@ -76,7 +76,7 @@ export default function BookingDetailsSidebar({
             cleanerAvatar: booking.cleanerId?.avatar || "",
           })
         );
-        router.push("/inbox");
+        router.push("/property-manager/inbox");
         return;
       }
   
@@ -112,7 +112,7 @@ export default function BookingDetailsSidebar({
   
           // Redirect to inbox
           console.log("Redirecting to /inbox");
-          router.push("/inbox");
+          router.push("/property-manager/inbox");
         } else {
           console.error("Chat participants are not initialized correctly:", newChat);
           alert("The chat was created, but the participants are not correctly initialized.");

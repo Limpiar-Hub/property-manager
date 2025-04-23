@@ -17,7 +17,7 @@ export default function PropertyListingComponent({ propertyData, count }: Proper
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'pending'>('all');
 
   const handleRouter = () => {
-    router.push("/my-property/add");
+    router.push("/property-manager/my-property/add");
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -37,7 +37,7 @@ export function useChat() {
       );
 
       // Navigate to inbox page
-      router.push("/inbox");
+      router.push("/property-manager/inbox");
     } catch (error) {
       console.error("Error creating chat thread:", error);
     }
