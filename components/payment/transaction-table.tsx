@@ -39,6 +39,18 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
     }
   };
 
+  // Function to format description based on payment method
+  const getTransactionDescription = (transaction: Transaction) => {
+    const method = transaction.paymentMethod?.toLowerCase();
+    const amountFormatted = transaction.amount.toFixed(2);
+    if (method === "wallet") {
+      return `Wallet transaction for $${amountFormatted} `;
+    } else if (method === "stripe") {
+      return `Stripe transaction for $${amountFormatted} `;
+    }
+    return transaction.description;
+  };
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesStatus =
       statusFilter === "all" ||
@@ -136,7 +148,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                   {new Date(transaction.date).toDateString()}
                 </td>
                 <td className="relative max-w-[250px] overflow-hidden whitespace-nowrap text-ellipsis pr-5">
-                  {transaction.description}
+                  {getTransactionDescription(transaction)}
                 </td>
                 <td className="p-4 text-sm">$ {transaction.amount.toFixed(2)}</td>
                 <td className="p-4 text-sm">{transaction.paymentMethod}</td>

@@ -1,6 +1,4 @@
-
-
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,27 +8,24 @@ import { Property } from "@/types/property";
 
 export default function PropertyListingPage() {
   const router = useRouter();
-  const [propertyData, setPropertyData] = useState<Property[]>([]);
-  const [propertyCount, setPropertyCount] = useState<number>(0);
+  const [activeProperties, setActiveProperties] = useState<Property[]>([]);
+  const [pendingProperties, setPendingProperties] = useState<Property[]>([]);
+  const [allProperties, setAllProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Fetch properties data - replace with your actual fetch logic
+
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        // Get token from localStorage or elsewhere
         const token = localStorage.getItem("token");
-        
+
         if (!token) {
           router.push("/login");
           return;
         }
-        
-        // Get userId from token or elsewhere
-        // This is just a placeholder - use your actual logic
+
         const decodedToken = JSON.parse(atob(token.split('.')[1]));
         const userId = decodedToken.userId;
-        
+
         const response = await fetch(
           `https://limpiar-backend.onrender.com/api/properties/fetch/${userId}`,
           {
@@ -47,8 +42,18 @@ export default function PropertyListingPage() {
           throw new Error(result.message || "Failed to fetch properties");
         }
 
-        setPropertyData(result.data);
-        setPropertyCount(result.count);
+        const properties: Property[] = result.data || [];
+
+        // Log the fetched properties to inspect them
+        console.log("Fetched properties:", properties);
+
+        // Set all properties
+        setAllProperties(properties);
+
+        // Filter and set active and pending properties
+        setActiveProperties(properties.filter((prop) => prop.status === "verified"));
+        setPendingProperties(properties.filter((prop) => prop.status === "pending"));
+
       } catch (error) {
         console.error("Error fetching properties:", error);
       } finally {
@@ -63,5 +68,11 @@ export default function PropertyListingPage() {
     return <Spinner />;
   }
 
-  return <PropertyListingComponent propertyData={propertyData} count={propertyCount} />;
+  return (
+    <PropertyListingComponent
+      activeProperties={activeProperties}
+      pendingProperties={pendingProperties}
+      allProperties={allProperties}
+    />
+  );
 }

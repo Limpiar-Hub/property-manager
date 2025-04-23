@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,29 @@ import Image from "next/image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 
+interface ParticipantInfo {
+  name: string;
+  avatar?: string;
+}
+
+interface Message {
+  _id: string;
+  senderId: string;
+  senderType: string;
+  text: string;
+  fileUrl?: string | null;
+  fileType?: string;
+  timestamp: string;
+}
+
+interface Chat {
+  id: string;
+  participants: string[];
+  taskId?: string;
+  messages: Message[];
+  participantInfo: Record<string, ParticipantInfo>;
+}
+
 export function ChatDetail() {
   const [message, setMessage] = useState("");
   const dispatch: AppDispatch = useAppDispatch();
@@ -23,24 +46,37 @@ export function ChatDetail() {
     (state: RootState) => state.chat.selectedChatId
   );
   const chat = useAppSelector((state: RootState) =>
-    state.chat.chats.find((c) => c.id === selectedChatId)
-  );
+    state.chat.chats.find((c: Chat) => c.id === selectedChatId)
+  ) as Chat | undefined;
   const loading = useAppSelector((state: RootState) => state.chat.loading);
   const token = useAppSelector((state: RootState) => state.auth.token);
   const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const [fetchedChatIds, setFetchedChatIds] = useState<string[]>([]);
 
+  // Fetch messages only once when chat is selected
   useEffect(() => {
-    if (selectedChatId && token) {
+    if (selectedChatId && token && chat && !fetchedChatIds.includes(selectedChatId)) {
       console.log("Fetching messages for chat:", selectedChatId);
-      dispatch(fetchChatMessages({ chatId: selectedChatId, token })).unwrap();
-      dispatch(markChatAsRead(selectedChatId));
+      dispatch(fetchChatMessages({ chatId: selectedChatId, token }))
+        .unwrap()
+        .then(() => {
+          setFetchedChatIds((prev) => [...prev, selectedChatId]);
+          dispatch(markChatAsRead(selectedChatId));
+        })
+        .catch((error) => {
+          console.error("Failed to fetch messages:", error);
+        });
     }
-  }, [selectedChatId, dispatch, token]);
+  }, [selectedChatId, token, chat, dispatch, fetchedChatIds]);
 
+  // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chat?.messages) {
+      console.log("Chat messages:", chat.messages);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [chat?.messages]);
 
   const handleBack = () => {
@@ -51,28 +87,50 @@ export function ChatDetail() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !selectedChatId || !token) return;
+
+    if (!message.trim() || !selectedChatId || !token || !chat || !currentUserId) {
+      console.error("Missing required fields:", {
+        message: message.trim(),
+        selectedChatId,
+        token,
+        chat,
+        currentUserId,
+      });
+      alert("Cannot send message: Missing required information.");
+      return;
+    }
+
+    // Find the cleaner's ID (receiverId) from participants
+    const receiverId = chat.participants.find((id) => id !== currentUserId);
+    if (!receiverId) {
+      console.error("No receiver found in chat participants:", chat.participants);
+      alert("Cannot send message: No recipient found.");
+      return;
+    }
 
     try {
-      const otherParticipantId = chat?.participants.find(
-        (id) => id !== currentUserId
-      );
-      if (!otherParticipantId) {
-        console.error("No other participant found");
-        return;
-      }
-
+      console.log("Sending message with payload:", {
+        text: message,
+        chatId: selectedChatId,
+        receiverId,
+      });
       await dispatch(
         sendChatMessage({
-          receiverId: otherParticipantId,
           text: message,
           chatId: selectedChatId,
+          receiverId,
           token,
         })
       ).unwrap();
+      console.log("Message sent successfully");
       setMessage("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
+      alert(
+        error.message?.includes("500")
+          ? "Failed to send message: Server error. Please try again later or contact support."
+          : "Failed to send message: Please try again."
+      );
     }
   };
 
@@ -93,19 +151,10 @@ export function ChatDetail() {
     );
   }
 
-  if (loading && !chat?.messages?.length) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        Loading messages...
-      </div>
-    );
-  }
-
-  const otherParticipantId =
-    chat?.participants.find((id) => id !== currentUserId) || "";
-  const participantInfo = chat?.participantInfo[otherParticipantId] || {
+  const otherParticipantId = chat?.participants.find((id) => id !== currentUserId) || "";
+  const participantInfo: ParticipantInfo = chat?.participantInfo[otherParticipantId] || {
     name: "Unknown",
-    avatar: "/placeholder.svg",
+    avatar: undefined,
   };
 
   return (
@@ -127,8 +176,8 @@ export function ChatDetail() {
               className="rounded-full"
             />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-              {participantInfo.name.charAt(0)}
+            <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500 bg-gray-200">
+              {participantInfo.name.charAt(0) || "?"}
             </div>
           )}
         </Avatar>
@@ -142,39 +191,41 @@ export function ChatDetail() {
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
-        {chat?.messages?.length === 0 ? (
+        {loading && !fetchedChatIds.includes(selectedChatId) ? (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            Loading messages...
+          </div>
+        ) : !chat?.messages || chat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             No messages yet. Start the conversation!
           </div>
         ) : (
           <div className="space-y-4">
-            {chat?.messages?.map((msg) => {
+            {chat.messages.map((msg) => {
               const isCurrentUser = msg.senderId === currentUserId;
+              const senderInfo = chat.participantInfo[msg.senderId] || {
+                name: "Unknown",
+                avatar: undefined,
+              };
               return (
                 <div
-                  key={msg.id}
-                  className={`flex ${
-                    isCurrentUser ? "justify-end" : "justify-start"
-                  }`}
+                  key={msg._id}
+                  className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
                 >
                   <div className="flex gap-2 max-w-[70%]">
                     {!isCurrentUser && (
                       <Avatar className="w-8 h-8">
-                        {chat.participantInfo[msg.senderId]?.avatar ? (
+                        {senderInfo.avatar ? (
                           <Image
-                            src={
-                              chat.participantInfo[msg.senderId]?.avatar ||
-                              "/placeholder.svg"
-                            }
-                            alt={chat.participantInfo[msg.senderId].name}
+                            src={senderInfo.avatar}
+                            alt={senderInfo.name}
                             width={32}
                             height={32}
+                            className="rounded-full"
                           />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                            {chat.participantInfo[msg.senderId]?.name?.charAt(
-                              0
-                            ) || "U"}
+                          <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500 bg-gray-200">
+                            {senderInfo.name.charAt(0) || "?"}
                           </div>
                         )}
                       </Avatar>
@@ -192,10 +243,12 @@ export function ChatDetail() {
                           isCurrentUser ? "text-blue-100" : "text-gray-500"
                         }`}
                       >
-                        {new Date(msg.createdAt).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {msg.timestamp
+                          ? new Date(msg.timestamp).toLocaleTimeString("en-US", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "Unknown time"}
                       </p>
                     </div>
                   </div>

@@ -65,15 +65,16 @@ export default function PaymentsPage() {
 
       if (transactionsRes.data) {
         setTransactions(
-          transactionsRes.data.map((transaction: TransactionApiResponse) => ({
+          transactionsRes.data.map((transaction: any) => ({
             id: transaction.id,
             amount: transaction.amount,
-            date: transaction.date || "",
+            date: transaction.createdAt || "",   
             description: transaction.description || "",
-            paymentMethod: transaction.paymentMethod || "",
+            paymentMethod: transaction.method || "",  
             status: transaction.status as "pending" | "succeeded" | "Rejected" | "completed",
           }))
         );
+        
       }
       if (balanceRes.data) {
         setWalletBalance(balanceRes.data);

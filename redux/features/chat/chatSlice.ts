@@ -1,10 +1,11 @@
 import { RootState } from "@/redux/store";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { use } from "react";
+import { format } from "date-fns";
 
 export interface ChatMessage {
   id: string;
+  chatId: string;
   senderId: string;
   receiverId: string;
   text: string;
@@ -12,6 +13,7 @@ export interface ChatMessage {
   isRead: boolean;
   senderName?: string;
   senderAvatar?: string;
+  timestamp?: string;
 }
 
 export interface Chat {
@@ -36,14 +38,14 @@ interface ChatState {
   loading: boolean;
   error: string | null;
   cleanerName: string | null;
-  cleanerAvatar: string | null; 
+  cleanerAvatar: string | null;
 }
 
 const initialState: ChatState = {
   chats: [],
   selectedChatId: null,
   cleanerName: null,
-  cleanerAvatar:  null,
+  cleanerAvatar: null,
   loading: false,
   error: null,
 };
@@ -63,18 +65,18 @@ export const createChatThread = createAsyncThunk(
     { getState, rejectWithValue }
   ) => {
     try {
-      // Check if the chat already exists in the state
       const state = getState() as RootState;
-      const existingChat = state.chat.chats.find((chat) =>
-        chat.participants.every((id) => participantIds.includes(id))
-      );
+
+      const existingChat = state.chat.chats.find((chat) => {
+        const existingSorted = [...chat.participants].sort().join(",");
+        const newSorted = [...participantIds].sort().join(",");
+        return existingSorted === newSorted;
+      });
 
       if (existingChat) {
-        // If the chat already exists, return it
         return existingChat;
       }
 
-      // If the chat does not exist, create a new one
       const response = await axios.post(
         "https://limpiar-backend.onrender.com/api/chats/thread",
         {
@@ -88,15 +90,13 @@ export const createChatThread = createAsyncThunk(
         }
       );
 
-      return response.data; // Assuming the response contains the new chat thread
+      return response.data;
     } catch (error: any) {
       console.error("Error creating chat thread:", error);
       return rejectWithValue(error.response?.data || "Failed to create chat thread");
     }
   }
 );
-
-
 
 export const sendChatMessage = createAsyncThunk(
   "chat/sendMessage",
@@ -133,9 +133,6 @@ export const sendChatMessage = createAsyncThunk(
   }
 );
 
-
-
-
 export const fetchChatMessages = createAsyncThunk(
   "chat/fetchMessages",
   async ({ chatId, token }: { chatId: string; token: string }, { rejectWithValue }) => {
@@ -148,7 +145,7 @@ export const fetchChatMessages = createAsyncThunk(
           },
         }
       );
-      
+
       console.log("Fetched messages for chat", chatId, ":", response.data);
       return {
         chatId,
@@ -156,7 +153,7 @@ export const fetchChatMessages = createAsyncThunk(
           id: msg._id,
           senderId: msg.senderId,
           text: msg.text,
-          createdAt: msg.timestamp,
+          createdAt: format(new Date(msg.timestamp), "MMMM dd, yyyy hh:mm a"),
           isRead: false,
         })),
       };
@@ -167,17 +164,12 @@ export const fetchChatMessages = createAsyncThunk(
   }
 );
 
-
 export const fetchAllThreads = createAsyncThunk(
   "chat/fetchAllThreads",
-  // parse the userId from the token
-
   async ({ userId, token }: { userId: string; token: string }, { rejectWithValue }) => {
-
-  // async (token: string, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `https://limpiar-backend.onrender.com/api/chats/threads/${userId}`, 
+        `https://limpiar-backend.onrender.com/api/chats/threads/${userId}/normal`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -233,26 +225,11 @@ const chatSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-
       .addCase(createChatThread.fulfilled, (state, action) => {
         state.loading = false;
-
-        // Check if the chat already exists in the state
-        const newChat = action.payload;
-        const chatExists = state.chats.some((chat) => chat.id === newChat.id);
-
-        if (!chatExists) {
-          state.chats.push({
-            ...newChat,
-            messages: [],
-            unreadCount: 0,
-            participantInfo: newChat.participantInfo || {},
-          });
-        }
-
-        state.selectedChatId = newChat.id;
+        state.selectedChatId = action.payload._id;
+        // Do not add the chat to state.chats here; let fetchAllThreads handle it
       })
-   
       .addCase(createChatThread.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to create chat thread";
@@ -266,8 +243,12 @@ const chatSlice = createSlice({
         const { chatId } = action.meta.arg;
         const chat = state.chats.find((c) => c.id === chatId);
         if (chat) {
-          chat.messages.push(action.payload);
-          chat.lastMessage = action.payload;
+          const messageWithChatId = {
+            ...action.payload,
+            chatId,
+          };
+          chat.messages.push(messageWithChatId);
+          chat.lastMessage = messageWithChatId;
         }
       })
       .addCase(sendChatMessage.rejected, (state, action) => {
@@ -282,7 +263,6 @@ const chatSlice = createSlice({
         state.loading = false;
         const { chatId, messages } = action.payload;
         const chatIndex = state.chats.findIndex((c) => c.id === chatId);
-        
         if (chatIndex > -1) {
           state.chats[chatIndex].messages = messages;
           if (messages.length > 0) {
@@ -298,7 +278,6 @@ const chatSlice = createSlice({
         state.error = action.error.message || "Failed to fetch messages";
         console.error("Failed to fetch messages:", action.error);
       })
-
       .addCase(fetchAllThreads.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -307,27 +286,29 @@ const chatSlice = createSlice({
         state.loading = false;
         const threads = action.payload.map((thread: any) => ({
           id: thread._id,
-          participants: thread.participants.map((p: any) => p._id),
+          participants: thread.participants.map((p: any) => (typeof p === "string" ? p : p._id)),
           taskId: thread.taskId,
           isSupportTicket: thread.chatType === "support",
           messages: [],
-          lastMessage: thread.latestMessage ? {
-            id: thread.latestMessage._id,
-            senderId: thread.latestMessage.senderId,
-            text: thread.latestMessage.text,
-            createdAt: thread.latestMessage.timestamp,
-            isRead: false
-          } : undefined,
+          lastMessage: thread.latestMessage
+            ? {
+                id: thread.latestMessage._id,
+                senderId: thread.latestMessage.senderId,
+                text: thread.latestMessage.text,
+                createdAt: thread.latestMessage.timestamp,
+                isRead: false,
+              }
+            : undefined,
           unreadCount: 0,
           participantInfo: thread.participants.reduce((acc: any, participant: any) => {
-            acc[participant._id] = {
-              name: participant.fullName,
-              avatar: participant.avatar
+            const participantId = typeof participant === "string" ? participant : participant._id;
+            acc[participantId] = {
+              name: typeof participant === "string" ? "Unknown" : participant.fullName || "Unknown",
+              avatar: typeof participant === "string" ? undefined : participant.avatar,
             };
             return acc;
-          }, {})
+          }, {}),
         }));
-        
         state.chats = threads;
         console.log("Fetched and transformed threads:", threads);
       })
@@ -335,11 +316,8 @@ const chatSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || "Failed to fetch threads";
       });
-    
-
   },
 });
 
-export const { setSelectedChat, addLocalMessage, markChatAsRead } =
-  chatSlice.actions;
+export const { setSelectedChat, addLocalMessage, markChatAsRead } = chatSlice.actions;
 export default chatSlice.reducer;
