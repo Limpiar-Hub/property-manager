@@ -5,7 +5,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyStripePayment } from '@/components/handlers';
 import { useAppSelector } from "@/hooks/useReduxHooks";
-import { Suspense } from 'react';
 
 const PaymentSuccessContent = () => {
   const router = useRouter();
@@ -39,18 +38,11 @@ const PaymentSuccessContent = () => {
     };
 
     verifyPayment();
-<<<<<<< HEAD
-  }, [searchParams, router, token]);
-=======
   }, [searchParams, router, isClient]);
->>>>>>> 02ae41d5562c402d67bbcad56dd0ae58193165f9
 
   return null;
 };
 
-<<<<<<< HEAD
-export default PaymentSuccessPage;
-=======
 const PaymentSuccess = () => {
   return (
     <Suspense fallback={null}>
@@ -60,4 +52,3 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
->>>>>>> 02ae41d5562c402d67bbcad56dd0ae58193165f9
