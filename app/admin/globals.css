@@ -60,7 +60,7 @@
     @apply font-sans;
   } */
   * {
-    /* @apply border-border; */
+    @apply border-border;
   }
   body {
     /* @apply bg-background text-foreground; */

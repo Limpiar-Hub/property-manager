@@ -19,25 +19,20 @@ export const metadata: Metadata = {
   description: "Property Management System - Property Manager Dashboard",
   generator: "Next.js",
   icons: {
-    icon: "/favicon.ico", 
+    icon: "/favicon.ico",
   },
 };
 
-
-export default function RootLayout({
+export default function PropertyManagerLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ImageProvider>
-          <Providers>{children}</Providers>
-        </ImageProvider>
-      </body>
-    </html>
+    <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <ImageProvider>
+        <Providers>{children}</Providers>
+      </ImageProvider>
+    </div>
   );
 }
