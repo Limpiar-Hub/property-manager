@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { openModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import { setUserBalance } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import dynamic from "next/dynamic";
+import { useAppSelector } from "@/hooks/useReduxHooks";
 
 type Transaction = {
   id: string;

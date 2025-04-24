@@ -53,17 +53,6 @@ interface RequestResult<T> {
   error: string | null;
 }
 
-<<<<<<< HEAD
-// Get user wallet from localStorage
-let userWallet: UserWallet | null = null;
-const getUserFromLocalStorage = typeof window !== 'undefined'
-? JSON.parse(localStorage.getItem('userWallet') || '{}')
-: null;
-if (getUserFromLocalStorage) {
-  const user = JSON.parse(getUserFromLocalStorage);
-  userWallet = user.data;
-}
-=======
 const getUserWallet = (): UserWallet | null => {
   if (typeof window === 'undefined') return null;
 
@@ -78,7 +67,6 @@ const getUserWallet = (): UserWallet | null => {
     return null;
   }
 };
->>>>>>> 02ae41d5562c402d67bbcad56dd0ae58193165f9
 
 export const AddNewProperty = async (
   formData: FormData
@@ -290,14 +278,8 @@ export const verifyStripePayment = async ({
   session_id: string;
   token: string | null;
 }): Promise<RequestResult<unknown>> => {
-<<<<<<< HEAD
-  if (!token) {
-    return { data: null, error: "User not authenticated" };
-  }
-=======
   const userWallet = getUserWallet();
   if (!userWallet) return { data: null, error: "User not authenticated" };
->>>>>>> 02ae41d5562c402d67bbcad56dd0ae58193165f9
 
   try {
     const res = await fetch(

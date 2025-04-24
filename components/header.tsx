@@ -11,6 +11,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppSelector, useAppDispatch } from "@/hooks/useReduxHooks";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 
 export default function Header() {
   const dispatch = useAppDispatch();
@@ -58,7 +60,9 @@ export default function Header() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+        <Link href='/profile'>
           <DropdownMenuItem>Profile</DropdownMenuItem>
+        </Link>
           <DropdownMenuItem>Settings</DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
         </DropdownMenuContent>

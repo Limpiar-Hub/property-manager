@@ -10,6 +10,8 @@ const PaymentSuccessContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isClient, setIsClient] = useState(false);
+  const { token } = useAppSelector((state) => state.auth);
+  
 
   useEffect(() => {
     setIsClient(true);
