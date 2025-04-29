@@ -13,7 +13,12 @@ const nextConfig = {
       return config;
     },
     images: {
-      domains: ['limpiar-backend.onrender.com'],
+      domains: [
+        'limpiar-backend.onrender.com',
+        'encrypted-tbn0.gstatic.com',
+        't4.ftcdn.net',  
+        
+      ],
     },
   };
   

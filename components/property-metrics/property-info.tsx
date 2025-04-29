@@ -78,7 +78,7 @@ export default function PropertyInfo({ id }: { id: string }) {
 
         // Fetch property bookings
         const bookingsResponse = await fetch(
-          `https://limpiar-backend.onrender.com/api/bookings/history/67b46440ef5688b6d2418bd7`,
+          `https://limpiar-backend.onrender.com/api/bookings/history/:propertyManagerId`,
           {
             method: "GET",
             headers: {

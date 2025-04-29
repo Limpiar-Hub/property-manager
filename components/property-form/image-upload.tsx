@@ -1,11 +1,7 @@
 "use client";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
-import {
-  addImage,
-  removeImage,
-  clearImages,
-} from "@/redux/features/addProperty/propertySlice";
+import { addImage, removeImage } from "@/redux/features/addProperty/propertySlice";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useState } from "react";
@@ -55,14 +51,6 @@ export default function ImageUpload() {
 
   const handleRemoveImage = (url: string) => {
     dispatch(removeImage(url));
-  };
-
-  const handlePublish = () => {
-    // 👇 You can add your API submission logic here
-    console.log("Publishing property with images:", images);
-
-    // ✅ Clear all images after publish
-    dispatch(clearImages());
   };
 
   return (
@@ -127,23 +115,6 @@ export default function ImageUpload() {
           </div>
         )}
       </div>
-
-      {images.length > 0 && (
-        <div className="flex justify-center mt-6 gap-4">
-          <button
-            onClick={() => dispatch(clearImages())}
-            className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"
-          >
-            Clear All
-          </button>
-          <button
-            onClick={handlePublish}
-            className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md"
-          >
-            Publish
-          </button>
-        </div>
-      )}
     </div>
   );
 }

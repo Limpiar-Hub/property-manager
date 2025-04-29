@@ -9,9 +9,8 @@ export default function ProgressSteps() {
   const steps = [
     { id: 1, name: "Category" },
     { id: 2, name: "Title" },
-    { id: 3, name: "Units" },
-    { id: 4, name: "Location" },
-    { id: 5, name: "Image" },
+    { id: 3, name: "Location" },
+    { id: 4, name: "Image" },
   ];
 
   // Handle the subcategory step (1.5) by considering it part of step 1

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -6,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import { resetProperty } from "@/redux/features/addProperty/propertySlice";
 import { useEffect, useState } from "react";
-import {jwtDecode} from "jwt-decode";
-import PropertyListingComponent from "@/components/PropertyListingComponent"; // Update this import
+import { jwtDecode } from "jwt-decode";
+import PropertyListingComponent from "@/components/PropertyListingComponent";
 import Spinner from "@/components/spinner";
 import { Property } from "@/types/property";
+
+// New Icons
+import { Home, Tag, MapPin, Image as ImageIcon } from "lucide-react";
 
 interface DecodedToken {
   userId: string;
@@ -17,7 +19,8 @@ interface DecodedToken {
   iat: number;
 }
 
-export default function Home() {
+
+export default function MyPropertyPage() { 
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [propertyData, setPropertyData] = useState<Property[]>([]);
@@ -69,6 +72,30 @@ export default function Home() {
     router.push("/my-property/add");
   };
 
+  // Steps data with Icons
+  const steps = [
+    {
+      title: "Category",
+      description: "Basic info like property category and sub-category.",
+      icon: Home,
+    },
+    {
+      title: "Title",
+      description: "Give your property a name.",
+      icon: Tag,
+    },
+    {
+      title: "Location",
+      description: "Add the location of your property.",
+      icon: MapPin,
+    },
+    {
+      title: "Image",
+      description: "Add photos of your property.",
+      icon: ImageIcon,
+    },
+  ];
+
   return (
     <div>
       {isLoading ? (
@@ -85,8 +112,7 @@ export default function Home() {
                   Welcome, {user?.fullName || "Guest"}!
                 </h1>
                 <p className="text-blue-100 text-base md:text-lg">
-                  Let&apos;s go ahead and add your first property to get you
-                  started.
+                  Let&apos;s go ahead and add your first property to get you started.
                 </p>
                 <button
                   onClick={handleAddProperty}
@@ -115,70 +141,24 @@ export default function Home() {
             </h2>
 
             <div className="space-y-6 md:space-y-8">
-              <div className="flex gap-4 md:gap-6">
-                <div className="font-bold text-xl md:text-2xl">1.</div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">
-                    Category
-                  </h3>
-                  <p className="text-gray-600 text-sm md:text-base">
-                    Basic info like property category and sub-category.
-                  </p>
-                  <div className="h-px bg-gray-200 mt-4 md:mt-6"></div>
+              {steps.map((step, index) => (
+                <div key={index} className="flex gap-4 md:gap-6 items-start">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600">
+                      <step.icon size={24} />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">
+                      {index + 1}. {step.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm md:text-base">
+                      {step.description}
+                    </p>
+                    <div className="h-px bg-gray-200 mt-4 md:mt-6"></div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex gap-4 md:gap-6">
-                <div className="font-bold text-xl md:text-2xl">2.</div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">
-                    Title
-                  </h3>
-                  <p className="text-gray-600 text-sm md:text-base">
-                    Give your property a name.
-                  </p>
-                  <div className="h-px bg-gray-200 mt-4 md:mt-6"></div>
-                </div>
-              </div>
-
-              <div className="flex gap-4 md:gap-6">
-                <div className="font-bold text-xl md:text-2xl">3.</div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">
-                    Units
-                  </h3>
-                  <p className="text-gray-600 text-sm md:text-base">
-                    Add all kinds of units of your property.
-                  </p>
-                  <div className="h-px bg-gray-200 mt-4 md:mt-6"></div>
-                </div>
-              </div>
-
-              <div className="flex gap-4 md:gap-6">
-                <div className="font-bold text-xl md:text-2xl">4.</div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">
-                    Location
-                  </h3>
-                  <p className="text-gray-600 text-sm md:text-base">
-                    Add the location of your property.
-                  </p>
-                  <div className="h-px bg-gray-200 mt-4 md:mt-6"></div>
-                </div>
-              </div>
-
-              <div className="flex gap-4 md:gap-6">
-                <div className="font-bold text-xl md:text-2xl">5.</div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">
-                    Image
-                  </h3>
-                  <p className="text-gray-600 text-sm md:text-base">
-                    Add photos of your property.
-                  </p>
-                  <div className="h-px bg-gray-200 mt-4 md:mt-6"></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

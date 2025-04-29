@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/redux/provider";
 import { ImageProvider } from "@/components/imageFileProvider";
+import ClientComponent from "./ClientComponent"; // Import the client component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,10 +20,9 @@ export const metadata: Metadata = {
   description: "Property Management System - Property Manager Dashboard",
   generator: "Next.js",
   icons: {
-    icon: "/favicon.ico", 
+    icon: "/favicon.ico",
   },
 };
-
 
 export default function RootLayout({
   children,
@@ -31,12 +31,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ImageProvider>
           <Providers>{children}</Providers>
         </ImageProvider>
+        <ClientComponent /> {/* Include the client-side logic here */}
       </body>
     </html>
   );

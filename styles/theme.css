@@ -1,0 +1,27 @@
+/* styles/theme.css */
+
+html {
+    /* Light mode default styles */
+    --background-color: white;
+    --text-color: black;
+  }
+  
+  html.dark {
+    /* Dark mode styles */
+    --background-color: #121212;
+    --text-color: white;
+  }
+  
+  /* Apply theme styles to the body or other components */
+/* Default Light Mode */
+body {
+    background-color: #ffffff;
+    color: #000000;
+  }
+  
+  /* Dark Mode */
+  body.dark {
+    background-color: #121212;
+    color: #ffffff;
+  }
+  

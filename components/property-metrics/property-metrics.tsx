@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { ArrowUpIcon, CopyIcon, BarChart4Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +38,7 @@ interface WalletData {
 interface Property {
   _id: string;
   name: string;
+  propertyManagerId: string;
 }
 
 export default function PropertyMetrics() {
@@ -52,20 +51,11 @@ export default function PropertyMetrics() {
   const token = useAppSelector((state: RootState) => state.auth.token);
   const user = useAppSelector((state: RootState) => state.auth.user);
   const userId = user?._id;
-  const walletId = "67e1e8dff3f1e8b76ed8d219"; // Hardcoded walletId
 
-  // Fetch data when component mounts or timeframe/userId/token changes
   useEffect(() => {
     const fetchData = async () => {
-      if (!token) {
-        setError("Please log in to view metrics");
-        console.log("No token available");
-        return;
-      }
-
-      if (!userId) {
-        setError("User not authenticated");
-        console.log("No userId available", { user });
+      if (!token || !userId) {
+        setError("Authentication required.");
         return;
       }
 
@@ -73,59 +63,55 @@ export default function PropertyMetrics() {
       setError(null);
 
       try {
-        // Fetch properties by user ID
-        console.log("Fetching properties for user:", userId);
-        const propertiesResponse = await axios.get(
-          `https://limpiar-backend.onrender.com/api/properties/fetch/${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        // Fetch user to get walletId
+        const userRes = await axios.get(
+          `https://limpiar-backend.onrender.com/api/users/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        const properties = propertiesResponse.data.data || [];
-        console.log("Properties response:", propertiesResponse.data);
+        const walletId = userRes.data.wallet?._id || userRes.data.walletId;
+        if (!walletId) throw new Error("Wallet ID not found for user.");
+
+        // Fetch properties
+        const propertiesRes = await axios.get(
+          `https://limpiar-backend.onrender.com/api/properties/fetch/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const properties = propertiesRes.data.data || [];
         if (properties.length === 0) {
-          setError("No properties found for this user");
+          setError("No properties found for this user.");
           setBookings([]);
           setWallet(null);
           setProperty(null);
-          setLoading(false);
           return;
         }
 
-        // Use the first property
         const selectedProperty = properties[0];
         setProperty(selectedProperty);
-        console.log("Selected property:", selectedProperty);
 
         // Fetch bookings
-        console.log("Fetching bookings for property:", selectedProperty._id, "with timeframe:", timeframe);
-        const bookingsResponse = await axios.get(
-          `https://limpiar-backend.onrender.com/api/bookings/history/${selectedProperty._id}`,
+        const bookingsRes = await axios.get(
+          `https://limpiar-backend.onrender.com/api/bookings/history/${selectedProperty.propertyManagerId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
             params: { timeframe },
           }
         );
-        const bookingsData = Array.isArray(bookingsResponse.data)
-          ? bookingsResponse.data
-          : bookingsResponse.data.data || [];
+        const bookingsData = Array.isArray(bookingsRes.data)
+          ? bookingsRes.data
+          : bookingsRes.data.data || [];
         setBookings(bookingsData);
-        console.log("Bookings response:", bookingsResponse.data);
-        console.log("Set bookings:", bookingsData);
 
         // Fetch wallet data
-        console.log("Fetching wallet data for wallet:", walletId, "with timeframe:", timeframe);
-        const walletResponse = await axios.get(
+        const walletRes = await axios.get(
           `https://limpiar-backend.onrender.com/api/wallets/${walletId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
             params: { timeframe },
           }
         );
-        setWallet(walletResponse.data.wallet || null);
-        console.log("Wallet response:", walletResponse.data);
+        setWallet(walletRes.data.wallet || null);
       } catch (err: any) {
-        console.error("Error fetching data:", err);
+        console.error("Error:", err);
         setError(err.response?.data?.message || "Failed to fetch data");
         setBookings([]);
         setWallet(null);
@@ -138,33 +124,28 @@ export default function PropertyMetrics() {
     fetchData();
   }, [token, userId, timeframe]);
 
-  // Count bookings by status
-  const countActive = Array.isArray(bookings)
-    ? bookings.filter((book) => book.status.toLowerCase().includes("confirm")).length
-    : 0;
-  const countPending = Array.isArray(bookings)
-    ? bookings.filter((book) => book.status.toLowerCase().includes("pend")).length
-    : 0;
-  const countCancelled = Array.isArray(bookings)
-    ? bookings.filter((book) => book.status.toLowerCase().includes("cancel")).length
-    : 0;
+  const countActive = bookings.filter((b) =>
+    b.status.toLowerCase().includes("confirm")
+  ).length;
+  const countPending = bookings.filter((b) =>
+    b.status.toLowerCase().includes("pend")
+  ).length;
+  const countCancelled = bookings.filter((b) =>
+    b.status.toLowerCase().includes("cancel")
+  ).length;
 
-  // Calculate payment metrics from transactions
   const allTransactions = wallet
-    ? [
-        ...(wallet.transactions.walletPayments || []),
-        ...(wallet.transactions.deposits || []),
-        ...(wallet.transactions.withdrawals || []),
-        ...(wallet.transactions.transfers || []),
-        ...(wallet.transactions.refunds || []),
-      ]
+    ? Object.values(wallet.transactions).flat()
     : [];
+
   const completedPayments = allTransactions
     .filter((tx) => tx.status === "completed")
     .reduce((sum, tx) => sum + tx.amount, 0);
+
   const pendingPayments = allTransactions
     .filter((tx) => tx.status === "pending")
     .reduce((sum, tx) => sum + tx.amount, 0);
+
   const cancelledPayments = allTransactions
     .filter((tx) => tx.status === "cancelled")
     .reduce((sum, tx) => sum + tx.amount, 0);
@@ -226,17 +207,6 @@ export default function PropertyMetrics() {
                 <p className="text-lg md:text-xl font-semibold">{countCancelled}</p>
               </div>
             </div>
-
-            <div className="flex items-center mt-4">
-              <div className="flex items-center text-green-500 mr-4">
-                <ArrowUpIcon className="h-4 w-4 mr-1" />
-                <span className="text-sm font-medium">21.9%</span>
-              </div>
-              <div className="text-gray-400 text-sm">
-                <span className="mr-1">+50</span>
-                <span>This Week</span>
-              </div>
-            </div>
           </div>
 
           {/* Payments Card */}
@@ -271,17 +241,6 @@ export default function PropertyMetrics() {
                 <p className="text-lg md:text-xl font-semibold">
                   ${cancelledPayments.toLocaleString()}
                 </p>
-              </div>
-            </div>
-
-            <div className="flex items-center mt-4">
-              <div className="flex items-center text-green-500 mr-4">
-                <ArrowUpIcon className="h-4 w-4 mr-1" />
-                <span className="text-sm font-medium">21.9%</span>
-              </div>
-              <div className="text-gray-400 text-sm">
-                <span className="mr-1">+$60</span>
-                <span>This Week</span>
               </div>
             </div>
           </div>

@@ -1,5 +1,3 @@
-
-
 import { configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // Uses localStorage by default
@@ -9,7 +7,8 @@ import bookingReducer from "./features/booking/bookingSlice";
 import chatReducer from "./features/chat/chatSlice";
 import topUpModalReducer from "./features/topUpModalSlice/topUpModalSlice";
 import authReducer from "./features/auth/authSlice";
-import loginReducer from "./features/login/loginSlice"
+import loginReducer from "./features/login/loginSlice";
+import themeReducer from "./features/themes/themeSlice"; // Import the theme reducer
 
 // Configuration for redux-persist
 const authPersistConfig = {
@@ -18,8 +17,13 @@ const authPersistConfig = {
   whitelist: ['isAuthenticated', 'token', 'user'], 
 };
 
-// Create the persisted reducer
+const themePersistConfig = {
+  key: 'theme',
+  storage,
+};
+
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
+const persistedThemeReducer = persistReducer(themePersistConfig, themeReducer);
 
 export const store = configureStore({
   reducer: {
@@ -29,11 +33,11 @@ export const store = configureStore({
     chat: chatReducer,
     booking: bookingReducer,
     topUpModal: topUpModalReducer,
+    theme: persistedThemeReducer, // Add the theme reducer here
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore these action types
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE', 'persist/REGISTER'],
       },
     }),

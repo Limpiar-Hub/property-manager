@@ -18,7 +18,7 @@ interface User {
 
 interface AuthState {
   isAuthenticated: boolean;
-  
+  walletId: string | null;
   token: string | null;
   user: User | null;
   loading: boolean;
@@ -53,12 +53,14 @@ interface VerifyOtpResponse {
   message: string;
   token: string;
   user: User;
+  walletId: string;
 }
 
 // Initial state
 const initialState: AuthState = {
   isAuthenticated: false,
   token: null,
+  walletId: null, 
   user: null,
   loading: false,
   error: null,
@@ -260,11 +262,11 @@ const authSlice = createSlice({
       .addCase(verifyOtp.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = true;
-        // Update token with the new one from verification
         state.token = action.payload.token;
-        // Set user data
         state.user = action.payload.user;
+        state.walletId = action.payload.walletId; // Save walletId in the state
       })
+  
       .addCase(verifyOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
