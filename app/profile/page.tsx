@@ -122,7 +122,8 @@ export default function ProfilePage() {
                     name={key}
                     value={(formData as any)[key]}
                     onChange={handleChange}
-                    className="border rounded px-2 py-1 w-1/2"
+                    className="border rounded px-2 py-1 w-1/2 bg-gray-100 cursor-not-allowed"
+                    disabled
                   />
                 ) : (
                   <span>{(user as any)?.[key]}</span>
