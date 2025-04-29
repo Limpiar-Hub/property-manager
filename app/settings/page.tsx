@@ -16,7 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Settings, User, Shield, Bell, Palette, Key, Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import "@/styles/theme.css";
+import { useTheme } from "@/components/theme-provider";
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(8, "Current password must be at least 8 characters"),
@@ -37,12 +37,7 @@ export default function AdvancedSettingsPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user, token } = useAppSelector((state) => state.auth);
-  const [theme, setTheme] = useState<"light" | "dark" | "system">(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") as "light" | "dark" | "system" || "system";
-    }
-    return "system";
-  });
+  const { theme, setTheme } = useTheme(); // Use ThemeProvider
   const [language, setLanguage] = useState("en");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notificationPreferences, setNotificationPreferences] = useState({
@@ -71,22 +66,6 @@ export default function AdvancedSettingsPage() {
       fullName: user?.fullName || "",
     },
   });
-
-  // Apply theme globally
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "system") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", prefersDark);
-    } else {
-      root.classList.toggle("dark", theme === "dark");
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : prev === "dark" ? "light" : "system"));
-  };
 
   // Load user preferences
   useEffect(() => {
@@ -309,24 +288,26 @@ export default function AdvancedSettingsPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Mobile menu button */}
-      <button
-        className="fixed z-50 bottom-4 right-4 lg:hidden bg-blue-600 text-white p-3 rounded-full shadow-lg"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed z-50 top-4 right-4 lg:hidden"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
-        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+        {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </Button>
 
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 bg-black text-white transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Logo */}
-        <div className="p-4">
+        <div className="p-4 border-b dark:border-gray-700">
           <Image
             src="/limp.png"
             alt="Limpiar Logo"
@@ -340,73 +321,75 @@ export default function AdvancedSettingsPage() {
         <nav className="mt-5 px-2">
           <div className="space-y-1">
             {sidebarItems.map((item) => (
-              <button
+              <Button
                 key={item.id}
+                variant="ghost"
+                className={cn(
+                  "flex items-center px-4 py-3 text-sm font-medium w-full justify-start text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700",
+                  activeTab === item.id ? "bg-blue-50 dark:bg-blue-900" : ""
+                )}
                 onClick={() => {
                   setActiveTab(item.id);
                   setIsSidebarOpen(false);
                 }}
-                className={cn(
-                  "group flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-gray-700 w-full",
-                  activeTab === item.id ? "bg-gray-700" : ""
-                )}
               >
-                <item.icon className="mr-3 h-5 w-5 text-gray-300" />
+                <item.icon className="mr-3 h-5 w-5 text-gray-500 dark:text-gray-400" />
                 {item.label}
-              </button>
+              </Button>
             ))}
           </div>
         </nav>
 
         {/* Bottom links */}
-        <div className="absolute bottom-0 w-full border-t border-gray-700">
-          <button
+        <div className="absolute bottom-0 w-full border-t dark:border-gray-700">
+          <Button
+            variant="ghost"
+            className="flex items-center px-4 py-3 text-sm font-medium w-full justify-start text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={handleLogout}
-            className="group flex items-center px-4 py-3 text-sm font-medium hover:bg-gray-700 w-full"
           >
-            <LogOut className="mr-3 h-5 w-5 text-gray-300" />
+            <LogOut className="mr-3 h-5 w-5 text-gray-500 dark:text-gray-400" />
             Logout
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Main Content */}
       <main className="flex-1 p-6">
         <div className="max-w-4xl mx-auto">
-          <Button variant="ghost" onClick={handleBack} className="mb-4">
+          <Button variant="ghost" onClick={handleBack} className="mb-4 text-gray-800 dark:text-gray-200">
             ← Back
           </Button>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-6 lg:hidden">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-6 lg:hidden bg-gray-200 dark:bg-gray-700">
               {sidebarItems.map((item) => (
-                <TabsTrigger key={item.id} value={item.id}>
+                <TabsTrigger key={item.id} value={item.id} className="text-gray-800 dark:text-gray-200">
                   {item.label}
                 </TabsTrigger>
               ))}
             </TabsList>
 
             <TabsContent value="profile" className="mt-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 className="text-2xl font-semibold mb-4">Profile Settings</h2>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Profile Settings</h2>
                 <form onSubmit={profileForm.handleSubmit(handleProfileUpdate)} className="space-y-4">
                   <div>
-                    <Label htmlFor="username">Username</Label>
-                    <Input id="username" {...profileForm.register("username")} />
+                    <Label htmlFor="username" className="text-gray-800 dark:text-gray-200">Username</Label>
+                    <Input id="username" {...profileForm.register("username")} className="dark:bg-gray-700 dark:text-gray-200" />
                     {profileForm.formState.errors.username && (
                       <p className="text-red-500 text-sm">{profileForm.formState.errors.username.message}</p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...profileForm.register("email")} />
+                    <Label htmlFor="email" className="text-gray-800 dark:text-gray-200">Email</Label>
+                    <Input id="email" type="email" {...profileForm.register("email")} className="dark:bg-gray-700 dark:text-gray-200" />
                     {profileForm.formState.errors.email && (
                       <p className="text-red-500 text-sm">{profileForm.formState.errors.email.message}</p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input id="fullName" {...profileForm.register("fullName")} />
+                    <Label htmlFor="fullName" className="text-gray-800 dark:text-gray-200">Full Name</Label>
+                    <Input id="fullName" {...profileForm.register("fullName")} className="dark:bg-gray-700 dark:text-gray-200" />
                   </div>
                   <Button type="submit">Update Profile</Button>
                 </form>
@@ -414,26 +397,26 @@ export default function AdvancedSettingsPage() {
             </TabsContent>
 
             <TabsContent value="security" className="mt-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 className="text-2xl font-semibold mb-4">Security Settings</h2>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Security Settings</h2>
                 <form onSubmit={passwordForm.handleSubmit(handlePasswordChange)} className="space-y-4">
                   <div>
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input type="password" id="currentPassword" {...passwordForm.register("currentPassword")} />
+                    <Label htmlFor="currentPassword" className="text-gray-800 dark:text-gray-200">Current Password</Label>
+                    <Input type="password" id="currentPassword" {...passwordForm.register("currentPassword")} className="dark:bg-gray-700 dark:text-gray-200" />
                     {passwordForm.formState.errors.currentPassword && (
                       <p className="text-red-500 text-sm">{passwordForm.formState.errors.currentPassword.message}</p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input type="password" id="newPassword" {...passwordForm.register("newPassword")} />
+                    <Label htmlFor="newPassword" className="text-gray-800 dark:text-gray-200">New Password</Label>
+                    <Input type="password" id="newPassword" {...passwordForm.register("newPassword")} className="dark:bg-gray-700 dark:text-gray-200" />
                     {passwordForm.formState.errors.newPassword && (
                       <p className="text-red-500 text-sm">{passwordForm.formState.errors.newPassword.message}</p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input type="password" id="confirmPassword" {...passwordForm.register("confirmPassword")} />
+                    <Label htmlFor="confirmPassword" className="text-gray-800 dark:text-gray-200">Confirm New Password</Label>
+                    <Input type="password" id="confirmPassword" {...passwordForm.register("confirmPassword")} className="dark:bg-gray-700 dark:text-gray-200" />
                     {passwordForm.formState.errors.confirmPassword && (
                       <p className="text-red-500 text-sm">{passwordForm.formState.errors.confirmPassword.message}</p>
                     )}
@@ -441,24 +424,24 @@ export default function AdvancedSettingsPage() {
                   <Button type="submit">Change Password</Button>
                 </form>
                 <div className="mt-6 flex items-center justify-between">
-                  <Label htmlFor="twoFactor">Two-Factor Authentication</Label>
+                  <Label htmlFor="twoFactor" className="text-gray-800 dark:text-gray-200">Two-Factor Authentication</Label>
                   <input
                     type="checkbox"
                     id="twoFactor"
                     checked={twoFactorEnabled}
                     onChange={(e) => handleToggleTwoFactor(e.target.checked)}
-                    className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="h-5 w-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                   />
                 </div>
               </div>
             </TabsContent>
 
             <TabsContent value="notifications" className="mt-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 className="text-2xl font-semibold mb-4">Notification Preferences</h2>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Notification Preferences</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="emailNotifications">Email Notifications</Label>
+                    <Label htmlFor="emailNotifications" className="text-gray-800 dark:text-gray-200">Email Notifications</Label>
                     <input
                       type="checkbox"
                       id="emailNotifications"
@@ -466,11 +449,11 @@ export default function AdvancedSettingsPage() {
                       onChange={(e) =>
                         setNotificationPreferences({ ...notificationPreferences, email: e.target.checked })
                       }
-                      className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="h-5 w-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="pushNotifications">Push Notifications</Label>
+                    <Label htmlFor="pushNotifications" className="text-gray-800 dark:text-gray-200">Push Notifications</Label>
                     <input
                       type="checkbox"
                       id="pushNotifications"
@@ -478,11 +461,11 @@ export default function AdvancedSettingsPage() {
                       onChange={(e) =>
                         setNotificationPreferences({ ...notificationPreferences, push: e.target.checked })
                       }
-                      className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="h-5 w-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="smsNotifications">SMS Notifications</Label>
+                    <Label htmlFor="smsNotifications" className="text-gray-800 dark:text-gray-200">SMS Notifications</Label>
                     <input
                       type="checkbox"
                       id="smsNotifications"
@@ -490,7 +473,7 @@ export default function AdvancedSettingsPage() {
                       onChange={(e) =>
                         setNotificationPreferences({ ...notificationPreferences, sms: e.target.checked })
                       }
-                      className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="h-5 w-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                     />
                   </div>
                   <Button onClick={handleSaveNotificationPreferences}>Save Preferences</Button>
@@ -499,16 +482,16 @@ export default function AdvancedSettingsPage() {
             </TabsContent>
 
             <TabsContent value="appearance" className="mt-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 className="text-2xl font-semibold mb-4">Appearance Settings</h2>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Appearance Settings</h2>
                 <div className="space-y-4">
                   <div>
-                    <Label>Theme</Label>
+                    <Label className="text-gray-800 dark:text-gray-200">Theme</Label>
                     <Select value={theme} onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:bg-gray-700 dark:text-gray-200">
                         <SelectValue placeholder="Select theme" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dark:bg-gray-700 dark:text-gray-200">
                         <SelectItem value="light">Light</SelectItem>
                         <SelectItem value="dark">Dark</SelectItem>
                         <SelectItem value="system">System</SelectItem>
@@ -516,12 +499,12 @@ export default function AdvancedSettingsPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label>Language</Label>
+                    <Label className="text-gray-800 dark:text-gray-200">Language</Label>
                     <Select value={language} onValueChange={setLanguage}>
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:bg-gray-700 dark:text-gray-200">
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dark:bg-gray-700 dark:text-gray-200">
                         <SelectItem value="en">English</SelectItem>
                         <SelectItem value="es">Spanish</SelectItem>
                         <SelectItem value="fr">French</SelectItem>
@@ -534,17 +517,17 @@ export default function AdvancedSettingsPage() {
             </TabsContent>
 
             <TabsContent value="api" className="mt-6">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 className="text-2xl font-semibold mb-4">API Settings</h2>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">API Settings</h2>
                 <div className="space-y-4">
                   <div>
-                    <Label>API Key</Label>
+                    <Label className="text-gray-800 dark:text-gray-200">API Key</Label>
                     <div className="flex gap-2">
-                      <Input value={apiKey} readOnly placeholder="No API key generated" />
+                      <Input value={apiKey} readOnly placeholder="No API key generated" className="dark:bg-gray-700 dark:text-gray-200" />
                       <Button onClick={handleGenerateApiKey}>Generate New Key</Button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500">Keep your API key secure and do not share it publicly.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Keep your API key secure and do not share it publicly.</p>
                 </div>
               </div>
             </TabsContent>

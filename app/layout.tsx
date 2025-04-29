@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/redux/provider";
 import { ImageProvider } from "@/components/imageFileProvider";
-import ClientComponent from "./ClientComponent"; // Import the client component
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,12 +30,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ImageProvider>
-          <Providers>{children}</Providers>
-        </ImageProvider>
-        <ClientComponent /> {/* Include the client-side logic here */}
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ImageProvider>
+            <Providers>{children}</Providers>
+          </ImageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
