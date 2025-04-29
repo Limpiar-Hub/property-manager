@@ -37,13 +37,27 @@ export default function ProfilePage() {
 
         const walletData = localStorage.getItem("userWallet");
         if (walletData) {
-          setUserWallet(JSON.parse(walletData).data.wallet);
+          const wallet = JSON.parse(walletData).data.wallet;
+          setUserWallet(wallet);
+          fetchWalletBalance(wallet._id);
         }
       } catch (error) {
         console.error("Error parsing user or wallet data:", error);
       }
     }
   }, []);
+
+  const fetchWalletBalance = async (walletId: string) => {
+    try {
+      const response = await fetch(`https://limpiar-backend.onrender.com/api/wallets/balances/${walletId}`);
+      const data = await response.json();
+      if (data?.balance !== undefined) {
+        setUserWallet((prev: any) => ({ ...prev, balance: data.balance }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch wallet balance:", error);
+    }
+  };
 
   const wallet = userWallet?.balance || 0;
 
@@ -83,14 +97,13 @@ export default function ProfilePage() {
 
         <div className="relative flex flex-col items-center mt-6">
           <div className="relative rounded-full overflow-hidden w-32 h-32">
-          <Image
-  src={user?.profileImage?.trim() ? user.profileImage : "https://t4.ftcdn.net/jpg/04/83/90/95/360_F_483909569_OI4LKNeFgHwvvVju60fejLd9gj43dIcd.jpg"}
-  alt="User Profile"
-  width={200}
-  height={200}
-  className="object-cover w-full h-full"
-/>
-
+            <Image
+              src={user?.profileImage?.trim() ? user.profileImage : "https://t4.ftcdn.net/jpg/04/83/90/95/360_F_483909569_OI4LKNeFgHwvvVju60fejLd9gj43dIcd.jpg"}
+              alt="User Profile"
+              width={200}
+              height={200}
+              className="object-cover w-full h-full"
+            />
           </div>
           <div className="relative flex flex-col justify-center text-center mt-4">
             <h1 className="text-2xl font-bold">{user?.fullName}</h1>
@@ -104,17 +117,16 @@ export default function ProfilePage() {
               <li key={key} className="flex justify-between items-center">
                 <span className="capitalize">{key.replace("Number", " Number")}</span>
                 {editMode ? (
-  <input
-    type="text"
-    name={key}
-    value={(formData as any)[key]}
-    readOnly
-    className="border rounded px-2 py-1 w-1/2 bg-gray-100 text-gray-400 cursor-not-allowed"
-  />
-) : (
-  <span>{(user as any)?.[key]}</span>
-)}
-
+                  <input
+                    type="text"
+                    name={key}
+                    value={(formData as any)[key]}
+                    onChange={handleChange}
+                    className="border rounded px-2 py-1 w-1/2"
+                  />
+                ) : (
+                  <span>{(user as any)?.[key]}</span>
+                )}
               </li>
             ))}
 
