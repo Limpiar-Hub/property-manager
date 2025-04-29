@@ -31,14 +31,7 @@ export default function BookingTabs({ activeTab, setActiveTab, counts }: Booking
             key={tab.id}
             onClick={() => setActiveTab(tab.id as BookingStatus)}
             className={`
-              py-2 sm:py-3 px-3 sm:px-4 text-sm font-medium whitespace-nowrap rounded-md
-              ${
-                activeTab === tab.id
-                  ? "bg-white border border-gray-300"
-                  : tab.id === "active"
-                    ? "bg-gray-100"
-                    : "bg-white"
-              }
+              py-2 sm:py-3 px-3 sm:px-4 text-sm font-medium whitespace-nowrap rounded-md border-2
               mr-2
             `}
           >

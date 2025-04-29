@@ -30,7 +30,7 @@ export default function AnalyticsDashboard() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Analytics</h1>
         <Select value={timeframe} onValueChange={setTimeframe}>
-          <SelectTrigger className="w-[140px] bg-white border">
+          <SelectTrigger className="w-[140px] border">
             <SelectValue placeholder="This Week" />
           </SelectTrigger>
           <SelectContent>
@@ -45,7 +45,7 @@ export default function AnalyticsDashboard() {
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Bookings Card */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="rounded-lg border shadow p-4 sm:p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Bookings</p>
@@ -71,7 +71,7 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center mt-4">
+          <div className="flex items-center mt-4 border">
             <div className="flex items-center text-green-500 mr-4">
               <ArrowUpIcon className="h-4 w-4 mr-1" />
               <span className="text-sm font-medium">21.9%</span>
@@ -84,7 +84,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Payments Card */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="rounded-lg shadow p-4 sm:p-6 border">
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Payments</p>
@@ -110,7 +110,7 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center mt-4">
+          <div className="flex items-center mt-4 border">
             <div className="flex items-center text-green-500 mr-4">
               <ArrowUpIcon className="h-4 w-4 mr-1" />
               <span className="text-sm font-medium">21.9%</span>
@@ -125,7 +125,7 @@ export default function AnalyticsDashboard() {
 
       {/* Chart Section */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div className="lg:col-span-3 bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="lg:col-span-3 rounded-lg shadow p-4 sm:p-6 border">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
             <div>
               <div className="uppercase text-xs font-medium text-gray-500 tracking-wider mb-1">TOTAL AMOUNT SPENT</div>
@@ -141,7 +141,7 @@ export default function AnalyticsDashboard() {
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Select value={chartTimeframe} onValueChange={setChartTimeframe}>
-                  <SelectTrigger className="w-[140px] bg-white border">
+                  <SelectTrigger className="w-[140px] border">
                     <SelectValue placeholder="This Month" />
                   </SelectTrigger>
                   <SelectContent>
@@ -174,7 +174,7 @@ export default function AnalyticsDashboard() {
 
         {/* Property Stats */}
         <div className="lg:col-span-1 grid grid-cols-1 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className=" rounded-lg shadow p-6 border">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Total Number Of Property(s)</p>
@@ -186,7 +186,7 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className=" rounded-lg shadow p-6 border">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Active Property(s)</p>
@@ -198,7 +198,7 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className=" rounded-lg shadow p-6 border">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Pending Property(s)</p>

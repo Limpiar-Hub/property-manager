@@ -7,6 +7,9 @@ import { RootState } from "@/redux/store";
 import { checkTokenExpiration } from "@/redux/features/auth/authSlice";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
+import ProfilePage from "@/components/profile/page";
+import Settings from "@/components/settings/page";
+import { setIsOpen } from "@/redux/features/user/userSlice";
 
 export default function DashboardLayout({
   children,
@@ -16,6 +19,7 @@ export default function DashboardLayout({
   const { isAuthenticated, token } = useSelector(
     (state: RootState) => state.auth
   );
+  const {isOpen, isProfileOpen} = useSelector((state: RootState) => state.user);
 
   const [isClient, setIsClient] = useState(false);
 
@@ -50,6 +54,8 @@ export default function DashboardLayout({
         <Header />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
+      { isOpen && <Settings />}
+      { isProfileOpen && <ProfilePage />}
     </div>
   );
 }

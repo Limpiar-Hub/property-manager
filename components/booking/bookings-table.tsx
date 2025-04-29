@@ -110,7 +110,7 @@ export default function BookingsTable({
       <div className="min-w-[1000px]">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-50">
+            <tr>
               {showCheckboxes && (
                 <th className="p-3 sm:p-4 border border-gray-200">
                   <input
@@ -124,22 +124,22 @@ export default function BookingsTable({
                   />
                 </th>
               )}
-              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border border-gray-200">
+              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border">
                 Property Name
               </th>
-              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border border-gray-200">
+              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border">
                 Address
               </th>
-              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border border-gray-200">
+              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border">
                 Date
               </th>
-              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border border-gray-200">
+              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border">
                 Time
               </th>
-              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border border-gray-200">
+              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border">
                 Status
               </th>
-              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border border-gray-200">
+              <th className="p-3 sm:p-4 text-left font-medium text-gray-600 border">
                 Price
               </th>
             </tr>
@@ -147,7 +147,7 @@ export default function BookingsTable({
           <tbody>
             {filteredBookings.length > 0 ? (
               filteredBookings.map((booking) => (
-                <tr key={booking._id} className="bg-white hover:bg-gray-50">
+                <tr key={booking._id} className=" hover:bg-gray-50">
                   {showCheckboxes && (
                     <td className="p-3 sm:p-4 border border-gray-200">
                       <input

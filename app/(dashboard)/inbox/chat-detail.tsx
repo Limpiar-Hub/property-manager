@@ -160,7 +160,7 @@ export function ChatDetail() {
   return (
     <div className="h-full flex flex-col">
       {/* Chat Header */}
-      <div className="p-4 border-b bg-white flex items-center">
+      <div className="p-4 border-b flex items-center">
         {isMobile && (
           <Button variant="ghost" onClick={handleBack} className="mr-2">
             <ArrowLeft className="h-5 w-5" />

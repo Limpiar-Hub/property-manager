@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/redux/provider";
 import { ImageProvider } from "@/components/imageFileProvider";
 import { Inter, Roboto_Mono } from "next/font/google";
+import ThemeProvider from "@/components/themeProvider";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -35,7 +36,11 @@ export default function RootLayout({
         className={`${inter.variable} ${robotoMono.variable} antialiased`}
       >
         <ImageProvider>
-          <Providers>{children}</Providers>
+          <Providers>
+            <ThemeProvider>
+            {children}
+            </ThemeProvider>
+            </Providers>
         </ImageProvider>
       </body>
     </html>

@@ -10,6 +10,8 @@ import { openModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import { setUserBalance } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import dynamic from "next/dynamic";
 import { useAppSelector } from "@/hooks/useReduxHooks";
+import { useSelector} from "react-redux";
+import { RootState } from "@/redux/store";
 
 type Transaction = {
   id: string;
@@ -55,6 +57,7 @@ export default function PaymentsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const dispatch = useDispatch();
+  const {showBalance} = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     setIsLoading(true);
@@ -87,7 +90,7 @@ export default function PaymentsPage() {
   }, [dispatch]);
 
   return (
-    <div className="flex bg-gray-50">
+    <div className="flex">
       {/* Main content */}
       <main className="flex-1 overflow-auto pb-20 md:pb-0">
         {/* Content */}
@@ -143,7 +146,13 @@ export default function PaymentsPage() {
                     {isLoading ? (
                       <span className="text-xl">Loading...</span>
                     ) : (
-                      `$${walletBalance.toLocaleString()}`
+                      <>
+                        {showBalance ? (
+                          <span>${walletBalance.toLocaleString()}</span>
+                        ) : (
+                          <span>$****</span> // Placeholder when hidden
+                        )}
+                      </>
                     )}
                   </p>
                 </div>
@@ -152,7 +161,7 @@ export default function PaymentsPage() {
               <div className="grid grid-cols-2 gap-4 mt-6">
                 <button
                   onClick={() => dispatch(openModal())}
-                  className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium"
+                  className="flex items-center justify-center gap-2 border-2 light:hover:bg-gray-200 dark:hover:bg-gray-700  transition-colors p-3 rounded-lg text-sm font-medium"
                 >
                   <Plus className="w-4 h-4" />
                   Top Up Wallet
@@ -160,7 +169,7 @@ export default function PaymentsPage() {
 
                 <button
                   onClick={() => dispatch(openRefundModal())}
-                  className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium"
+                  className="flex items-center justify-center gap-2 border-2 light:hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors p-3 rounded-lg text-sm font-medium"
                 >
                   <RefreshCcw className="w-4 h-4" />
                   Request Refund

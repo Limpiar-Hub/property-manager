@@ -31,7 +31,7 @@ export function InboxContent() {
     <div className="flex h-[calc(100vh-4rem)]">
       {/* Left side - Chat List */}
       {(!isMobile || !selectedChatId) && (
-        <div className="w-full md:w-[400px] border-r flex flex-col bg-white md:bg-white relative">
+        <div className="w-full md:w-[400px] border-r flex flex-col relative">
           <div className="p-4 md:p-6 border-b bg-blue-600 md:bg-transparent text-white md:text-black">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h1 className="text-xl md:text-2xl font-semibold">Inbox</h1>

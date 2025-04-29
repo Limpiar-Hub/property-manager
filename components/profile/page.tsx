@@ -6,11 +6,17 @@ import { useAppSelector, useAppDispatch } from "@/hooks/useReduxHooks";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/redux/features/auth/authSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/redux/store";
+import { setIsOpen, setOpenProfile } from "@/redux/features/user/userSlice";
+import {Menu, X} from "lucide-react";
 
 // app/profile/page.tsx
 export default function ProfilePage() {  
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const {isProfileOpen} = useSelector((state: RootState) => state.user);
+
   const getuser = localStorage.getItem('persist:auth');
   let user: any;
   if(getuser) {
@@ -22,27 +28,35 @@ export default function ProfilePage() {
   if(getuserBalance) {
     userWallet = JSON.parse(getuserBalance).data.wallet;
   }
-  const wallet = userWallet.balance
+  const wallet = userWallet.balance;
 
-    const handleLogout = () => {
-      dispatch(logout());
-      router.push("/login"); // Redirect to login page after logout
-    };
+  const getTotalProperty = localStorage.getItem('totalProperty');
+  let totalProperty: any;
+  if(getTotalProperty) {
+    totalProperty = JSON.parse(getTotalProperty);
+  }
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/login"); // Redirect to login page after logout
+  };
 
   const { userBalance } = useAppSelector((state) => state.topUpModal);
     return (
-      <div className="flex min-h-screen w-[full] flex-col items-center justify-center">
-        <div className="content min-w-[50%]">
-          <div className="relative top-4">
-          <button
-            className="flex items-center text-gray-600 w-20 h-11 hover:text-gray-900 " 
-            onClick={() => router.back()}
-          >
-            <ArrowLeft size={18} className="mr-1" />
-            <p>Back</p>
-          </button>
+      <>
+      {isProfileOpen && (
+      <div className="absolute top-16 right-4 w-96 h-[80vh] overflow-auto bg-white border-2 dark:bg-black rounded-lg shadow-lg transition-all duration-500 ease-in-out animate-dropdown">
+        <div>
+          <div>
+            <button
+            className="p-3 rounded-full"
+            onClick={() => dispatch(setOpenProfile(!isProfileOpen))}
+            >
+              {isProfileOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
-          <div className="relative flex flex-col items-center rounded-lg">
+
+          <div className="relative flex flex-col items-center rounded-lg ">
               <Image src="/darren.png" alt='Property image' width={200} height={200} className="relative object-cover" />
               <div className="relative flex flex-col justify-center">
                   <h1 className="text-2xl font-bold">{user.fullName}</h1>
@@ -50,9 +64,9 @@ export default function ProfilePage() {
               </div>
           </div>
 
-          <div className="relative w-[100%] mt-7 p-5 rounded-lg items-start border-2 border-gray-500">
+          <div className="relative w-[100%] mt-7 p-5 rounded-lg items-start border-2">
             <div>
-              <ul className="list-inside text-gray-700 text-base text-start space-y-5">
+              <ul className="list-inside text-base text-start space-y-5">
                   <li className="flex justify-between">
                   <span>Full Name</span>
                   <span>{user.fullName}</span>
@@ -84,6 +98,13 @@ export default function ProfilePage() {
                   <span>${wallet.toLocaleString()}</span>
                 </li>
 
+                {user.role === 'property_manager' && 
+                  <li className="flex justify-between">
+                    <span>Total Property</span>
+                    <span>{totalProperty}</span>
+                  </li>
+                }
+
                 <li className="flex justify-between font-bold">
                   <span>Edit Profile</span>
                   <span> <ArrowRight size={18} className="mr-1" /> </span>
@@ -102,6 +123,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+    )}
+    </>
+    
     );
   }
   
