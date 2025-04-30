@@ -49,6 +49,10 @@ export default function AdvancedSettingsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
+  useEffect(() => {
+    setTheme("light");
+  }, [setTheme]);
+
   const passwordForm = useForm({
     resolver: zodResolver(passwordSchema),
     defaultValues: {

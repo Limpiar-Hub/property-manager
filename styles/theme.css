@@ -1,16 +1,6 @@
 /* styles/theme.css */
 
-html {
-    /* Light mode default styles */
-    --background-color: white;
-    --text-color: black;
-  }
-  
-  html.dark {
-    /* Dark mode styles */
-    --background-color: #121212;
-    --text-color: white;
-  }
+
   
   /* Apply theme styles to the body or other components */
 /* Default Light Mode */
@@ -23,5 +13,26 @@ body {
   body.dark {
     background-color: #121212;
     color: #ffffff;
+  }
+  html {
+    --text-color: #000000;
+    --background-color: #ffffff;
+    --step-bg: #cce4ff;
+    --step-text: #003366;
+    --banner-gradient: linear-gradient(to right, #003366, #0055aa);
+    --banner-subtext: #cce4ff;
+    --button-bg: #1e90ff;
+    --button-text: white;
+  }
+  
+  html.dark {
+    --text-color: #ffffff;
+    --background-color: #121212;
+    --step-bg: #003366;
+    --step-text: #cce4ff;
+    --banner-gradient: linear-gradient(to right, #1a1a2e, #16213e);
+    --banner-subtext: #aaccff;
+    --button-bg: #1e90ff;
+    --button-text: white;
   }
   
