@@ -114,7 +114,7 @@ export function LoginForm() {
       });
 
       // Step 4: Redirect to /verify with phoneNumber as a query param
-      router.push(`/verify?phoneNumber=${encodeURIComponent(phoneNumber)}`);
+      router.push(`/admin/verify?phoneNumber=${encodeURIComponent(phoneNumber)}`);
     } catch (error) {
       console.error("❌ Login Error:", error);
 
