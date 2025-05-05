@@ -35,12 +35,12 @@ export function Sidebar() {
     { href: ROUTES.PROPERTIES, icon: Building2, label: "Property" },
     { href: ROUTES.BOOKINGS, icon: CreditCard, label: "Booking" },
     { href: ROUTES.PAYMENTS, icon: CreditCard, label: "Payment" },
-    { href: "/analytics", icon: LineChart, label: "Analytics" },
+    { href: ROUTES.ANALYTICS, icon: LineChart, label: "Analytics" },
     { href: ROUTES.SETTINGS, icon: Settings, label: "Settings" },
   ];
 
   const footerItems = [
-    { href: "/support", icon: HeadphonesIcon, label: "Help and Support" },
+    { href: "/admin/support", icon: HeadphonesIcon, label: "Help and Support" },
   ];
 
   const handleLogout = async () => {

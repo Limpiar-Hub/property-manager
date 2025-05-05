@@ -33,18 +33,19 @@ export const PROPERTY_STATUS = {
 // Routes
 export const ROUTES = {
   HOME: "/",
-  LOGIN: "/log-in",
-  SIGNUP: "/sign-up",
-  VERIFY: "/verify",
-  FORGOT_PASSWORD: "/forgot-password",
-  CHECK_EMAIL: "/check-email",
-  DASHBOARD: "/dashboard",
-  USERS: "/users",
-  PROPERTIES: "/property",
-  BOOKINGS: "/booking",
-  CLEANING_BUSINESSES: "/cleaning-business",
-  PAYMENTS: "/payment",
-  SETTINGS: "/settings",
+  LOGIN: "/admin/log-in",
+  SIGNUP: "/admin/sign-up",
+  VERIFY: "/admin/verify",
+  ANALYTICS: "/admin/analytics",
+  FORGOT_PASSWORD: "/admin/forgot-password",
+  CHECK_EMAIL: "/admin/check-email",
+  DASHBOARD: "/admin/dashboard",
+  USERS: "/admin/users",
+  PROPERTIES: "/admin/property",
+  BOOKINGS: "/admin/booking",
+  CLEANING_BUSINESSES: "/admin/cleaning-business",
+  PAYMENTS: "/admin/payment",
+  SETTINGS: "/admin/settings",
 }
 
 // Local storage keys

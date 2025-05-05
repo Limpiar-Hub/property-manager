@@ -1,3 +1,6 @@
+
+
+
 import './globals.css';
 import { ReactNode } from 'react';
 
@@ -9,7 +12,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning={true}>
         {children}
       </body>
     </html>
