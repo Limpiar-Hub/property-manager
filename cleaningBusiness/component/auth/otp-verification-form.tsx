@@ -168,7 +168,7 @@ export function OtpVerificationForm() {
   return (
     <div className="w-full max-w-md space-y-8 text-center">
       <Image
-        src="/authLoggo.png"
+        src="/cleaningBusinessLogo.png"
         alt="Limpiar Logo"
         width={200}
         height={200}
@@ -210,7 +210,7 @@ export function OtpVerificationForm() {
 
         <Button
           type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-600"
+          className="w-full bg-[#4C41C0] hover:bg-[#4C41C9]"
           disabled={loading}
         >
           {loading ? "Verifying..." : "Confirm"}
@@ -221,7 +221,7 @@ export function OtpVerificationForm() {
         type="button"
         onClick={handleResendCode}
         disabled={countdown > 0 || isResending}
-        className="text-sm text-blue-500 hover:text-blue-600 disabled:text-gray-400"
+        className="text-sm text-[#4C41C0] hover:text-[#4C41C9] disabled:text-gray-400"
       >
         {countdown > 0
           ? `Resend code in ${countdown}s`

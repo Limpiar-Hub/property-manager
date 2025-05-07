@@ -1,5 +1,6 @@
 "use client"
 import { useSelector } from "react-redux"
+import Image from "next/image"
 import { Provider } from "react-redux"
 import { store } from "../lib/store"
 import BusinessInformation from "./steps/business-information"
@@ -25,7 +26,13 @@ const RegistrationFormContent = () => {
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-6">
       <div className="flex justify-center mb-8">
-        <Logo />
+      <Image
+            src="/cleaningBusinessLogo.png"
+            alt="Limpiar Logo"
+            width={120}
+            height={50}
+            className="h-10 w-auto"
+          />
       </div>
 
       {currentStep < 4 && <StepIndicator />}

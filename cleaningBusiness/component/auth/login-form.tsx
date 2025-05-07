@@ -73,7 +73,7 @@ export function LoginForm() {
       <div className="flex flex-col items-center justify-center">
         {/* <LimpiarLogo className="h-16 w-auto" /> */}
         <Image
-            src="/authLoggo.png"
+            src="/cleaningBusinessLogo.png"
             alt="Limpiar Logo"
             width={200}
             height={200}
@@ -140,19 +140,19 @@ export function LoginForm() {
           </div>
 
           <div className="text-sm">
-            <Link href="/forgot-password" className="text-blue-500 hover:text-blue-600">
+            <Link href="/forgot-password" className="text-[#4C41C0] hover:text-blue-600">
               Forgot Password?
             </Link>
           </div>
         </div>
 
-        <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600" disabled={isLoading}>
+        <Button type="submit" className="w-full bg-[#4C41C0] hover:bg-[#4C41C9]" disabled={isLoading}>
           {isLoading ? "Signing in..." : "Login"}
         </Button>
 
         <div className="text-center text-sm">
           If you don&apos;t have an account{" "}
-          <Link href="/signup" className="text-blue-500 hover:text-blue-600">
+          <Link href="/signup" className="text-[#4C41C0] hover:text-blue-600">
             Sign Up
           </Link>
         </div>
