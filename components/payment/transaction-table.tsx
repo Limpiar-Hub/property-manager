@@ -39,6 +39,18 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
     }
   };
 
+  // Function to format description based on payment method
+  const getTransactionDescription = (transaction: Transaction) => {
+    const method = transaction.paymentMethod?.toLowerCase();
+    const amountFormatted = transaction.amount.toFixed(2);
+    if (method === "wallet") {
+      return `Wallet transaction for $${amountFormatted} `;
+    } else if (method === "stripe") {
+      return `Stripe transaction for $${amountFormatted} `;
+    }
+    return transaction.description;
+  };
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesStatus =
       statusFilter === "all" ||
@@ -64,7 +76,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
   const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
 
   return (
-    <div className="bg-white rounded-lg border">
+    <div className="rounded-lg border">
       {/* Search and filter */}
       <div className="p-4 flex flex-col md:flex-row justify-between gap-4">
         <div className="relative">
@@ -85,7 +97,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
               setStatusFilter(e.target.value)
             }
-            className="w-full appearance-none border rounded-md px-4 py-2 pr-8 bg-white"
+            className="w-full appearance-none border-2 rounded-md px-4 py-2 pr-8 "
           >
             <option value={"all"}>All Status</option>
             <option value={"pending"}>Pending</option>
@@ -123,7 +135,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
           </thead>
           <tbody>
             {currentRows.map((transaction) => (
-              <tr key={transaction.id} className="border-b hover:bg-gray-50">
+              <tr key={transaction.id} className="border-b light:hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td className="p-4">
                   <input
                     type="checkbox"
@@ -136,7 +148,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                   {new Date(transaction.date).toDateString()}
                 </td>
                 <td className="relative max-w-[250px] overflow-hidden whitespace-nowrap text-ellipsis pr-5">
-                  {transaction.description}
+                  {getTransactionDescription(transaction)}
                 </td>
                 <td className="p-4 text-sm">$ {transaction.amount.toFixed(2)}</td>
                 <td className="p-4 text-sm">{transaction.paymentMethod}</td>
@@ -160,7 +172,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                 setCurrentPage(1); // Reset to first page
               }}
               value={rowsPerPage}
-              className="w-full appearance-none border rounded-md px-2 py-1 pr-6 bg-white"
+              className="w-full appearance-none border-2 rounded-md px-2 py-1 pr-6"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -177,7 +189,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 border rounded-md text-gray-500 disabled:text-gray-300 hover:bg-gray-50"
+            className="px-4 py-2 border rounded-md text-gray-500 disabled:text-gray-300 light:hover:bg-gray-200 dark:hover:bg-gray-700"
           >
             Previous
           </button>

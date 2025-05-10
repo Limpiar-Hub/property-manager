@@ -1,4 +1,3 @@
-
 "use client"
 
 import Image from "next/image";
@@ -15,6 +14,7 @@ interface PropertyListingComponentProps {
 export default function PropertyListingComponent({ propertyData, count }: PropertyListingComponentProps) {
   const router = useRouter();
   const [searches, setSearches] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'pending'>('all');
 
   const handleRouter = () => {
     router.push("/my-property/add");
@@ -24,25 +24,34 @@ export default function PropertyListingComponent({ propertyData, count }: Proper
     setSearches(e.target.value);
   }
 
-  const filteredProperties = propertyData.filter((property: Property) =>
+  const countActive = propertyData.filter((property: Property) => 
+    property.status.toLowerCase() === 'verified'
+  );
+  
+  const countPending = propertyData.filter((property: Property) => 
+    property.status.toLowerCase() === 'pending'
+  );
+
+  const propertiesToDisplay = activeTab === 'all' ? propertyData :
+                             activeTab === 'active' ? countActive :
+                             countPending;
+
+  // Filter properties based on search
+  const filteredProperties = propertiesToDisplay.filter((property: Property) =>
     property.name.toLowerCase().includes(searches.toLowerCase()) || 
     property.address.toLowerCase().includes(searches.toLowerCase()) || 
     property.status.toLowerCase().includes(searches.toLowerCase()) || 
     property.type.toLowerCase().includes(searches.toLowerCase())
   );
 
-  const countPending = propertyData.filter((property: Property) => 
-    property.status.toLowerCase().includes('pending')
-  );
-  
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen">
       {/* Main Content */}
       <main className="flex-1">
         {/* Content */}
         <div className="p-">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">
+            <h1 className="text-2xl font-bold mb-4 md:mb-0">
               My Properties
             </h1>
             <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
@@ -64,10 +73,10 @@ export default function PropertyListingComponent({ propertyData, count }: Proper
 
           {/* Tabs */}
           <div className="mb-6">
-            <div className="flex space-x-2 bg-gray-50 p-1 rounded-lg w-fit">
-              <TabButton text={`All (${count})`} active />
-              <TabButton text="Active (0)" active/>
-              <TabButton text={`Pending (${countPending.length})`} active />
+            <div className="flex space-x-2 p-1 rounded-lg w-fit">
+              <TabButton text={`All (${count})`} active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
+              <TabButton text={`Active (${countActive.length})`} active={activeTab === 'active'} onClick={() => setActiveTab('active')} />
+              <TabButton text={`Pending (${countPending.length})`} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
             </div>
           </div>
 
@@ -98,16 +107,14 @@ export default function PropertyListingComponent({ propertyData, count }: Proper
 interface TabButtonProps {
   text: string;
   active?: boolean;
+  onClick: () => void;
 }
 
-function TabButton({ text, active = false }: TabButtonProps) {
+function TabButton({ text, active = false, onClick }: TabButtonProps) {
   return (
     <button
-      className={`py-2 px-4 rounded-lg ${
-        active
-          ? "bg-white text-gray-800 font-medium"
-          : "text-gray-500 bg-gray-50"
-      }`}
+      className="py-2 px-4 rounded-lg border-2"
+      onClick={onClick}
     >
       {text}
     </button>
@@ -131,7 +138,7 @@ function PropertyCard({ status, src, location, type, name, propertyId }: Propert
   
   return (
     <div className="flex flex-col">
-      <div className="relative">
+      <div className="relative border-2 rounded-lg">
         <Image 
           src={src}
           alt="Property"

@@ -122,9 +122,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s, color 0.3s;
   }
 }
 
+@media (max-width: 768px) {
+  .content {
+    min-width: 90%;
+  }
+}
 
 
 

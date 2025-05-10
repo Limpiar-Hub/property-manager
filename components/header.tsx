@@ -11,10 +11,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppSelector, useAppDispatch } from "@/hooks/useReduxHooks";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useRouter } from "next/navigation";
+import { RootState } from "@/redux/store";
+import { useSelector } from "react-redux";
+import Link from "next/link";
+import { setIsOpen, setOpenProfile } from "@/redux/features/user/userSlice";
+
 
 export default function Header() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const {isOpen, theme, showBalance, isProfileOpen} = useSelector((state: RootState) => state.user);
 
   // Get the authenticated user's name from Redux state
   const { user } = useAppSelector((state) => state.auth);
@@ -32,8 +38,22 @@ export default function Header() {
     router.push("/login"); // Redirect to login page after logout
   };
 
+  const handleOpenSettings = () => {
+    if(isProfileOpen) {
+      dispatch(setOpenProfile(false));
+    }
+    dispatch(setIsOpen(true));
+  };
+
+  const handleOpenProfile = () => {
+    if(isOpen) {
+      dispatch(setIsOpen(false));
+    }
+    dispatch(setOpenProfile(true));
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200 py-3 px-4 md:px-6 flex items-center justify-end">
+    <header className="border-b-2 py-3 px-4 md:px-6 flex items-center justify-end">
       {/* Notification bell */}
       <button className="relative p-2 mr-4 text-gray-600 hover:text-gray-900">
         <Bell className="h-5 w-5" />
@@ -58,8 +78,8 @@ export default function Header() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleOpenProfile}>Profile</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleOpenSettings}>Settings</DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

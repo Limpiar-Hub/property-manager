@@ -54,6 +54,7 @@ export default function Home() {
 
         setPropertyData(result.data);
         setPropertyCount(result.count);
+        localStorage.setItem('totalProperty', result.count)
       } catch (err) {
         console.error("Error fetching properties:", err);
       } finally {

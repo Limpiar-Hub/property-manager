@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
 import {
   addImage,
   removeImage,
+  clearImages,
 } from "@/redux/features/addProperty/propertySlice";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
@@ -20,22 +21,30 @@ export default function ImageUpload() {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (images.length >= 8) return;
+
       setUploading(true);
+
       setTimeout(() => {
-        acceptedFiles.forEach((file) => {
+        const newFiles = acceptedFiles.slice(0, 8 - images.length);
+        addFiles(newFiles);
+
+        newFiles.forEach((file, index) => {
           const imageUrl = URL.createObjectURL(file);
-          addFiles(acceptedFiles); // Add files to the context
-          dispatch(
-            addImage({
-              url: imageUrl,
-              isCover: images.length === 0,
-            })
-          );
+          const alreadyExists = images.some((img) => img.url === imageUrl);
+          if (!alreadyExists) {
+            dispatch(
+              addImage({
+                url: imageUrl,
+                isCover: images.length + index === 0,
+              })
+            );
+          }
         });
+
         setUploading(false);
       }, 1000);
     },
-    [dispatch, images.length, addFiles] // Added 'addFiles' to the dependency array
+    [dispatch, images.length, addFiles, images]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -46,6 +55,14 @@ export default function ImageUpload() {
 
   const handleRemoveImage = (url: string) => {
     dispatch(removeImage(url));
+  };
+
+  const handlePublish = () => {
+    // 👇 You can add your API submission logic here
+    console.log("Publishing property with images:", images);
+
+    // ✅ Clear all images after publish
+    dispatch(clearImages());
   };
 
   return (
@@ -110,6 +127,23 @@ export default function ImageUpload() {
           </div>
         )}
       </div>
+
+      {images.length > 0 && (
+        <div className="flex justify-center mt-6 gap-4">
+          <button
+            onClick={() => dispatch(clearImages())}
+            className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"
+          >
+            Clear All
+          </button>
+          <button
+            onClick={handlePublish}
+            className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md"
+          >
+            Publish
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -69,7 +69,7 @@ export function TicketDetail() {
   return (
     <div className="h-full flex flex-col">
       {isMobile && (
-        <div className="p-4 border-b bg-white flex items-center">
+        <div className="p-4 border-bflex items-center">
           <Button variant="ghost" onClick={handleBack} className="mr-2">
             <ArrowLeft className="h-5 w-5" />
           </Button>

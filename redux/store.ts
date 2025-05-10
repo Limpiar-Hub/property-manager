@@ -9,6 +9,7 @@ import bookingReducer from "./features/booking/bookingSlice";
 import chatReducer from "./features/chat/chatSlice";
 import topUpModalReducer from "./features/topUpModalSlice/topUpModalSlice";
 import authReducer from "./features/auth/authSlice";
+import settingReducer from "./features/user/userSlice"
 import loginReducer from "./features/login/loginSlice"
 
 // Configuration for redux-persist
@@ -29,6 +30,7 @@ export const store = configureStore({
     chat: chatReducer,
     booking: bookingReducer,
     topUpModal: topUpModalReducer,
+    user: settingReducer
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({

@@ -1,10 +1,9 @@
 "use client";
 
-import { Avatar } from "@/components/ui/avatar";
 import { setSelectedChat } from "@/redux/features/chat/chatSlice";
 import type { RootState } from "@/redux/store";
-import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
+import { User } from "lucide-react";
 
 // Define a type for participantInfo
 type ParticipantInfo = {
@@ -15,7 +14,6 @@ type ParticipantInfo = {
 export function ChatList() {
   const dispatch = useAppDispatch();
   const chats = useAppSelector((state: RootState) => state.chat.chats);
-
   const selectedChatId = useAppSelector(
     (state: RootState) => state.chat.selectedChatId
   );
@@ -58,6 +56,11 @@ export function ChatList() {
           avatar: chat.participantInfo[otherParticipantId]?.avatar || "/placeholder.svg",
         };
 
+        // Use firstMessage or fallback to messages[0]
+        const firstMessage = chat.firstMessage || (chat.messages && chat.messages.length > 0
+          ? { text: chat.messages[0].text, createdAt: chat.messages[0].timestamp }
+          : undefined);
+
         return (
           <div
             key={chat.id}
@@ -69,39 +72,28 @@ export function ChatList() {
             }`}
           >
             <div className="flex gap-3">
-              <Avatar className="w-10 h-10">
-                {participantInfo.avatar ? (
-                  <Image
-                    src={participantInfo.avatar}
-                    alt={participantInfo.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                    {participantInfo.name.charAt(0)}
-                  </div>
-                )}
-              </Avatar>
+              {/* Normal Avatar Icon */}
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                <User className="w-6 h-6 text-white" />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start mb-1">
                   <h3 className="font-medium">{participantInfo.name}</h3>
-                  {chat.lastMessage && (
+                  {firstMessage && (
                     <span className="text-sm text-gray-500">
-                      {new Date(chat.lastMessage.createdAt).toLocaleTimeString(
-                        [],
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}
+                      {(() => {
+                        const date = new Date(firstMessage.createdAt);
+                        const isToday = date.toDateString() === new Date().toDateString();
+                        return isToday
+                          ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : date.toLocaleDateString([], { month: "short", day: "numeric" });
+                      })()}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center">
                   <p className="text-gray-600 text-sm truncate flex-1">
-                    {chat.lastMessage?.text || "No messages yet"}
+                    {firstMessage?.text || "No messages yet"}
                   </p>
                   {chat.unreadCount > 0 && (
                     <span className="ml-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">

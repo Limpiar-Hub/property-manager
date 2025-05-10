@@ -11,7 +11,7 @@ import { PasswordInput } from "@/components/password-input";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-// const SuccessPage = dynamic(() => import("@/components/SuccessPage"), {
+// const SuccessPage = dynamic(() => import("@/components/SuccessPage"), { 
 //   ssr: false,
 // });
 
