@@ -37,7 +37,7 @@ export default function CleanersPage() {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#4C41C0] text-white rounded-md hover:bg-primary-600 transition-colors"
           >
             <Plus className="h-5 w-5" />
             Add New Cleaner
