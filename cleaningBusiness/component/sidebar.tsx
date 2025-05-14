@@ -29,8 +29,7 @@ const navItems = [
   { name: "Cleaners", href: "/cleaning-business/cleaners", icon: Activity },
   { name: "Inbox", href: "/cleaning-business/inbox", icon: Calendar },
   { name: "Payment", href: "/cleaning-business/payment", icon: CreditCard },
-  // { name: "Property Metric", href: "/property-metrics", icon: FileText },
-  // { name: "Listing", href: "/property-list", icon: CreditCard },
+
 ];
 
 export default function Sidebar() {

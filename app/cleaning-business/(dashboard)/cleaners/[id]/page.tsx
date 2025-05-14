@@ -6,7 +6,7 @@ import Link from "next/link"
 import { ArrowLeft, Phone, Mail, MapPin } from "lucide-react"
 import DashboardLayout from "../../layout"
 
-// Mock data for the cleaner
+
 const cleanerData = {
   id: 1,
   name: "Jerome Bell",

@@ -29,7 +29,7 @@ export default function DashboardLayout({
     if (!isAuthenticated) {
       router.push("/property-manager/login");
     }
-  }, [isAuthenticated, token, dispatch, router]); // Added `router` to the dependency array
+  }, [isAuthenticated, token, dispatch, router]); 
 
   if (!isClient) {
     return (

@@ -8,7 +8,7 @@ export default function LoadingAccount() {
   const router = useRouter()
 
   useEffect(() => {
-    // Simulate loading and redirect to dashboard
+ 
     const timer = setTimeout(() => {
       router.push("/cleaning-business/dashboard")
     }, 2000)

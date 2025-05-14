@@ -1,18 +1,7 @@
-// import React from 'react'
-
-// const page = () => {
-//   return (
-//     <div>page</div>
-//   )
-// }
-
-// export default page
 
 "use client"
 
 import { useState } from "react"
-// import Sidebar from "./sidebar"
-// import Header from "./header"
 import CleanersTab from "@/cleaningBusiness/component/cleaners-tab"
 import TasksTab from "@/cleaningBusiness/component/tasks-tab"
 
