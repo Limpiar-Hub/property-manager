@@ -429,11 +429,11 @@ export function LoginForm() {
             )}
           </Button>
           <div className="text-center text-sm">
-            If you don't have an account{" "}
-            <Link href="/signup" className="text-blue-500 hover:text-blue-600">
-              Sign Up
-            </Link>
-          </div>
+  If you don't have an account,{" "}
+  <a href="https://api.leadconnectorhq.com/widget/booking/N59Uzph3F1P9QB1CfZLS" className="text-blue-500 hover:text-blue-600 font-semibold">
+    click here to join the Limpiar community →
+  </a>
+</div>
         </form>
       )}
     </div>
