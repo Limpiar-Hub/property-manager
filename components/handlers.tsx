@@ -67,6 +67,15 @@ const getUserWallet = (): UserWallet | null => {
     return null;
   }
 };
+// Get user wallet from localStorage
+let userWallet: UserWallet | null = null;
+const getUserFromLocalStorage = typeof window !== 'undefined'
+? JSON.parse(localStorage.getItem('userWallet') || '{}')
+: null;
+if (getUserFromLocalStorage) {
+  const user = JSON.parse(getUserFromLocalStorage);
+  userWallet = user.data;
+}
 
 export const AddNewProperty = async (
   formData: FormData
@@ -273,12 +282,16 @@ export const createPayment = async ({
 };
 
 export const verifyStripePayment = async ({
-  session_id,
+  session_id, token
 }: {
   session_id: string;
+  token: string | null;
 }): Promise<RequestResult<unknown>> => {
   const userWallet = getUserWallet();
   if (!userWallet) return { data: null, error: "User not authenticated" };
+  if (!token) {
+    return { data: null, error: "User not authenticated" };
+  }
 
   try {
     const res = await fetch(
@@ -286,7 +299,7 @@ export const verifyStripePayment = async ({
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${userWallet.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
