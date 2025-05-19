@@ -86,7 +86,7 @@ export function InitialStep({ fetchTransactions }: { fetchTransactions: () => vo
       </div>
 
       <Button
-        className="w-full bg-blue-500 hover:bg-blue-600"
+        className="w-full bg-[#4C41C0] hover:bg-blue-600"
         onClick={handleProceed}
         disabled={!amount || !paymentMethod}
       >

@@ -17,7 +17,7 @@ export default function FormNavigation() {
 
   const handleBack = () => {
     if (step === 1) {
-      router.push("/my-property");
+      router.push("/property-manager/my-property");
     } else if (step === 1.5) {
       dispatch(setStep(1));
     } else if (step === 2) {
@@ -46,47 +46,55 @@ export default function FormNavigation() {
   const handleSubmit = async () => {
     dispatch(openModalFunc());
     dispatch(setIsLoaing(true));
-
-    const sampleFile = new File(["sample content"], "image.jpg", { type: "image/jpeg" });
+  
     const formData = new FormData();
-    imageFiles.forEach((image: File) => {
+  
+    console.log("Preparing images:");
+    imageFiles.forEach((image: File, idx: number) => {
       if (image) {
-        formData.append(`pictures`, image);
+        formData.append("pictures", image);
+        console.log(`Image ${idx + 1}:`, image.name);
       }
     });
-    formData.append("pictures", sampleFile);
+  
     formData.append("name", title);
     formData.append("type", category ?? "");
     formData.append("subType", subCategory ?? "");
-    formData.append("size", "150 fts");
+    formData.append("size", "150 sqft");
     formData.append("propertyManagerId", User?.userId || "");
     formData.append("address", location.address);
-
+  
+    console.log("Form Data entries:");
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+  
     try {
       const response = await fetch("https://limpiar-backend.onrender.com/api/properties", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`, // Set the Bearer token
+          Authorization: `Bearer ${token}`, 
         },
         body: formData,
       });
-
+  
       const data = await response.json();
-
-      if (data.status === "success") {
-        dispatch(setIsLoaing(false));
-      }
-
+      console.log("Response:", data);
+  
       if (!response.ok) {
         throw new Error(data.message || "Something went wrong, please try again later.");
       }
+  
+      dispatch(setIsLoaing(false));
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
       dispatch(setError(errorMessage));
+      console.error("Submit Error:", errorMessage);
     } finally {
       dispatch(setIsLoaing(false));
     }
   };
+  
 
   // Determine if the Next button should be enabled
   const isNextDisabled = () => {
@@ -94,7 +102,7 @@ export default function FormNavigation() {
     if (step === 1.5 && !subCategory) return true;
     if (step === 2 && !title.trim()) return true;
     if (step === 3 && !location.address) return true;
-    if (step === 4 && images.length < 4) return true;
+    if (step === 4 && imageFiles.length < 4) return true;
 
     return false;
   };

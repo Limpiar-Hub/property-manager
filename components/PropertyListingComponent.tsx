@@ -1,4 +1,3 @@
-
 "use client"
 
 import Image from "next/image";
@@ -15,26 +14,36 @@ interface PropertyListingComponentProps {
 export default function PropertyListingComponent({ propertyData, count }: PropertyListingComponentProps) {
   const router = useRouter();
   const [searches, setSearches] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'pending'>('all');
 
   const handleRouter = () => {
-    router.push("/my-property/add");
+    router.push("/property-manager/my-property/add");
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearches(e.target.value);
   }
 
-  const filteredProperties = propertyData.filter((property: Property) =>
+  const countActive = propertyData.filter((property: Property) => 
+    property.status.toLowerCase() === 'verified'
+  );
+  
+  const countPending = propertyData.filter((property: Property) => 
+    property.status.toLowerCase() === 'pending'
+  );
+
+  const propertiesToDisplay = activeTab === 'all' ? propertyData :
+                             activeTab === 'active' ? countActive :
+                             countPending;
+
+  // Filter properties based on search
+  const filteredProperties = propertiesToDisplay.filter((property: Property) =>
     property.name.toLowerCase().includes(searches.toLowerCase()) || 
     property.address.toLowerCase().includes(searches.toLowerCase()) || 
     property.status.toLowerCase().includes(searches.toLowerCase()) || 
     property.type.toLowerCase().includes(searches.toLowerCase())
   );
 
-  const countPending = propertyData.filter((property: Property) => 
-    property.status.toLowerCase().includes('pending')
-  );
-  
   return (
     <div className="flex h-screen bg-white">
       {/* Main Content */}
@@ -65,9 +74,9 @@ export default function PropertyListingComponent({ propertyData, count }: Proper
           {/* Tabs */}
           <div className="mb-6">
             <div className="flex space-x-2 bg-gray-50 p-1 rounded-lg w-fit">
-              <TabButton text={`All (${count})`} active />
-              <TabButton text="Active (0)" active/>
-              <TabButton text={`Pending (${countPending.length})`} active />
+              <TabButton text={`All (${count})`} active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
+              <TabButton text={`Active (${countActive.length})`} active={activeTab === 'active'} onClick={() => setActiveTab('active')} />
+              <TabButton text={`Pending (${countPending.length})`} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
             </div>
           </div>
 
@@ -98,9 +107,10 @@ export default function PropertyListingComponent({ propertyData, count }: Proper
 interface TabButtonProps {
   text: string;
   active?: boolean;
+  onClick: () => void;
 }
 
-function TabButton({ text, active = false }: TabButtonProps) {
+function TabButton({ text, active = false, onClick }: TabButtonProps) {
   return (
     <button
       className={`py-2 px-4 rounded-lg ${
@@ -108,6 +118,7 @@ function TabButton({ text, active = false }: TabButtonProps) {
           ? "bg-white text-gray-800 font-medium"
           : "text-gray-500 bg-gray-50"
       }`}
+      onClick={onClick}
     >
       {text}
     </button>

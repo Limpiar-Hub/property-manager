@@ -100,6 +100,13 @@ export const propertySlice = createSlice({
     removeImage: (state, action: PayloadAction<string>) => {
       state.images = state.images.filter((img) => img.url !== action.payload)
     },
+    clearImages: (state) => {
+      state.images.forEach((img) => {
+        URL.revokeObjectURL(img.url); 
+      });
+      state.images = [];
+    },
+    
     setCoverImage: (state, action: PayloadAction<string>) => {
       state.images = state.images.map((img) => ({
         ...img,
@@ -110,7 +117,7 @@ export const propertySlice = createSlice({
   },
 })
 
-export const { setStep, setCategory, setSubCategory, setTitle, setIsLoaing, setError, openModalFunc, closeModalFunc, resetProperty, setLocation,addImage,removeImage,setCoverImage } = propertySlice.actions
+export const { setStep, setCategory, setSubCategory, setTitle, setIsLoaing, setError, openModalFunc, closeModalFunc, resetProperty, setLocation,addImage,removeImage,setCoverImage,clearImages  } = propertySlice.actions
 
 export default propertySlice.reducer
 

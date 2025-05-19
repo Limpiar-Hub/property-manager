@@ -24,11 +24,11 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/redux/features/auth/authSlice";
 
 const navItems = [
-  { name: "My Property", href: "/my-property", icon: Building },
-  { name: "Inbox", href: "/inbox", icon: MessageCircle },
-  { name: "Analytics", href: "/analytics", icon: Activity },
-  { name: "Bookings", href: "/booking", icon: Calendar },
-  { name: "Payment", href: "/payment", icon: CreditCard },
+  { name: "My Property", href: "/property-manager/my-property", icon: Building },
+  { name: "Inbox", href: "/property-manager/inbox", icon: MessageCircle },
+  { name: "Analytics", href: "/property-manager/analytics", icon: Activity },
+  { name: "Bookings", href: "/property-manager/booking", icon: Calendar },
+  { name: "Payment", href: "/property-manager/payment", icon: CreditCard },
   // { name: "Property Metric", href: "/property-metrics", icon: FileText },
   // { name: "Listing", href: "/property-list", icon: CreditCard },
 ];
@@ -44,7 +44,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     dispatch(logout());
-    router.push('/login');
+    router.push('/property-manager/login');
   };
 
   return (
