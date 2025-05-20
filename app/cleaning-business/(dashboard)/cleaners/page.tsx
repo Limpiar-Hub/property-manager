@@ -11,11 +11,25 @@ export default function CleanersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isVerifyingModal, setIsVerifyingModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [verificationLink, setVerificationLink] = useState<string | undefined>(undefined)
 
-  const handleAddCleaner = () => {
+  // const handleAddCleaner = () => {
   
+  //   setIsAddModalOpen(false)
+  //   setIsVerifyingModal(true)
+  // }
+
+  const handleAddCleaner = (link: string) => {
+    // Close the add modal and show the verification modal with the link
     setIsAddModalOpen(false)
+    setVerificationLink(link)
     setIsVerifyingModal(true)
+  }
+
+  const handleCloseVerificationModal = () => {
+    setIsVerifyingModal(false)
+    setVerificationLink(undefined)
+    // Optionally refresh the cleaners list here
   }
 
   return (
@@ -64,11 +78,23 @@ export default function CleanersPage() {
 
       <CleanerGrid activeTab={activeTab} searchQuery={searchQuery} />
 
-      {isAddModalOpen && (
+      {/* {isAddModalOpen && (
         <AddCleanerModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddCleaner} />
       )}
 
-      {isVerifyingModal && <VerificationModal isOpen={isVerifyingModal} onClose={() => setIsVerifyingModal(false)} />}
+      {isVerifyingModal && <VerificationModal isOpen={isVerifyingModal} onClose={() => setIsVerifyingModal(false)} />} */}
+
+{isAddModalOpen && (
+        <AddCleanerModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddCleaner} />
+      )}
+
+      {isVerifyingModal && (
+        <VerificationModal
+          isOpen={isVerifyingModal}
+          onClose={handleCloseVerificationModal}
+          verificationLink={verificationLink}
+        />
+      )}
     </div>
   )
 }
