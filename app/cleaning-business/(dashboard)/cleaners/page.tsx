@@ -7,20 +7,15 @@ import AddCleanerModal from "@/cleaningBusiness/component/add-cleaner-modal"
 import VerificationModal from "@/cleaningBusiness/component/verification-modal"
 
 export default function CleanersPage() {
-  const [activeTab, setActiveTab] = useState<"active" | "inactive">("active")
+  const [activeTab, setActiveTab] = useState<"verified" | "pending">("verified")
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isVerifyingModal, setIsVerifyingModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [verificationLink, setVerificationLink] = useState<string | undefined>(undefined)
 
-  // const handleAddCleaner = () => {
-  
-  //   setIsAddModalOpen(false)
-  //   setIsVerifyingModal(true)
-  // }
+
 
   const handleAddCleaner = (link: string) => {
-    // Close the add modal and show the verification modal with the link
     setIsAddModalOpen(false)
     setVerificationLink(link)
     setIsVerifyingModal(true)
@@ -29,7 +24,7 @@ export default function CleanersPage() {
   const handleCloseVerificationModal = () => {
     setIsVerifyingModal(false)
     setVerificationLink(undefined)
-    // Optionally refresh the cleaners list here
+    // will probably rrefresh the list here but lets see sha
   }
 
   return (
@@ -62,27 +57,22 @@ export default function CleanersPage() {
       <div className="mb-6">
         <div className="inline-flex rounded-md overflow-hidden border">
           <button
-            onClick={() => setActiveTab("active")}
-            className={`px-6 py-2 ${activeTab === "active" ? "bg-gray-100 text-gray-900" : "bg-white text-gray-500"}`}
+            onClick={() => setActiveTab("verified")}
+            className={`px-6 py-2 ${activeTab === "verified" ? "bg-gray-100 text-gray-900" : "bg-white text-gray-500"}`}
           >
-            Active
+            Verified Cleaners
           </button>
           <button
-            onClick={() => setActiveTab("inactive")}
-            className={`px-6 py-2 ${activeTab === "inactive" ? "bg-gray-100 text-gray-900" : "bg-white text-gray-500"}`}
+            onClick={() => setActiveTab("pending")}
+            className={`px-6 py-2 ${activeTab === "pending" ? "bg-gray-100 text-gray-900" : "bg-white text-gray-500"}`}
           >
-            Inactive
+            Pending Cleaners
           </button>
         </div>
       </div>
 
       <CleanerGrid activeTab={activeTab} searchQuery={searchQuery} />
 
-      {/* {isAddModalOpen && (
-        <AddCleanerModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddCleaner} />
-      )}
-
-      {isVerifyingModal && <VerificationModal isOpen={isVerifyingModal} onClose={() => setIsVerifyingModal(false)} />} */}
 
 {isAddModalOpen && (
         <AddCleanerModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddCleaner} />
