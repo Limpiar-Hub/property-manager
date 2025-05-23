@@ -30,7 +30,7 @@ export interface Cleaner {
     availability: boolean
     identityVerified: boolean
     tasks: any[]
-    // Add other fields as needed
+
   }
 
   export interface CleaningBusiness {
