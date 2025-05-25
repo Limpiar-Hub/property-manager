@@ -2,6 +2,7 @@ const API_BASE_URL = "https://limpiar-backend.onrender.com/api"
 
 
 export interface Booking {
+  taskId: string
   cleanerId: any
   assignedCleaner: any
     _id: string

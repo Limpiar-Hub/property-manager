@@ -1,14 +1,19 @@
 
-"use client"
 
+"use client"
+import { MessageSquare } from "lucide-react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { X, ClipboardX } from "lucide-react"
 import AssignCleanerModal from "./assign-cleaner-modal"
 import { assignCleanerToTask, type Booking } from "../lib/services/bookingService"
+import { useRouter } from "next/navigation"
+import { useDispatch } from "react-redux"
 import { useAppSelector } from "@/hooks/useReduxHooks"
-import { fetchCleaners } from "../lib/services/cleanerService"
+import { createChatThread, setSelectedChat, fetchAllThreads } from "@/redux/features/chat/chatSlice"
+import { RootState } from "@/redux/store"
+import { AppDispatch } from "@/redux/store"
 
 interface TaskListProps {
   activeTab: "pending" | "active" | "completed"
@@ -35,7 +40,11 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
     visible: false,
   })
 
-  const { token, user } = useAppSelector((state) => state.auth)
+  const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
+  const chats = useAppSelector((state: RootState) => state.chat.chats || [])
+  const token = useAppSelector((state: RootState) => state.auth.token)
+  const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id)
 
   useEffect(() => {
     if (allTasks.length) {
@@ -105,7 +114,6 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
     try {
       setIsAssignModalOpen(false)
       
-      // Send request to assign cleaner
       const response = await assignCleanerToTask(
         {
           bookingId: currentBookingId,
@@ -114,7 +122,6 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
         token,
       )
 
-      // Update the task in the local state
       setTasks(prevTasks =>
         prevTasks.map(task => {
           if (task._id === currentBookingId) {
@@ -131,6 +138,54 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
       showNotification("Cleaner assigned successfully", "success")
     } catch (err: any) {
       showNotification(err.message || "Failed to assign cleaner", "error")
+    }
+  }
+
+  const handleStartChat = async (task: Booking) => {
+    if (!task.cleanerId?._id || !currentUserId || !token) {
+      showNotification("Cannot start chat: Missing required information", "error")
+      return
+    }
+
+    try {
+      // Check for existing chat
+      const existingChat = chats.find(chat => 
+        chat.participants.includes(task.cleanerId._id) &&
+        chat.participants.includes(currentUserId) &&
+        chat.taskId === task._id
+      )
+
+      if (existingChat) {
+        dispatch(setSelectedChat({
+          chatId: existingChat.id,
+          cleanerName: task.cleanerId.fullName || "Cleaner",
+          cleanerAvatar: task.cleanerId.avatar || "",
+        }))
+        router.push("/cleaning-business/inbox")
+        return
+      }
+
+      // Create new chat thread
+      const response = await dispatch(createChatThread({
+        participantIds: [currentUserId, task.cleanerId._id],
+        taskId: task._id,
+        token,
+      })).unwrap()
+
+      if (response?._id) {
+        await dispatch(fetchAllThreads({ userId: currentUserId, token }))
+        
+        dispatch(setSelectedChat({
+          chatId: response._id,
+          cleanerName: task.cleanerId.fullName || "Cleaner",
+          cleanerAvatar: task.cleanerId.avatar || "",
+        }))
+        
+        router.push("/cleaning-business/inbox")
+      }
+    } catch (error) {
+      console.error("Chat creation error:", error)
+      showNotification("Failed to start chat", "error")
     }
   }
 
@@ -189,99 +244,113 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
             "Unknown"
 
           return (
-            <Link 
-              key={task._id} 
-              href={`/cleaning-business/tasks/${task._id}`}
-              className="block"
-            >
-              <div className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4">
-                  <div className="md:col-span-1">
-                    <p className="text-xs text-gray-500 mb-1">Service Type</p>
-                    <p className="font-medium">{task.serviceType || "N/A"}</p>
-                  </div>
-                  <div className="md:col-span-1">
-                    <p className="text-xs text-gray-500 mb-1">Property</p>
-                    <p className="font-medium">{property}</p>
-                  </div>
-                  <div className="md:col-span-1">
-                    <p className="text-xs text-gray-500 mb-1">Property Manager</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                        <span className="text-xs font-medium text-gray-600">
-                          {propertyManagerName.charAt(0).toUpperCase()}
-                        </span>
+            <div key={task._id}>
+              <Link 
+                href={`/cleaning-business/tasks/${task._id}`}
+                className="block"
+              >
+                <div className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4">
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Service Type</p>
+                      <p className="font-medium">{task.serviceType || "N/A"}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Property</p>
+                      <p className="font-medium">{property}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Property Manager</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                          <span className="text-xs font-medium text-gray-600">
+                            {propertyManagerName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="font-medium">{propertyManagerName}</p>
                       </div>
-                      <p className="font-medium">{propertyManagerName}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Date</p>
+                      <p className="font-medium">{date}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Time</p>
+                      <p className="font-medium">{time}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Price</p>
+                      <p className="font-medium">${task.price || "N/A"}</p>
                     </div>
                   </div>
-                  <div className="md:col-span-1">
-                    <p className="text-xs text-gray-500 mb-1">Date</p>
-                    <p className="font-medium">{date}</p>
-                  </div>
-                  <div className="md:col-span-1">
-                    <p className="text-xs text-gray-500 mb-1">Time</p>
-                    <p className="font-medium">{time}</p>
-                  </div>
-                  <div className="md:col-span-1">
-                    <p className="text-xs text-gray-500 mb-1">Price</p>
-                    <p className="font-medium">${task.price || "N/A"}</p>
-                  </div>
-                </div>
 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-t">
-                  {activeTab === "pending" ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-2 sm:mb-0">
-                        <p className="text-xs text-gray-500">Status</p>
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          {status}
-                        </span>
-                      </div>
-                      <button
-                        onClick={(e) => handleConfirmBooking(task._id, e)}
-                        className="px-4 py-2 bg-[#4C41C0] text-white rounded-md hover:bg-[#4C41C0] transition-colors"
-                      >
-                        Confirm Booking
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 mb-2 sm:mb-0">
-                        <p className="text-xs text-gray-500">Assigned to</p>
-                        {task.cleanerId ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                              <span className="text-xs font-medium text-gray-600">
-                                {task.cleanerId.fullName.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <p className="font-medium">{task.cleanerId.fullName}</p>
-                          </div>
-                        ) : (
-                          <p className="font-medium">Not assigned</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs text-gray-500">Status</p>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            normalizeStatus(task.status) === 'confirmed' || 
-                            normalizeStatus(task.status) === 'not started'
-                              ? "bg-blue-100 text-blue-800"
-                              : normalizeStatus(task.status) === 'in progress'
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                          }`}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-t">
+                    {activeTab === "pending" ? (
+                      <>
+                        <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                          <p className="text-xs text-gray-500">Status</p>
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            {status}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => handleConfirmBooking(task._id, e)}
+                          className="px-4 py-2 bg-[#4C41C0] text-white rounded-md hover:bg-[#4C41C0] transition-colors"
                         >
-                          {status}
-                        </span>
-                      </div>
-                    </>
-                  )}
+                          Confirm Booking
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                          <p className="text-xs text-gray-500">Assigned to</p>
+                          {task.cleanerId ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                                <span className="text-xs font-medium text-gray-600">
+                                  {task.cleanerId.fullName.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <p className="font-medium">{task.cleanerId.fullName}</p>
+                              {activeTab === "active" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    handleStartChat(task)
+                                  }}
+                                  className="text-gray-500 hover:text-primary transition-colors"
+                                  title="Message cleaner"
+                                >
+                                  <MessageSquare className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="font-medium">Not assigned</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-gray-500">Status</p>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              normalizeStatus(task.status) === 'confirmed' || 
+                              normalizeStatus(task.status) === 'not started'
+                                ? "bg-blue-100 text-blue-800"
+                                : normalizeStatus(task.status) === 'in progress'
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {status}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           )
         })}
       </div>
@@ -306,4 +375,4 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
       )}
     </>
   )
-};
+}
