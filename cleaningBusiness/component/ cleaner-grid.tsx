@@ -62,7 +62,7 @@ export default function CleanerGrid({ activeTab, searchQuery }: CleanerGridProps
     // Filter based on tab
     if (activeTab === "verified") {
       filtered = filtered.filter(
-        (cleaner) => cleaner.availability === true && cleaner.identityVerified === true && cleaner.tasks.length === 0,
+        (cleaner) => cleaner.availability === true && cleaner.identityVerified === true,
       )
     } else if (activeTab === "pending") {
       filtered = filtered.filter((cleaner) => cleaner.identityVerified === false)
