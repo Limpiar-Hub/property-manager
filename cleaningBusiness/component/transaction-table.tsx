@@ -1,162 +1,198 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 
-
-const transactions = [
-  {
-    id: 1,
-    date: "11 June, 2025",
-    description: "Booking Payment, Opal Ridge",
-    amount: "$ 100.00",
-    paymentMethod: "Wallet Transaction",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    date: "11 June, 2025",
-    description: "Booking Payment, Opal Ridge",
-    amount: "$ 100.00",
-    paymentMethod: "Debit/credit Card Transaction",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    date: "11 June, 2025",
-    description: "Wallet Top",
-    amount: "$ 100.00",
-    paymentMethod: "Debit/credit Card Transaction",
-    status: "Failed",
-  },
-  {
-    id: 4,
-    date: "11 June, 2025",
-    description: "Booking Payment, Opal Ridge",
-    amount: "$ 100.00",
-    paymentMethod: "AHC Transfer",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    date: "10 June, 2025",
-    description: "Wallet Top",
-    amount: "$ 200.00",
-    paymentMethod: "Debit/credit Card Transaction",
-    status: "Completed",
-  },
-  {
-    id: 6,
-    date: "9 June, 2025",
-    description: "Booking Payment, Azure Haven",
-    amount: "$ 150.00",
-    paymentMethod: "Wallet Transaction",
-    status: "Completed",
-  },
-  {
-    id: 7,
-    date: "8 June, 2025",
-    description: "Booking Payment, Emerald Heights",
-    amount: "$ 120.00",
-    paymentMethod: "AHC Transfer",
-    status: "Pending",
-  },
-  {
-    id: 8,
-    date: "7 June, 2025",
-    description: "Wallet Top",
-    amount: "$ 500.00",
-    paymentMethod: "Debit/credit Card Transaction",
-    status: "Completed",
-  },
-  {
-    id: 9,
-    date: "6 June, 2025",
-    description: "Booking Payment, Sapphire Residences",
-    amount: "$ 180.00",
-    paymentMethod: "Wallet Transaction",
-    status: "Completed",
-  },
-  {
-    id: 10,
-    date: "5 June, 2025",
-    description: "Booking Payment, Crystal Gardens",
-    amount: "$ 90.00",
-    paymentMethod: "AHC Transfer",
-    status: "Failed",
-  },
-  {
-    id: 11,
-    date: "4 June, 2025",
-    description: "Wallet Top",
-    amount: "$ 300.00",
-    paymentMethod: "Debit/credit Card Transaction",
-    status: "Completed",
-  },
-  {
-    id: 12,
-    date: "3 June, 2025",
-    description: "Booking Payment, Diamond Plaza",
-    amount: "$ 200.00",
-    paymentMethod: "Wallet Transaction",
-    status: "Pending",
-  },
-]
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: string;
+  paymentMethod: string;
+  status: string;
+}
 
 interface TransactionTableProps {
-  searchQuery: string
-  statusFilter: string
+  searchQuery: string;
+  statusFilter: string;
 }
 
 export default function TransactionTable({ searchQuery, statusFilter }: TransactionTableProps) {
-  const [currentPage, setCurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [filteredTransactions, setFilteredTransactions] = useState(transactions)
-  const [selectedRows, setSelectedRows] = useState<number[]>([])
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const token = useSelector((state: RootState) => state.auth.token);
 
+  // Retrieve userId from localStorage
+  const userWallet = (() => {
+    const getUserFromLocalStorage = localStorage.getItem("userWallet");
+    if (getUserFromLocalStorage) {
+      try {
+        const user = JSON.parse(getUserFromLocalStorage);
+        return user.data;
+      } catch (e) {
+        console.error("Error parsing userWallet from localStorage:", e);
+        return null;
+      }
+    }
+    return null;
+  })();
+
+  const userId = userWallet?.user?.userId;
+
+  // Fetch transactions
   useEffect(() => {
-    let filtered = transactions
+    if (!userId || !token) {
+      setError("User ID or authentication token is missing.");
+      return;
+    }
+
+    const fetchTransactions = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch Stripe payments
+        const stripeResponse = await fetch(`https://limpiar-backend.onrender.com/api/payments/user/${userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!stripeResponse.ok) {
+          const errorData = await stripeResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch Stripe payments (Status: ${stripeResponse.status})`);
+        }
+
+        const stripeData = await stripeResponse.json();
+
+        // Fetch wallet transactions
+        const walletResponse = await fetch(`https://limpiar-backend.onrender.com/api/wallets/transactions/user/${userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!walletResponse.ok) {
+          const errorData = await walletResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch wallet transactions (Status: ${walletResponse.status})`);
+        }
+
+        const walletData = await walletResponse.json();
+
+        // Normalize Stripe transactions
+        const stripeTransactions: Transaction[] = (stripeData.data || []).map((payment: any) => ({
+          id: payment._id,
+          date: new Date(payment.createdAt).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          }),
+          description: payment.bookingId
+            ? `Booking Payment, ${payment.bookingId.serviceType}`
+            : "Wallet Top Up",
+          amount: `$${((payment.amount || 0) / 100).toFixed(2)}`,
+          paymentMethod: "Debit/Credit Card Transaction",
+          status: payment.status === "succeeded" ? "Completed" : payment.status.charAt(0).toUpperCase() + payment.status.slice(1),
+        }));
+
+        // Normalize wallet transactions
+        const walletTransactions: Transaction[] = [
+          ...(walletData.wallet?.transactions?.debits || []),
+          ...(walletData.wallet?.transactions?.credits || []),
+          ...(walletData.wallet?.transactions?.transfers || []),
+          ...(walletData.wallet?.transactions?.refunds || []),
+        ].map((txn: any) => ({
+          id: txn._id,
+          date: new Date(txn.timestamp).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          }),
+          description: txn.description !== "No description provided" ? txn.description : (
+            txn.transactionCategory === "cleaning_payment" ? `Booking Payment` :
+            txn.transactionCategory === "wallet_transfer" ? `Wallet Transfer` :
+            txn.transactionCategory === "refund" ? `Refund` : `Wallet ${txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}`
+          ),
+          amount: `${txn.amount < 0 ? "-" : ""}$${(Math.abs(txn.amount) / 100).toFixed(2)}`,
+          paymentMethod: txn.transactionCategory === "wallet_transfer" || txn.type === "debit" || txn.type === "credit"
+            ? "Wallet Transaction"
+            : txn.transactionCategory === "refund"
+            ? "Refund"
+            : "AHC Transfer",
+          status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
+        }));
+
+        // Combine and sort by date (descending)
+        const allTransactions = [...stripeTransactions, ...walletTransactions].sort(
+          (a, b) => new Date(b.date.split(" ").reverse().join("-")).getTime() - new Date(a.date.split(" ").reverse().join("-")).getTime()
+        );
+
+        setFilteredTransactions(allTransactions);
+      } catch (err: any) {
+        console.error("Error fetching transactions:", err.message);
+        setError(err.message || "Failed to load transactions.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, [userId, token]);
+
+  // Apply search and status filters
+  useEffect(() => {
+    let filtered = filteredTransactions;
 
     if (searchQuery) {
       filtered = filtered.filter(
         (transaction) =>
           transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          transaction.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+          transaction.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
     if (statusFilter !== "All Status") {
-      filtered = filtered.filter((transaction) => transaction.status === statusFilter)
+      filtered = filtered.filter((transaction) => transaction.status === statusFilter);
     }
 
-    setFilteredTransactions(filtered)
-    setCurrentPage(1) // Reset to first page when filters change
-  }, [searchQuery, statusFilter])
+    setFilteredTransactions(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchQuery, statusFilter]);
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage)
-  const startIndex = (currentPage - 1) * rowsPerPage
-  const endIndex = Math.min(startIndex + rowsPerPage, filteredTransactions.length)
-  const currentTransactions = filteredTransactions.slice(startIndex, endIndex)
+  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, filteredTransactions.length);
+  const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
 
   // Handle row selection
-  const handleSelectRow = (id: number) => {
+  const handleSelectRow = (id: string) => {
     if (selectedRows.includes(id)) {
-      setSelectedRows(selectedRows.filter((rowId) => rowId !== id))
+      setSelectedRows(selectedRows.filter((rowId) => rowId !== id));
     } else {
-      setSelectedRows([...selectedRows, id])
+      setSelectedRows([...selectedRows, id]);
     }
-  }
+  };
 
   // Handle select all rows
   const handleSelectAllRows = () => {
     if (selectedRows.length === currentTransactions.length) {
-      setSelectedRows([])
+      setSelectedRows([]);
     } else {
-      setSelectedRows(currentTransactions.map((transaction) => transaction.id))
+      setSelectedRows(currentTransactions.map((transaction) => transaction.id));
     }
-  }
+  };
 
   // Get status badge color
   const getStatusBadge = (status: string) => {
@@ -167,24 +203,32 @@ export default function TransactionTable({ searchQuery, statusFilter }: Transact
             <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
             <span className="text-yellow-700">Pending</span>
           </span>
-        )
+        );
       case "Completed":
         return (
           <span className="flex items-center">
             <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
             <span className="text-green-700">Completed</span>
           </span>
-        )
+        );
       case "Failed":
         return (
           <span className="flex items-center">
             <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
             <span className="text-red-700">Failed</span>
           </span>
-        )
+        );
       default:
-        return status
+        return status;
     }
+  };
+
+  if (isLoading) {
+    return <div className="text-gray-600">Loading transactions...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
   }
 
   return (
@@ -246,7 +290,7 @@ export default function TransactionTable({ searchQuery, statusFilter }: Transact
         </div>
 
         <div className="text-sm text-gray-500">
-          showing {startIndex + 1}-{endIndex} of {filteredTransactions.length} rows
+          Showing {startIndex + 1}-{endIndex} of {filteredTransactions.length} rows
         </div>
 
         <div className="flex items-center gap-2">
@@ -267,5 +311,5 @@ export default function TransactionTable({ searchQuery, statusFilter }: Transact
         </div>
       </div>
     </div>
-  )
+  );
 }

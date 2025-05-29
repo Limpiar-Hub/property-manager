@@ -9,7 +9,8 @@ import bookingReducer from "./features/booking/bookingSlice";
 import chatReducer from "./features/chat/chatSlice";
 import topUpModalReducer from "./features/topUpModalSlice/topUpModalSlice";
 import authReducer from "./features/auth/authSlice";
-import loginReducer from "./features/login/loginSlice"
+import loginReducer from "./features/login/loginSlice";
+import paymentModalReducer from '@/redux/features/paymentModalSlice/paymentModalSlice';
 
 // Configuration for redux-persist
 const authPersistConfig = {
@@ -29,6 +30,7 @@ export const store = configureStore({
     chat: chatReducer,
     booking: bookingReducer,
     topUpModal: topUpModalReducer,
+    paymentModal: paymentModalReducer,
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({
