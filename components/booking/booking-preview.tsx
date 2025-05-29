@@ -8,13 +8,13 @@ import Image from "next/image";
 import { useState } from "react";
 import axios from "axios";
 
-
 export default function BookingPreview() {
   const dispatch = useAppDispatch();
   const booking = useAppSelector((state) => state.booking);
   const authState = useAppSelector((state) => state.auth);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [responseData, setResponseData] = useState(null);
 
   const user = authState.user || null;
   const token = authState.token;
@@ -23,24 +23,36 @@ export default function BookingPreview() {
     dispatch(setStep(4));
   };
 
+  const isValidTime = (time) => /^\d{1,2}:\d{2} (AM|PM)$/.test(time?.trim());
+
   const handleSubmit = async () => {
     setIsLoading(true);
 
     try {
-      if (!user?._id || !user?.phoneNumber || !token) {
-        console.error("Missing required user data or token");
-        alert("Unable to submit booking. Please ensure you are logged in.");
+      if (
+        !user?._id ||
+        !user?.phoneNumber ||
+        !token ||
+        !booking.property?.id ||
+        !booking.serviceType?.name ||
+        !booking.date.selectedDate ||
+        !isValidTime(booking.time) ||
+        (booking.endTime && !isValidTime(booking.endTime))
+      ) {
+        console.error("Missing or invalid required fields");
+        alert("Unable to submit booking. Please ensure all required fields are filled correctly.");
         setIsLoading(false);
         return;
       }
 
       const requestBody = {
-        propertyId: booking.property?.id,
+        propertyId: booking.property.id,
         propertyManagerId: user._id,
-        serviceType: booking.serviceType?.name,
-        date: booking.date.selectedDate,
-        startTime: booking.time,
+        serviceType: booking.serviceType.name,
+        date: new Date(booking.date.selectedDate).toISOString().split("T")[0],
+        startTime: booking.time.trim(),
         phoneNumber: user.phoneNumber,
+        ...(booking.endTime && { endTime: booking.endTime.trim() }),
       };
 
       console.log("Submitting booking data:", requestBody);
@@ -57,11 +69,12 @@ export default function BookingPreview() {
       );
 
       console.log("Booking response:", response.data);
-
+      setResponseData(response.data.data);
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting booking:", error);
-      alert("Failed to submit booking. Please try again.");
+      const errorMessage = error.response?.data?.error || "Failed to submit booking. Please try again.";
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +92,9 @@ export default function BookingPreview() {
         </div>
         <h2 className="text-2xl font-bold mb-1">Cleaning Request</h2>
         <h3 className="text-xl font-bold mb-4">Received Successfully.</h3>
-
+        <p className="text-gray-600 mb-4 max-w-md">
+          Booking ID: {responseData?._id || "N/A"}
+        </p>
         <p className="text-gray-600 mb-8 max-w-md">
           Thank you for submitting your details. Our team has received your
           information and will review it shortly. An administrator will reach
@@ -87,7 +102,6 @@ export default function BookingPreview() {
           process. We appreciate your cooperation and look forward to assisting
           you further.
         </p>
-
         <Button
           onClick={handleGoToBookings}
           className="w-full max-w-md bg-blue-500 hover:bg-blue-600"
@@ -137,7 +151,7 @@ export default function BookingPreview() {
           <div className="flex items-center">
             <div className="h-16 w-16 rounded-md overflow-hidden mr-3">
               <Image
-                src={booking.property?.image || "/placeholder.svg"} // Display the selected property's image
+                src={booking.property?.image || "/placeholder.svg"}
                 alt={booking.property?.name || "Property"}
                 width={64}
                 height={64}
@@ -159,6 +173,14 @@ export default function BookingPreview() {
           <p className="text-sm text-gray-500 mb-2">Time</p>
           <p className="font-medium">{booking.time}</p>
         </div>
+
+        {/* End Time (Optional) */}
+        {booking.endTime && (
+          <div>
+            <p className="text-sm text-gray-500 mb-2">End Time</p>
+            <p className="font-medium">{booking.endTime}</p>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-between mt-8">
