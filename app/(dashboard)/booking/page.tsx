@@ -29,7 +29,10 @@ export default function BookingsPage() {
   const fetchBookings = useCallback(async () => {
     try {
       setIsLoading(true);
-      if (!token || !managerId) return;
+      if (!token || !managerId) {
+        console.warn("Token or managerId is missing");
+        return;
+      }
 
       const response = await axios.get(
         `https://limpiar-backend.onrender.com/api/bookings/history/${managerId}`,
@@ -43,15 +46,19 @@ export default function BookingsPage() {
         }
       );
 
-      if (response.data) {
-        setBookings(response.data.data || []);
+      if (response.data && Array.isArray(response.data.data)) {
+        setBookings(response.data.data);
         setPagination((prev) => ({
           ...prev,
           total: response.data.total || 0,
         }));
+      } else {
+        console.warn("No valid bookings data received");
+        setBookings([]);
       }
     } catch (err) {
       console.error("Error fetching bookings:", err);
+      setBookings([]);
     } finally {
       setIsLoading(false);
     }

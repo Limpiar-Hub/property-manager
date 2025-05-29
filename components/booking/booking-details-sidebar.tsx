@@ -49,16 +49,17 @@ export default function BookingDetailsSidebar({
         alert("Token is missing. Please log in again.");
         return;
       }
-  
-      const cleanerId = booking.cleanerId?._id;
+
+      // Use the first cleaner from the cleaners array, if available
+      const cleanerId = booking.cleaners?.[0]?.cleanerId?._id;
       const propertyManagerId = currentUserId;
-  
+
       if (!cleanerId || !propertyManagerId) {
         console.error("Cleaner ID or Property Manager ID is missing.");
         alert("Missing necessary IDs. Please try again.");
         return;
       }
-  
+
       // Check for existing chat
       const existingChat = chats.find(
         (chat) =>
@@ -66,20 +67,20 @@ export default function BookingDetailsSidebar({
           chat.participants.includes(propertyManagerId) &&
           chat.taskId === booking._id
       );
-  
+
       if (existingChat) {
         console.log("Existing chat found:", existingChat);
         dispatch(
           setSelectedChat({
             chatId: existingChat.id,
-            cleanerName: booking.cleanerId?.fullName || "Unknown Cleaner",
-            cleanerAvatar: booking.cleanerId?.avatar || "",
+            cleanerName: booking.cleaners?.[0]?.cleanerId?.fullName || "Unknown Cleaner",
+            cleanerAvatar: booking.cleaners?.[0]?.cleanerId?.avatar || "",
           })
         );
         router.push("/inbox");
         return;
       }
-  
+
       console.log("Creating new chat thread...");
       const response = await dispatch(
         createChatThread({
@@ -88,29 +89,25 @@ export default function BookingDetailsSidebar({
           token,
         })
       );
-  
+
       const newChat = response.payload || null;
-  
+
       if (newChat) {
         console.log("New chat created:", newChat);
-  
-        // Ensure chat has both participants initialized
+
         if (newChat.participants && newChat.participants.length === 2) {
-          // Fetch all threads to update the chat list
           console.log("Fetching all threads after creating new chat...");
           const threadsResponse = await dispatch(fetchAllThreads({ userId: currentUserId, token }));
           console.log("Threads fetched:", threadsResponse.payload);
-  
-          // Set the selected chat
+
           dispatch(
             setSelectedChat({
               chatId: newChat._id,
-              cleanerName: booking.cleanerId?.fullName || "Unknown Cleaner",
-              cleanerAvatar: booking.cleanerId?.avatar || "",
+              cleanerName: booking.cleaners?.[0]?.cleanerId?.fullName || "Unknown Cleaner",
+              cleanerAvatar: booking.cleaners?.[0]?.cleanerId?.avatar || "",
             })
           );
-  
-          // Redirect to inbox
+
           console.log("Redirecting to /inbox");
           router.push("/inbox");
         } else {
@@ -129,16 +126,20 @@ export default function BookingDetailsSidebar({
 
   const demoTimeline: TimelineEvent[] = [
     {
-      date: new Date(booking.createdAt).toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      time: new Date(booking.createdAt).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      date: booking.createdAt
+        ? new Date(booking.createdAt).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "N/A",
+      time: booking.createdAt
+        ? new Date(booking.createdAt).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "N/A",
       event: "Booking requested by",
       icon: (
         <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
@@ -164,13 +165,15 @@ export default function BookingDetailsSidebar({
       },
     },
     {
-      date: new Date(booking.date).toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      time: booking.startTime,
+      date: booking.date
+        ? new Date(booking.date).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "N/A",
+      time: booking.startTime || "N/A",
       event: "Scheduled for",
       icon: (
         <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
@@ -194,7 +197,8 @@ export default function BookingDetailsSidebar({
     },
   ];
 
-  if (booking.cleanerId) {
+  // Add cleaner assignment to timeline if cleaners exist
+  if (booking.cleaners?.[0]?.cleanerId) {
     demoTimeline.push({
       date: new Date().toLocaleDateString("en-US", {
         weekday: "long",
@@ -234,8 +238,8 @@ export default function BookingDetailsSidebar({
         </div>
       ),
       person: {
-        name: booking.cleanerId.fullName,
-        avatar: booking.cleanerId.avatar,
+        name: booking.cleaners[0].cleanerId?.fullName || "Unknown Cleaner",
+        avatar: booking.cleaners[0].cleanerId?.avatar,
       },
     });
   }
@@ -264,78 +268,83 @@ export default function BookingDetailsSidebar({
             <p className="text-xs text-gray-500 mb-1">Assigned Cleaner</p>
             <div className="flex items-center">
               <div className="h-6 w-6 rounded-full bg-gray-200 mr-2 overflow-hidden">
-                {booking.cleanerId?.avatar ? (
+                {booking.cleaners?.[0]?.cleanerId?.avatar ? (
                   <Image
-                    src={booking.cleanerId.avatar}
-                    alt={booking.cleanerId.fullName}
+                    src={booking.cleaners[0].cleanerId.avatar}
+                    alt={booking.cleaners[0].cleanerId.fullName || "Cleaner"}
                     className="h-full w-full object-cover"
                     width={24}
                     height={24}
                   />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                    {booking.cleanerId?.fullName.charAt(0) || "N"}
+                    {booking.cleaners?.[0]?.cleanerId?.fullName?.charAt(0) || "N"}
                   </div>
                 )}
               </div>
               <span className="text-sm font-medium">
-                {booking.cleanerId?.fullName || "Not assigned"}
+                {booking.cleaners?.[0]?.cleanerId?.fullName || "Not assigned"}
               </span>
             </div>
 
-            {booking.status.toLowerCase() === "confirmed" && booking.cleanerId && (
-              <Button
-                className="mt-4 border bg-white text-black flex items-center gap-2"
-                onClick={handleSendMessage}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Send Message
-              </Button>
-            )}
+            {booking.status?.toLowerCase() === "confirmed" &&
+              booking.cleaners?.[0]?.cleanerId && (
+                <Button
+                  className="mt-4 border bg-white text-black flex items-center gap-2"
+                  onClick={handleSendMessage}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Send Message
+                </Button>
+              )}
           </div>
         </div>
 
         <div className="border-t border-gray-100 px-5 py-4">
           <div className="mb-5">
             <p className="text-xs text-gray-500 mb-1">Property</p>
-            <p className="text-sm">{booking.propertyId.name}</p>
+            <p className="text-sm">{booking.propertyId?.name || "N/A"}</p>
           </div>
 
           <div className="mb-5">
             <p className="text-xs text-gray-500 mb-1">Address</p>
-            <p className="text-sm">{booking.propertyId.address}</p>
+            <p className="text-sm">{booking.propertyId?.address || "N/A"}</p>
           </div>
 
           <div className="mb-5">
             <p className="text-xs text-gray-500 mb-1">Services</p>
             <div className="text-sm">
-              {booking.serviceType.split(",").map((service, i) => (
-                <span key={i} className="block py-1">
-                  • {service.trim()}
-                </span>
-              ))}
+              {booking.serviceType
+                ? booking.serviceType.split(",").map((service, i) => (
+                    <span key={i} className="block py-1">
+                      • {service.trim()}
+                    </span>
+                  ))
+                : "N/A"}
             </div>
           </div>
 
           <div className="mb-5">
             <p className="text-xs text-gray-500 mb-1">Amount</p>
-            <p className="text-sm">${booking.price.toFixed(2)}</p>
+            <p className="text-sm">{booking.price ? `$${booking.price.toFixed(2)}` : "N/A"}</p>
           </div>
 
           <div className="mb-5">
             <p className="text-xs text-gray-500 mb-1">Booking Date</p>
             <p className="text-sm">
-              {new Date(booking.date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {booking.date
+                ? new Date(booking.date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : "N/A"}
             </p>
           </div>
 
           <div className="mb-5">
             <p className="text-xs text-gray-500 mb-1">Booking Time</p>
-            <p className="text-sm">{booking.startTime}</p>
+            <p className="text-sm">{booking.startTime || "N/A"}</p>
           </div>
 
           <div className="mb-5">
@@ -343,25 +352,24 @@ export default function BookingDetailsSidebar({
             <div
               className={cn(
                 "inline-block text-xs font-medium px-2 py-0.5 rounded-sm",
-                booking.status.toLowerCase() === "pending" &&
-                  "bg-amber-50 text-amber-600",
-                booking.status.toLowerCase() === "completed" &&
-                  "bg-green-50 text-green-600",
-                booking.status.toLowerCase() === "cancelled" &&
-                  "bg-red-50 text-red-600",
-                !["pending", "completed", "cancelled"].includes(
-                  booking.status.toLowerCase()
-                ) && "bg-gray-50 text-gray-600"
+                booking.status?.toLowerCase() === "pending" && "bg-amber-50 text-amber-600",
+                booking.status?.toLowerCase() === "completed" && "bg-green-50 text-green-600",
+                booking.status?.toLowerCase() === "cancelled" && "bg-red-50 text-red-600",
+                !booking.status ||
+                  !["pending", "completed", "cancelled"].includes(booking.status.toLowerCase()) &&
+                  "bg-gray-50 text-gray-600"
               )}
             >
-              {booking.status}
+              {booking.status
+                ? booking.status.charAt(0).toUpperCase() + booking.status.slice(1).toLowerCase()
+                : "Unknown"}
             </div>
           </div>
 
           <div className="mb-5">
             <p className="text-xs text-gray-500 mb-1">Created At</p>
             <p className="text-xs text-gray-700">
-              {new Date(booking.createdAt).toLocaleString()}
+              {booking.createdAt ? new Date(booking.createdAt).toLocaleString() : "N/A"}
             </p>
           </div>
         </div>
@@ -390,25 +398,23 @@ export default function BookingDetailsSidebar({
                           {event.person.avatar ? (
                             <Image
                               src={event.person.avatar}
-                              alt={event.person.name}
+                              alt={event.person.name || "Unknown"}
                               className="h-full w-full object-cover"
                               width={20}
                               height={20}
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                              {event.person.name.charAt(0)}
+                              {event.person.name?.charAt(0) || "N"}
                             </div>
                           )}
                         </div>
-                        <span>{event.person.name}</span>
+                        <span>{event.person.name || "Unknown"}</span>
                       </span>
                     )}
                     {event.company && (
                       <span>
-                        <span className="text-blue-600 ml-1">
-                          {event.company}
-                        </span>
+                        <span className="text-blue-600 ml-1">{event.company}</span>
                       </span>
                     )}
                   </div>
