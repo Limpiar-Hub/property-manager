@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { X, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ export default function BookingDetailsSidebar({
   const token = useAppSelector((state) => state.auth.token);
   const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const sidebar = document.getElementById("booking-sidebar");
       if (sidebar && !sidebar.contains(event.target as Node)) {
@@ -50,41 +50,53 @@ export default function BookingDetailsSidebar({
         return;
       }
 
-      // Use the first cleaner from the cleaners array, if available
-      const cleanerId = booking.cleaners?.[0]?.cleanerId?._id;
+      const cleanerIds = booking.cleaners?.map((cleaner) => cleaner.cleanerId?._id).filter(Boolean) || [];
+      const cleaningBusinessId = booking.cleaningBusinessId;
       const propertyManagerId = currentUserId;
 
-      if (!cleanerId || !propertyManagerId) {
-        console.error("Cleaner ID or Property Manager ID is missing.");
+      if (!cleanerIds.length || !cleaningBusinessId || !propertyManagerId) {
+        console.error("Missing necessary IDs: cleaners, cleaning business, or property manager.");
         alert("Missing necessary IDs. Please try again.");
         return;
       }
 
-      // Check for existing chat
-      const existingChat = chats.find(
-        (chat) =>
-          chat.participants.includes(cleanerId) &&
-          chat.participants.includes(propertyManagerId) &&
-          chat.taskId === booking._id
-      );
+      const participants = [
+        { id: propertyManagerId, type: "user" },
+        { id: cleaningBusinessId, type: "cleaningBusiness" },
+        ...cleanerIds.map((id) => ({ id, type: "cleaner" })),
+      ];
+
+      const existingChat = chats.find((chat) => {
+        const chatParticipants = chat.participants
+          .map((p: { id: string; type: string }) => `${p.id}:${p.type}`)
+          .sort();
+        const requiredParticipants = participants
+          .map((p) => `${p.id}:${p.type}`)
+          .sort();
+        return (
+          chat.taskId === booking._id &&
+          chatParticipants.length === requiredParticipants.length &&
+          chatParticipants.every((p, index) => p === requiredParticipants[index])
+        );
+      });
 
       if (existingChat) {
-        console.log("Existing chat found:", existingChat);
+        console.log("Existing group chat found:", existingChat);
         dispatch(
           setSelectedChat({
             chatId: existingChat.id,
-            cleanerName: booking.cleaners?.[0]?.cleanerId?.fullName || "Unknown Cleaner",
-            cleanerAvatar: booking.cleaners?.[0]?.cleanerId?.avatar || "",
+            cleanerName: "Group Chat",
+            cleanerAvatar: "",
           })
         );
         router.push("/inbox");
         return;
       }
 
-      console.log("Creating new chat thread...");
+      console.log("Creating new group chat thread...");
       const response = await dispatch(
         createChatThread({
-          participantIds: [propertyManagerId, cleanerId],
+          participants,
           taskId: booking._id,
           token,
         })
@@ -93,34 +105,34 @@ export default function BookingDetailsSidebar({
       const newChat = response.payload || null;
 
       if (newChat) {
-        console.log("New chat created:", newChat);
+        console.log("New group chat created:", newChat);
 
-        if (newChat.participants && newChat.participants.length === 2) {
-          console.log("Fetching all threads after creating new chat...");
+        if (newChat.participants && newChat.participants.length === participants.length) {
+          console.log("Fetching all threads after creating new group chat...");
           const threadsResponse = await dispatch(fetchAllThreads({ userId: currentUserId, token }));
           console.log("Threads fetched:", threadsResponse.payload);
 
           dispatch(
             setSelectedChat({
               chatId: newChat._id,
-              cleanerName: booking.cleaners?.[0]?.cleanerId?.fullName || "Unknown Cleaner",
-              cleanerAvatar: booking.cleaners?.[0]?.cleanerId?.avatar || "",
+              cleanerName: "Group Chat",
+              cleanerAvatar: "",
             })
           );
 
           console.log("Redirecting to /inbox");
           router.push("/inbox");
         } else {
-          console.error("Chat participants are not initialized correctly:", newChat);
-          alert("The chat was created, but the participants are not correctly initialized.");
+          console.error("Group chat participants are not initialized correctly:", newChat);
+          alert("The group chat was created, but the participants are not correctly initialized.");
         }
       } else {
-        console.error("Failed to create chat thread. Response:", response);
-        alert("Failed to create chat thread. Please try again.");
+        console.error("Failed to create group chat thread. Response:", response);
+        alert("Failed to create group chat thread. Please try again.");
       }
     } catch (error) {
-      console.error("Error creating chat thread:", error);
-      alert("An error occurred while creating the chat. Please try again.");
+      console.error("Error creating group chat thread:", error);
+      alert("An error occurred while creating the group chat. Please try again.");
     }
   };
 
@@ -197,8 +209,7 @@ export default function BookingDetailsSidebar({
     },
   ];
 
-  // Add cleaner assignment to timeline if cleaners exist
-  if (booking.cleaners?.[0]?.cleanerId) {
+  if (booking.cleaners?.length) {
     demoTimeline.push({
       date: new Date().toLocaleDateString("en-US", {
         weekday: "long",
@@ -210,7 +221,7 @@ export default function BookingDetailsSidebar({
         hour: "2-digit",
         minute: "2-digit",
       }),
-      event: "Assigned to cleaner",
+      event: `Assigned to cleaner${booking.cleaners.length > 1 ? "s" : ""}`,
       icon: (
         <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center">
           <svg
@@ -238,8 +249,7 @@ export default function BookingDetailsSidebar({
         </div>
       ),
       person: {
-        name: booking.cleaners[0].cleanerId?.fullName || "Unknown Cleaner",
-        avatar: booking.cleaners[0].cleanerId?.avatar,
+        name: booking.cleaners.map((c) => c.cleanerId?.fullName || "Unknown").join(", "),
       },
     });
   }
@@ -265,30 +275,39 @@ export default function BookingDetailsSidebar({
           </h3>
 
           <div className="mb-2">
-            <p className="text-xs text-gray-500 mb-1">Assigned Cleaner</p>
-            <div className="flex items-center">
-              <div className="h-6 w-6 rounded-full bg-gray-200 mr-2 overflow-hidden">
-                {booking.cleaners?.[0]?.cleanerId?.avatar ? (
-                  <Image
-                    src={booking.cleaners[0].cleanerId.avatar}
-                    alt={booking.cleaners[0].cleanerId.fullName || "Cleaner"}
-                    className="h-full w-full object-cover"
-                    width={24}
-                    height={24}
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
-                    {booking.cleaners?.[0]?.cleanerId?.fullName?.charAt(0) || "N"}
+            <p className="text-xs text-gray-500 mb-1">Assigned Cleaners</p>
+            {booking.cleaners?.length ? (
+              <div className="space-y-2">
+                {booking.cleaners.map((cleaner, index) => (
+                  <div key={cleaner.cleanerId?._id || index} className="flex items-center">
+                    <div className="h-6 w-6 rounded-full bg-gray-200 mr-2 overflow-hidden">
+                      {cleaner.cleanerId?.avatar ? (
+                        <Image
+                          src={cleaner.cleanerId.avatar}
+                          alt={cleaner.cleanerId.fullName || "Cleaner"}
+                          className="h-full w-full object-cover"
+                          width={24}
+                          height={24}
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500">
+                          {cleaner.cleanerId?.fullName?.charAt(0) || "N"}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm font-medium">
+                      {cleaner.cleanerId?.fullName || "Unknown"}
+                    </span>
                   </div>
-                )}
+                ))}
               </div>
-              <span className="text-sm font-medium">
-                {booking.cleaners?.[0]?.cleanerId?.fullName || "Not assigned"}
-              </span>
-            </div>
+            ) : (
+              <span className="text-sm font-medium">Not assigned</span>
+            )}
 
             {booking.status?.toLowerCase() === "confirmed" &&
-              booking.cleaners?.[0]?.cleanerId && (
+              booking.cleaners?.length &&
+              booking.cleaningBusinessId && (
                 <Button
                   className="mt-4 border bg-white text-black flex items-center gap-2"
                   onClick={handleSendMessage}

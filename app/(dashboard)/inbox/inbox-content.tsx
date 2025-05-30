@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Search, MessageSquare, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChatList } from "./chat-list";
@@ -13,12 +13,17 @@ import { fetchAllThreads } from "@/redux/features/chat/chatSlice";
 export function InboxContent() {
   const dispatch = useAppDispatch();
   const token = useAppSelector((state: RootState) => state.auth.token);
-  const chatLoading = useAppSelector((state: RootState) => state.chat.loading);
+  
+  // Distinct loading states
+  const loadingThreads = useAppSelector((state: RootState) => state.chat.loadingThreads);
+  const sendingMessage = useAppSelector((state: RootState) => state.chat.sendingMessage);
+
   const selectedChatId = useAppSelector(
     (state: RootState) => state.chat.selectedChatId
   );
-  const currentUserId = useAppSelector((state: RootState) => state.auth.user?._id);
-
+  const currentUserId = useAppSelector(
+    (state: RootState) => state.auth.user?._id
+  );
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
@@ -27,11 +32,25 @@ export function InboxContent() {
     }
   }, [dispatch, token, currentUserId]);
 
+  const renderChatSkeleton = () => (
+    <div className="animate-pulse space-y-4 p-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-gray-300 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-300 rounded w-3/4" />
+            <div className="h-3 bg-gray-200 rounded w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex h-[calc(100vh-4rem)]">
       {/* Left side - Chat List */}
       {(!isMobile || !selectedChatId) && (
-        <div className="w-full md:w-[400px] border-r flex flex-col bg-white md:bg-white relative">
+        <div className="w-full md:w-[400px] border-r flex flex-col bg-white relative">
           <div className="p-4 md:p-6 border-b bg-blue-600 md:bg-transparent text-white md:text-black">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h1 className="text-xl md:text-2xl font-semibold">Inbox</h1>
@@ -52,13 +71,8 @@ export function InboxContent() {
           </div>
 
           <div className="flex-1 overflow-auto bg-gray-100 md:bg-white">
-            {chatLoading ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                Loading...
-              </div>
-            ) : (
-              <ChatList />
-            )}
+            {/* Show skeleton ONLY while fetching threads, NOT when sending messages */}
+            {loadingThreads && !sendingMessage ? renderChatSkeleton() : <ChatList />}
           </div>
 
           {/* Floating Action Button for Mobile */}
@@ -76,7 +90,9 @@ export function InboxContent() {
 
       {/* Right side - Chat Detail */}
       <div
-        className={`flex-1 ${isMobile ? (selectedChatId ? "block" : "hidden") : "block"} bg-gray-50`}
+        className={`flex-1 ${
+          isMobile ? (selectedChatId ? "block" : "hidden") : "block"
+        } bg-gray-50`}
       >
         <ChatDetail />
       </div>

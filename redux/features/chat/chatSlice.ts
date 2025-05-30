@@ -9,16 +9,15 @@ export interface ChatMessage {
   senderId: string;
   receiverId: string;
   text: string;
-  createdAt: string;
+  timestamp: string; // Changed from createdAt
   isRead: boolean;
   senderName?: string;
   senderAvatar?: string;
-  timestamp?: string;
 }
 
 export interface Chat {
   id: string;
-  participants: string[];
+  participants: { id: string; type: string }[]; // Changed from string[]
   taskId?: string;
   isSupportTicket?: boolean;
   messages: ChatMessage[];
@@ -54,11 +53,11 @@ export const createChatThread = createAsyncThunk(
   "chat/createThread",
   async (
     {
-      participantIds,
+      participants,
       taskId,
       token,
     }: {
-      participantIds: string[];
+      participants: { id: string; type: string }[];
       taskId: string;
       token: string;
     },
@@ -68,9 +67,15 @@ export const createChatThread = createAsyncThunk(
       const state = getState() as RootState;
 
       const existingChat = state.chat.chats.find((chat) => {
-        const existingSorted = [...chat.participants].sort().join(",");
-        const newSorted = [...participantIds].sort().join(",");
-        return existingSorted === newSorted;
+        const existingSorted = chat.participants
+          .map((p) => `${p.id}:${p.type}`)
+          .sort()
+          .join(",");
+        const newSorted = participants
+          .map((p) => `${p.id}:${p.type}`)
+          .sort()
+          .join(",");
+        return existingSorted === newSorted && chat.taskId === taskId;
       });
 
       if (existingChat) {
@@ -80,7 +85,7 @@ export const createChatThread = createAsyncThunk(
       const response = await axios.post(
         "https://limpiar-backend.onrender.com/api/chats/thread",
         {
-          participants: participantIds,
+          participants,
           taskId,
         },
         {
@@ -153,7 +158,7 @@ export const fetchChatMessages = createAsyncThunk(
           id: msg._id,
           senderId: msg.senderId,
           text: msg.text,
-          createdAt: format(new Date(msg.timestamp), "MMMM dd, yyyy hh:mm a"),
+          timestamp: msg.timestamp, // Changed from createdAt
           isRead: false,
         })),
       };
@@ -286,7 +291,10 @@ const chatSlice = createSlice({
         state.loading = false;
         const threads = action.payload.map((thread: any) => ({
           id: thread._id,
-          participants: thread.participants.map((p: any) => (typeof p === "string" ? p : p._id)),
+          participants: thread.participants.map((p: any) => ({
+            id: typeof p === "string" ? p : p._id,
+            type: typeof p === "string" ? "unknown" : p.type || "unknown",
+          })),
           taskId: thread.taskId,
           isSupportTicket: thread.chatType === "support",
           messages: [],
@@ -295,7 +303,7 @@ const chatSlice = createSlice({
                 id: thread.latestMessage._id,
                 senderId: thread.latestMessage.senderId,
                 text: thread.latestMessage.text,
-                createdAt: thread.latestMessage.timestamp,
+                timestamp: thread.latestMessage.timestamp, // Changed from createdAt
                 isRead: false,
               }
             : undefined,

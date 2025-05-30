@@ -17,6 +17,7 @@ const nextConfig = {
         'limpiar-backend.onrender.com',
         'encrypted-tbn0.gstatic.com',
         't4.ftcdn.net',  
+         "img.freepik.com",
         
       ],
     },
