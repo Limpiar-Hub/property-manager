@@ -1,6 +1,42 @@
+// "use client";
+
+// import { useRouter, useParams } from "next/navigation";
+// import { useAppSelector } from "@/hooks/useReduxHooks";
+
+// export default function ChatDetail() {
+//   const router = useRouter();
+//   const { id: chatId } = useParams(); // Extract the chat ID from the route
+//   const chats = useAppSelector((state) => state.chat.chats);
+
+//   const chat = chats.find((chat) => chat.id === chatId);
+
+//   if (!chat) {
+//     return <p className="text-center">Chat not found</p>;
+//   }
+
+//   return (
+//     <div className="w-2/3 p-6">
+//       <h2 className="font-medium">Chat Details</h2>
+//       <p>Chat ID: {chatId}</p>
+//       <p>Participants: {chat.participants.join(", ")}</p>
+//       <div className="mt-4">
+//         {chat.messages.map((message, index) => (
+//           <div key={index} className="mb-2">
+//             <p className="text-sm text-gray-600">{message.text}</p>
+//             <p className="text-xs text-gray-400">
+//               {new Date(message.timestamp).toLocaleString()}
+//             </p>
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +45,6 @@ import {
   sendChatMessage,
   fetchChatMessages,
   markChatAsRead,
-  setSelectedChat,
 } from "@/redux/features/chat/chatSlice";
 import type { RootState, AppDispatch } from "@/redux/store";
 import Image from "next/image";
@@ -39,14 +74,16 @@ interface Chat {
   participantInfo: Record<string, ParticipantInfo>;
 }
 
-export function ChatDetail() {
+export default function ChatDetailPage() {
   const [message, setMessage] = useState("");
   const dispatch: AppDispatch = useAppDispatch();
-  const selectedChatId = useAppSelector(
-    (state: RootState) => state.chat.selectedChatId
-  );
+  const router = useRouter();
+  const params = useParams();
+  // Ensure chatId is a string or undefined
+  const chatId = typeof params.id === 'string' ? params.id : undefined;
+
   const chat = useAppSelector((state: RootState) =>
-    state.chat.chats.find((c: Chat) => c.id === selectedChatId)
+    state.chat.chats.find((c: Chat) => c.id === chatId)
   ) as Chat | undefined;
   const loading = useAppSelector((state: RootState) => state.chat.loading);
   const token = useAppSelector((state: RootState) => state.auth.token);
@@ -57,19 +94,20 @@ export function ChatDetail() {
 
   // Fetch messages only once when chat is selected
   useEffect(() => {
-    if (selectedChatId && token && chat && !fetchedChatIds.includes(selectedChatId)) {
-      console.log("Fetching messages for chat:", selectedChatId);
-      dispatch(fetchChatMessages({ chatId: selectedChatId, token }))
+    // Check if chatId is a string before using it
+    if (typeof chatId === "string" && token && chat && !fetchedChatIds.includes(chatId)) {
+      console.log("Fetching messages for chat:", chatId);
+      dispatch(fetchChatMessages({ chatId, token }))
         .unwrap()
         .then(() => {
-          setFetchedChatIds((prev) => [...prev, selectedChatId]);
-          dispatch(markChatAsRead(selectedChatId));
+          setFetchedChatIds((prev) => [...prev, chatId]);
+          dispatch(markChatAsRead(chatId));
         })
         .catch((error) => {
           console.error("Failed to fetch messages:", error);
         });
     }
-  }, [selectedChatId, token, chat, dispatch, fetchedChatIds]);
+  }, [chatId, token, chat, dispatch, fetchedChatIds]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -79,19 +117,14 @@ export function ChatDetail() {
     }
   }, [chat?.messages]);
 
-  const handleBack = () => {
-    dispatch(
-      setSelectedChat({ chatId: null, cleanerName: null, cleanerAvatar: null })
-    );
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!message.trim() || !selectedChatId || !token || !chat || !currentUserId) {
+    // The check !chatId now correctly handles chatId being undefined
+    if (!message.trim() || !chatId || !token || !chat || !currentUserId) {
       console.error("Missing required fields:", {
         message: message.trim(),
-        selectedChatId,
+        chatIdValue: chatId, // chatId is now string | undefined
         token,
         chat,
         currentUserId,
@@ -111,13 +144,13 @@ export function ChatDetail() {
     try {
       console.log("Sending message with payload:", {
         text: message,
-        chatId: selectedChatId,
+        chatId, // chatId is guaranteed to be string here due to the check above
         receiverId,
       });
       await dispatch(
         sendChatMessage({
           text: message,
-          chatId: selectedChatId,
+          chatId, // chatId is guaranteed to be string here
           receiverId,
           token,
         })
@@ -134,13 +167,13 @@ export function ChatDetail() {
     }
   };
 
-  if (!selectedChatId) {
+  if (!chatId) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
         {isMobile ? (
           <div className="text-center p-4">
             <p>No chat selected</p>
-            <Button onClick={handleBack} className="mt-4">
+            <Button onClick={() => router.push("/cleaning-business/inbox")} className="mt-4">
               Back to list
             </Button>
           </div>
@@ -151,32 +184,26 @@ export function ChatDetail() {
     );
   }
 
-  // const otherParticipantId = chat?.participants.find((id) => id !== currentUserId) || "";
-  // const participantInfo: ParticipantInfo = chat?.participantInfo[otherParticipantId] || {
-  //   name: "Unknown",
-  //   avatar: undefined,
-  // };
-
   const otherParticipantIds = chat?.participants.filter((id) => id !== currentUserId) || [];
-const cleanerNames = otherParticipantIds
-  .map((id) => chat?.participantInfo[id]?.name || "Unknown")
-  .join(", ");
+  const cleanerNames = otherParticipantIds
+    .map((id) => chat?.participantInfo[id]?.name || "Unknown")
+    .join(", ");
 
-// Truncate cleaner names if too long
-const truncatedCleanerNames =
-  cleanerNames.length > 30 ? `${cleanerNames.slice(0, 30)}...` : cleanerNames;
+  // Truncate cleaner names if too long
+  const truncatedCleanerNames =
+    cleanerNames.length > 30 ? `${cleanerNames.slice(0, 30)}...` : cleanerNames;
 
-const participantInfo: ParticipantInfo = {
-  name: truncatedCleanerNames,
-  avatar: chat?.participantInfo[otherParticipantIds[0]]?.avatar || "/placeholder.svg",
-};
+  const participantInfo: ParticipantInfo = {
+    name: truncatedCleanerNames,
+    avatar: chat?.participantInfo[otherParticipantIds[0]]?.avatar || "/placeholder.svg",
+  };
 
   return (
     <div className="h-full flex flex-col">
       {/* Chat Header */}
-      {/* <div className="p-4 border-b bg-white flex items-center">
+      <div className="p-4 border-b bg-white flex items-center">
         {isMobile && (
-          <Button variant="ghost" onClick={handleBack} className="mr-2">
+          <Button variant="ghost" onClick={() => router.push("/cleaning-business/inbox")} className="mr-2">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}
@@ -201,40 +228,12 @@ const participantInfo: ParticipantInfo = {
             {chat?.taskId ? `Booking ID: ${chat.taskId}` : "Direct message"}
           </p>
         </div>
-      </div> */}
-
-<div className="p-4 border-b bg-white flex items-center">
-  {isMobile && (
-    <Button variant="ghost" onClick={handleBack} className="mr-2">
-      <ArrowLeft className="h-5 w-5" />
-    </Button>
-  )}
-  <Avatar className="w-10 h-10 mr-3">
-    {participantInfo.avatar ? (
-      <Image
-        src={participantInfo.avatar}
-        alt={participantInfo.name}
-        width={40}
-        height={40}
-        className="rounded-full"
-      />
-    ) : (
-      <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500 bg-gray-200">
-        {participantInfo.name.charAt(0) || "?"}
       </div>
-    )}
-  </Avatar>
-  <div>
-    <h2 className="font-medium">{participantInfo.name}</h2>
-    <p className="text-xs text-gray-500">
-      {chat?.taskId ? `Booking ID: ${chat.taskId}` : "Direct message"}
-    </p>
-  </div>
-</div>
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-auto p-4 bg-gray-50">
-        {loading && !fetchedChatIds.includes(selectedChatId) ? (
+        {/* The check `typeof chatId === "string"` in the useEffect handles the type for fetchedChatIds.includes */}
+        {loading && typeof chatId === "string" && !fetchedChatIds.includes(chatId) ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             Loading messages...
           </div>
@@ -267,6 +266,7 @@ const participantInfo: ParticipantInfo = {
                             className="rounded-full"
                           />
                         ) : (
+                          // Corrected className here
                           <div className="h-full w-full flex items-center justify-center text-xs font-medium text-gray-500 bg-gray-200">
                             {senderInfo.name.charAt(0) || "?"}
                           </div>
@@ -286,6 +286,7 @@ const participantInfo: ParticipantInfo = {
                           isCurrentUser ? "text-blue-100" : "text-gray-500"
                         }`}
                       >
+                        {/* Ensure timestamp is valid before formatting */}
                         {msg.timestamp
                           ? new Date(msg.timestamp).toLocaleTimeString("en-US", {
                               hour: "2-digit",

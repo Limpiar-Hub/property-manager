@@ -108,86 +108,190 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
     setIsAssignModalOpen(true)
   }
 
-  const handleAssignCleaner = async (cleanerId: string) => {
-    if (!currentBookingId || !token) return
+  // const handleAssignCleaner = async (cleanerId: string) => {
+  //   if (!currentBookingId || !token) return
 
-    try {
-      setIsAssignModalOpen(false)
+  //   try {
+  //     setIsAssignModalOpen(false)
       
+  //     const response = await assignCleanerToTask(
+  //       {
+  //         bookingId: currentBookingId,
+  //         cleanerId: cleanerId,
+  //       },
+  //       token,
+  //     )
+
+  //     setTasks(prevTasks =>
+  //       prevTasks.map(task => {
+  //         if (task._id === currentBookingId) {
+  //           return {
+  //             ...task,
+  //             status: "Confirmed",
+  //             cleanerId: response.data.cleanerId
+  //           }
+  //         }
+  //         return task
+  //       })
+  //     )
+
+  //     showNotification("Cleaner assigned successfully", "success")
+  //   } catch (err: any) {
+  //     showNotification(err.message || "Failed to assign cleaner", "error")
+  //   }
+  // }
+
+  const handleAssignCleaner = async (selectedCleaners: { cleanerId: string }[]) => {
+    if (!currentBookingId || !token) return;
+  
+    try {
+      setIsAssignModalOpen(false);
+  
       const response = await assignCleanerToTask(
         {
           bookingId: currentBookingId,
-          cleanerId: cleanerId,
+          cleaners: selectedCleaners.map((cleaner) => ({ cleanerId: cleaner.cleanerId })),
         },
-        token,
-      )
-
-      setTasks(prevTasks =>
-        prevTasks.map(task => {
+        token
+      );
+  
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => {
           if (task._id === currentBookingId) {
             return {
               ...task,
               status: "Confirmed",
-              cleanerId: response.data.cleanerId
-            }
+              assignedCleaners: response.data.cleaners,
+            };
           }
-          return task
+          return task;
         })
-      )
-
-      showNotification("Cleaner assigned successfully", "success")
+      );
+  
+      showNotification("Cleaners assigned successfully", "success");
     } catch (err: any) {
-      showNotification(err.message || "Failed to assign cleaner", "error")
+      showNotification(err.message || "Failed to assign cleaners", "error");
     }
-  }
+  };
+
+  // const handleStartChat = async (task: Booking) => {
+  //   if (!task.cleanerId?._id || !currentUserId || !token) {
+  //     showNotification("Cannot start chat: Missing required information", "error")
+  //     return
+  //   }
+
+  //   try {
+  //     // Check for existing chat
+  //     const existingChat = chats.find(chat => 
+  //       chat.participants.includes(task.cleanerId._id) &&
+  //       chat.participants.includes(currentUserId) &&
+  //       chat.taskId === task._id
+  //     )
+
+  //     if (existingChat) {
+  //       dispatch(setSelectedChat({
+  //         chatId: existingChat.id,
+  //         cleanerName: task.cleanerId.fullName || "Cleaner",
+  //         cleanerAvatar: task.cleanerId.avatar || "",
+  //       }))
+  //       router.push("/cleaning-business/inbox")
+  //       return
+  //     }
+
+  //     // Create new chat thread
+  //     const response = await dispatch(createChatThread({
+  //       participantIds: [currentUserId, task.cleanerId._id],
+  //       taskId: task._id,
+  //       token,
+  //     })).unwrap()
+
+  //     if (response?._id) {
+  //       await dispatch(fetchAllThreads({ userId: currentUserId, token }))
+        
+  //       dispatch(setSelectedChat({
+  //         chatId: response._id,
+  //         cleanerName: task.cleanerId.fullName || "Cleaner",
+  //         cleanerAvatar: task.cleanerId.avatar || "",
+  //       }))
+        
+  //       router.push("/cleaning-business/inbox")
+  //     }
+  //   } catch (error) {
+  //     console.error("Chat creation error:", error)
+  //     showNotification("Failed to start chat", "error")
+  //   }
+  // }
+
 
   const handleStartChat = async (task: Booking) => {
-    if (!task.cleanerId?._id || !currentUserId || !token) {
-      showNotification("Cannot start chat: Missing required information", "error")
-      return
+    if (!task.cleaners || task.cleaners.length === 0 || !currentUserId || !token) {
+      showNotification("Cannot start chat: Missing required information", "error");
+      return;
     }
 
+    // log out all the credentials when the user clicks on the start chat button
+
+    console.log("Current User ID:", currentUserId);
+    console.log("Task Cleaners:", task.cleaners);
+    console.log("Task ID:", task._id);
+    console.log("Token:", token);
+  
     try {
+      // Collect all participant IDs (current user + cleaner IDs)
+      const participantIds = [
+        currentUserId,
+        ...task.cleaners.map((cleaner) => cleaner.cleanerId._id),
+      ];
+  
       // Check for existing chat
-      const existingChat = chats.find(chat => 
-        chat.participants.includes(task.cleanerId._id) &&
-        chat.participants.includes(currentUserId) &&
-        chat.taskId === task._id
-      )
-
+      const existingChat = chats.find(
+        (chat) =>
+          participantIds.every((id) => chat.participants.includes(id)) &&
+          chat.taskId === task._id
+      );
+  
       if (existingChat) {
-        dispatch(setSelectedChat({
-          chatId: existingChat.id,
-          cleanerName: task.cleanerId.fullName || "Cleaner",
-          cleanerAvatar: task.cleanerId.avatar || "",
-        }))
-        router.push("/cleaning-business/inbox")
-        return
+        console.log("Existing Chat ID:", existingChat.id); // Log the existing chat ID
+        dispatch(
+          setSelectedChat({
+            chatId: existingChat.id,
+            cleanerName: task.cleaners[0]?.cleanerId?.fullName || "Cleaner",
+            cleanerAvatar: task.cleaners[0]?.cleanerId?.avatar || "",
+          })
+        );
+        // router.push("/cleaning-business/inbox");
+        router.push(`/cleaning-business/inbox/${existingChat.id}`);
+        return;
       }
-
+  
       // Create new chat thread
-      const response = await dispatch(createChatThread({
-        participantIds: [currentUserId, task.cleanerId._id],
-        taskId: task._id,
-        token,
-      })).unwrap()
-
+      const response = await dispatch(
+        createChatThread({
+          participantIds,
+          taskId: task._id,
+          token,
+        })
+      ).unwrap();
+  
       if (response?._id) {
-        await dispatch(fetchAllThreads({ userId: currentUserId, token }))
-        
-        dispatch(setSelectedChat({
-          chatId: response._id,
-          cleanerName: task.cleanerId.fullName || "Cleaner",
-          cleanerAvatar: task.cleanerId.avatar || "",
-        }))
-        
-        router.push("/cleaning-business/inbox")
+        console.log("New Chat Response ID:", response._id); // Log the response ID
+        await dispatch(fetchAllThreads({ userId: currentUserId, token }));
+  
+        dispatch(
+          setSelectedChat({
+            chatId: response._id,
+            cleanerName: task.cleaners[0]?.cleanerId?.fullName || "Cleaner",
+            cleanerAvatar: task.cleaners[0]?.cleanerId?.avatar || "",
+          })
+        );
+  
+        router.push(`/cleaning-business/inbox/${response._id}`);
       }
     } catch (error) {
-      console.error("Chat creation error:", error)
-      showNotification("Failed to start chat", "error")
+      console.error("Chat creation error:", error);
+      showNotification("Failed to start chat", "error");
     }
-  }
+  };
 
   const showNotification = (message: string, type: "success" | "error") => {
     setNotification({ message, type, visible: true })
@@ -302,13 +406,13 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                        {/* <div className="flex items-center gap-2 mb-2 sm:mb-0">
                           <p className="text-xs text-gray-500">Assigned to</p>
                           {task.cleanerId ? (
                             <div className="flex items-center gap-2">
                               <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                                 <span className="text-xs font-medium text-gray-600">
-                                  {task.cleanerId.fullName.charAt(0).toUpperCase()}
+                                {task.cleanerId?.fullName?.charAt(0).toUpperCase() || ""}
                                 </span>
                               </div>
                               <p className="font-medium">{task.cleanerId.fullName}</p>
@@ -329,7 +433,42 @@ export default function TaskList({ activeTab, searchQuery = "", allTasks = [] }:
                           ) : (
                             <p className="font-medium">Not assigned</p>
                           )}
-                        </div>
+                        </div> */}
+
+
+<div className="flex items-center gap-2 mb-2 sm:mb-0">
+  <p className="text-xs text-gray-500">Assigned to</p>
+  {task.cleaners && task.cleaners.length > 0 ? (
+    <div className="flex items-center gap-2">
+      <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+        <span className="text-xs font-medium text-gray-600">
+          {task.cleaners[0].cleanerId.fullName?.charAt(0).toUpperCase()}
+        </span>
+      </div>
+      <p className="font-medium">
+        {task.cleaners.length === 1
+          ? task.cleaners[0].cleanerId.fullName
+          : `${task.cleaners[0].cleanerId.fullName} and ${task.cleaners.length - 1} other(s)`}
+      </p>
+      {activeTab === "active" && (
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleStartChat(task)
+          }}
+          className="text-gray-500 hover:text-primary transition-colors"
+          title="Message cleaner"
+        >
+          <MessageSquare className="w-5 h-5" />
+        </button>
+      )}
+    </div>
+  ) : (
+    <p className="font-medium">Not assigned</p>
+  )}
+</div>
+
                         <div className="flex items-center gap-2">
                           <p className="text-xs text-gray-500">Status</p>
                           <span
