@@ -27,14 +27,14 @@ export default function BookingPreview() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-
+  
     try {
       if (
         !user?._id ||
         !user?.phoneNumber ||
         !token ||
         !booking.property?.id ||
-        !booking.serviceType?.name ||
+        !booking.serviceType?.length ||
         !booking.date.selectedDate ||
         !isValidTime(booking.time) ||
         (booking.endTime && !isValidTime(booking.endTime))
@@ -44,19 +44,22 @@ export default function BookingPreview() {
         setIsLoading(false);
         return;
       }
-
+  
+      // Join all selected service names with commas and spaces
+      const serviceTypeString = booking.serviceType.map(s => s.name).join(", ");
+  
       const requestBody = {
         propertyId: booking.property.id,
         propertyManagerId: user._id,
-        serviceType: booking.serviceType.name,
-        date: new Date(booking.date.selectedDate).toISOString().split("T")[0],
+        serviceType: serviceTypeString,
+        date: new Date(booking.date.selectedDate).toISOString(),
         startTime: booking.time.trim(),
         phoneNumber: user.phoneNumber,
         ...(booking.endTime && { endTime: booking.endTime.trim() }),
       };
-
+  
       console.log("Submitting booking data:", requestBody);
-
+  
       const response = await axios.post(
         "https://limpiar-backend.onrender.com/api/bookings",
         requestBody,
@@ -67,7 +70,7 @@ export default function BookingPreview() {
           },
         }
       );
-
+  
       console.log("Booking response:", response.data);
       setResponseData(response.data.data);
       setIsSubmitted(true);
@@ -79,6 +82,7 @@ export default function BookingPreview() {
       setIsLoading(false);
     }
   };
+  
 
   const handleGoToBookings = () => {
     dispatch(closeModal());
@@ -125,27 +129,31 @@ export default function BookingPreview() {
       </div>
 
       <div className="space-y-6">
-        {/* Service */}
         <div>
-          <p className="text-sm text-gray-500 mb-2">Service</p>
-          <div className="flex items-center">
-            <div className="h-16 w-16 rounded-md overflow-hidden mr-3">
-              <Image
-                src={booking.serviceType?.image || "/placeholder.svg"}
-                alt={booking.serviceType?.name || "Service"}
-                width={64}
-                height={64}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div>
-              <p className="font-medium">{booking.serviceType?.name}</p>
-              <p className="text-sm">${booking.serviceType?.price}</p>
-            </div>
-          </div>
+          <p className="text-sm text-gray-500 mb-2">Services</p>
+          {booking.serviceType.length > 0 ? (
+            booking.serviceType.map((service) => (
+              <div key={service.id} className="flex items-center mb-3">
+                <div className="h-16 w-16 rounded-md overflow-hidden mr-3">
+                  <Image
+                    src={service.image || "/placeholder.svg"}
+                    alt={service.name}
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p className="font-medium">{service.name}</p>
+                  <p className="text-sm">${service.price}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">No services selected.</p>
+          )}
         </div>
 
-        {/* Property */}
         <div>
           <p className="text-sm text-gray-500 mb-2">Property</p>
           <div className="flex items-center">
@@ -162,19 +170,16 @@ export default function BookingPreview() {
           </div>
         </div>
 
-        {/* Date */}
         <div>
           <p className="text-sm text-gray-500 mb-2">Date</p>
           <p className="font-medium">{booking.date.selectedDate}</p>
         </div>
 
-        {/* Time */}
         <div>
           <p className="text-sm text-gray-500 mb-2">Time</p>
           <p className="font-medium">{booking.time}</p>
         </div>
 
-        {/* End Time (Optional) */}
         {booking.endTime && (
           <div>
             <p className="text-sm text-gray-500 mb-2">End Time</p>

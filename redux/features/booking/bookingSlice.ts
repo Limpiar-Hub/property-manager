@@ -2,14 +2,16 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
 export type DateType = "one-time" | "multiple-day" | "routine"
 
+export interface ServiceType {
+  id: string
+  name: string
+  image: string
+  price: number
+}
+
 export interface BookingState {
   step: number
-  serviceType: {
-    id: string
-    name: string
-    image: string
-    price: number
-  } | null
+  serviceType: ServiceType[]        // now an array for multiple selected services
   property: {
     id: string
     name: string
@@ -25,19 +27,17 @@ export interface BookingState {
     routineDays?: string[]
   }
   time: string
-  // notes: string
   isModalOpen: boolean
 }
 
 const initialState: BookingState = {
   step: 1,
-  serviceType: null,
+  serviceType: [],  // empty array initially
   property: null,
   date: {
     type: null,
   },
   time: "",
-  // notes: "",
   isModalOpen: false,
 }
 
@@ -48,8 +48,17 @@ export const bookingSlice = createSlice({
     setStep: (state, action: PayloadAction<number>) => {
       state.step = action.payload
     },
-    setServiceType: (state, action: PayloadAction<BookingState["serviceType"]>) => {
+    setServiceType: (state, action: PayloadAction<ServiceType[]>) => {
       state.serviceType = action.payload
+    },
+    setToggleService: (state, action: PayloadAction<ServiceType>) => {
+      const service = action.payload
+      const exists = state.serviceType.find((s) => s.id === service.id)
+      if (exists) {
+        state.serviceType = state.serviceType.filter((s) => s.id !== service.id)
+      } else {
+        state.serviceType.push(service)
+      }
     },
     setProperty: (state, action: PayloadAction<BookingState["property"]>) => {
       state.property = action.payload
@@ -60,20 +69,16 @@ export const bookingSlice = createSlice({
     setTime: (state, action: PayloadAction<string>) => {
       state.time = action.payload
     },
-    // setNotes: (state, action: PayloadAction<string>) => {
-    //   state.notes = action.payload
-    // },
     openModal: (state) => {
       state.isModalOpen = true
     },
     closeModal: (state) => {
       state.isModalOpen = false
       state.step = 1
-      state.serviceType = null
+      state.serviceType = []
       state.property = null
       state.date = { type: null }
       state.time = ""
-      // state.notes = ""
     },
     resetBooking: () => initialState,
     setDateType: (state, action: PayloadAction<DateType>) => {
@@ -98,10 +103,10 @@ export const bookingSlice = createSlice({
 export const {
   setStep,
   setServiceType,
+  setToggleService,
   setProperty,
   setDate,
   setTime,
-  // setNotes,
   openModal,
   closeModal,
   resetBooking,
@@ -112,4 +117,3 @@ export const {
 } = bookingSlice.actions
 
 export default bookingSlice.reducer
-

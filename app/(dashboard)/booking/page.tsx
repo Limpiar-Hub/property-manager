@@ -33,7 +33,7 @@ export default function BookingsPage() {
         console.warn("Token or managerId is missing");
         return;
       }
-
+  
       const response = await axios.get(
         `https://limpiar-backend.onrender.com/api/bookings/history/${managerId}`,
         {
@@ -45,9 +45,12 @@ export default function BookingsPage() {
           },
         }
       );
-
+  
       if (response.data && Array.isArray(response.data.data)) {
-        setBookings(response.data.data);
+        const sortedBookings = response.data.data.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setBookings(sortedBookings);
         setPagination((prev) => ({
           ...prev,
           total: response.data.total || 0,
@@ -63,7 +66,7 @@ export default function BookingsPage() {
       setIsLoading(false);
     }
   }, [token, managerId, activeTab, pagination.page, pagination.limit]);
-
+  
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);

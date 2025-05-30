@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks"
-import { setServiceType, setStep } from "@/redux/features/booking/bookingSlice"
-import { ChevronLeft, ChevronRight, Check } from "lucide-react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
+import { setServiceType, setStep } from "@/redux/features/booking/bookingSlice";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 const services = [
   {
@@ -43,48 +43,67 @@ const services = [
     price: 32,
     image: "/window-cleaning.png",
   },
-]
+];
 
 export default function ServiceTypeStep() {
-  const dispatch = useAppDispatch()
-  const { serviceType } = useAppSelector((state) => state.booking)
+  const dispatch = useAppDispatch();
+  const serviceTypes = useAppSelector((state) => state.booking.serviceType) || []; // Now array
+
+  // Toggle service selection
+  const toggleService = (service: typeof services[0]) => {
+    const isSelected = serviceTypes.some((s: any) => s.id === service.id);
+
+    let newSelected;
+    if (isSelected) {
+      // Remove from selected
+      newSelected = serviceTypes.filter((s: any) => s.id !== service.id);
+    } else {
+      // Add to selected
+      newSelected = [...serviceTypes, service];
+    }
+
+    dispatch(setServiceType(newSelected));
+  };
 
   const handleNext = () => {
-    if (serviceType) {
-      dispatch(setStep(2))
+    if (serviceTypes.length > 0) {
+      dispatch(setStep(2));
     }
-  }
+  };
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">Select Service Type</h3>
+      <h3 className="text-lg font-semibold mb-4">Select Service Type(s)</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        {services.map((service) => (
-          <div
-            key={service.id}
-            onClick={() => dispatch(setServiceType(service))}
-            className={`relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all
-              ${serviceType?.id === service.id ? "border-blue-500" : "border-transparent hover:border-gray-200"}`}
-          >
-            <Image
-              src={service.image || "/placeholder.svg"}
-              alt={service.name}
-              width={300}
-              height={200}
-              className="w-full h-40 object-cover"
-            />
-            {serviceType?.id === service.id && (
-              <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
+        {services.map((service) => {
+          const isSelected = serviceTypes.some((s: any) => s.id === service.id);
+          return (
+            <div
+              key={service.id}
+              onClick={() => toggleService(service)}
+              className={`relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all
+                ${isSelected ? "border-blue-500" : "border-transparent hover:border-gray-200"}`}
+            >
+              <Image
+                src={service.image || "/placeholder.svg"}
+                alt={service.name}
+                width={300}
+                height={200}
+                className="w-full h-40 object-cover"
+              />
+              {isSelected && (
+                <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+              )}
+              <div className="p-3">
+                <h4 className="font-medium">{service.name}</h4>
+                <p className="text-sm text-gray-600">${service.price}+</p>
               </div>
-            )}
-            <div className="p-3">
-              <h4 className="font-medium">{service.name}</h4>
-              <p className="text-sm text-gray-600">${service.price}+</p>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex justify-between items-center">
@@ -98,13 +117,12 @@ export default function ServiceTypeStep() {
         </div>
         <Button
           onClick={handleNext}
-          disabled={!serviceType}
+          disabled={serviceTypes.length === 0}
           className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-200"
         >
           Next
         </Button>
       </div>
     </div>
-  )
+  );
 }
-
