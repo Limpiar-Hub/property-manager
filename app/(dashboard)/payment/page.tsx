@@ -137,15 +137,16 @@ export default function PaymentsPage() {
                 </div>
 
                 <div className="relative z-10 text-center">
-                  <p className="text-lg mb-2">Wallet Balance</p>
-                  <p className="text-4xl font-bold">
-                    {isLoading ? (
-                      <span className="text-xl">Loading...</span>
-                    ) : (
-                      `$${walletBalance}`
-                    )}
-                  </p>
-                </div>
+  <p className="text-lg mb-2">Wallet Balance</p>
+  <p className="text-4xl font-bold">
+    {isLoading ? (
+      <span className="text-xl">Loading...</span>
+    ) : (
+      `$${walletBalance.toLocaleString()}`
+    )}
+  </p>
+</div>
+
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-6">
