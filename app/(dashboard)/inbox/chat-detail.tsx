@@ -258,7 +258,7 @@ const chatAvatar = isGroupChat
                           : "bg-white border border-gray-200"
                       }`}
                     >
-                      <p className="text-sm">{msg.text || "Message text missing"}</p>
+                      <p className="text-sm">{msg.text || "loading up your message in realtime..."}</p>
                       <p
                         className={`text-xs mt-1 flex items-center gap-1 ${
                           isCurrentUser ? "text-blue-100" : "text-gray-500"
