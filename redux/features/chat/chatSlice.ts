@@ -1,7 +1,6 @@
 import { RootState } from "@/redux/store";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { format } from "date-fns";
 
 export interface ChatMessage {
   id: string;
@@ -9,7 +8,7 @@ export interface ChatMessage {
   senderId: string;
   receiverId: string;
   text: string;
-  timestamp: string; // Changed from createdAt
+  timestamp: string;
   isRead: boolean;
   senderName?: string;
   senderAvatar?: string;
@@ -17,7 +16,7 @@ export interface ChatMessage {
 
 export interface Chat {
   id: string;
-  participants: { id: string; type: string }[]; // Changed from string[]
+  participants: { id: string; type: string }[];
   taskId?: string;
   isSupportTicket?: boolean;
   messages: ChatMessage[];
@@ -97,7 +96,6 @@ export const createChatThread = createAsyncThunk(
 
       return response.data;
     } catch (error: any) {
-      console.error("Error creating chat thread:", error);
       return rejectWithValue(error.response?.data || "Failed to create chat thread");
     }
   }
@@ -132,7 +130,6 @@ export const sendChatMessage = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      console.error("Error sending message:", error);
       throw error;
     }
   }
@@ -151,19 +148,17 @@ export const fetchChatMessages = createAsyncThunk(
         }
       );
 
-      console.log("Fetched messages for chat", chatId, ":", response.data);
       return {
         chatId,
         messages: response.data.map((msg: any) => ({
           id: msg._id,
           senderId: msg.senderId,
           text: msg.text,
-          timestamp: msg.timestamp, // Changed from createdAt
+          timestamp: msg.timestamp,
           isRead: false,
         })),
       };
     } catch (error: any) {
-      console.error("Error fetching chat messages:", error);
       return rejectWithValue(error.response?.data || "Failed to fetch messages");
     }
   }
@@ -183,7 +178,6 @@ export const fetchAllThreads = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      console.error("Error fetching chat threads:", error);
       return rejectWithValue(error.response?.data || "Failed to fetch threads");
     }
   }
@@ -233,7 +227,6 @@ const chatSlice = createSlice({
       .addCase(createChatThread.fulfilled, (state, action) => {
         state.loading = false;
         state.selectedChatId = action.payload._id;
-        // Do not add the chat to state.chats here; let fetchAllThreads handle it
       })
       .addCase(createChatThread.rejected, (state, action) => {
         state.loading = false;
@@ -273,15 +266,11 @@ const chatSlice = createSlice({
           if (messages.length > 0) {
             state.chats[chatIndex].lastMessage = messages[messages.length - 1];
           }
-          console.log("Updated messages for chat", chatId);
-        } else {
-          console.warn("Chat not found for messages:", chatId);
         }
       })
       .addCase(fetchChatMessages.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch messages";
-        console.error("Failed to fetch messages:", action.error);
       })
       .addCase(fetchAllThreads.pending, (state) => {
         state.loading = true;
@@ -303,7 +292,7 @@ const chatSlice = createSlice({
                 id: thread.latestMessage._id,
                 senderId: thread.latestMessage.senderId,
                 text: thread.latestMessage.text,
-                timestamp: thread.latestMessage.timestamp, // Changed from createdAt
+                timestamp: thread.latestMessage.timestamp,
                 isRead: false,
               }
             : undefined,
@@ -318,7 +307,6 @@ const chatSlice = createSlice({
           }, {}),
         }));
         state.chats = threads;
-        console.log("Fetched and transformed threads:", threads);
       })
       .addCase(fetchAllThreads.rejected, (state, action) => {
         state.loading = false;

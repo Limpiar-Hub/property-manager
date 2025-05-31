@@ -66,19 +66,31 @@ export default function BookingDetailsSidebar({
         ...cleanerIds.map((id) => ({ id, type: "cleaner" })),
       ];
 
-      const existingChat = chats.find((chat) => {
-        const chatParticipants = chat.participants
-          .map((p: { id: string; type: string }) => `${p.id}:${p.type}`)
-          .sort();
-        const requiredParticipants = participants
-          .map((p) => `${p.id}:${p.type}`)
-          .sort();
-        return (
-          chat.taskId === booking._id &&
-          chatParticipants.length === requiredParticipants.length &&
-          chatParticipants.every((p, index) => p === requiredParticipants[index])
-        );
-      });
+      // Fetch threads to ensure latest chats are available
+      console.log("Fetching all threads before checking existing chat...");
+      await dispatch(fetchAllThreads({ userId: currentUserId, token }));
+
+      // Check local storage for cached chat ID
+      const cachedChatId = localStorage.getItem(`chat_${booking._id}`);
+      let existingChat = cachedChatId
+        ? chats.find((chat) => chat.id === cachedChatId)
+        : null;
+
+      // If not found in cache, check Redux state by participants
+      if (!existingChat) {
+        existingChat = chats.find((chat) => {
+          const chatParticipants = chat.participants
+            .map((p: { id: string; type: string }) => `${p.id}:${p.type}`)
+            .sort();
+          const requiredParticipants = participants
+            .map((p) => `${p.id}:${p.type}`)
+            .sort();
+          return (
+            chatParticipants.length === requiredParticipants.length &&
+            chatParticipants.every((p, index) => p === requiredParticipants[index])
+          );
+        });
+      }
 
       if (existingChat) {
         console.log("Existing group chat found:", existingChat);
@@ -89,6 +101,7 @@ export default function BookingDetailsSidebar({
             cleanerAvatar: "",
           })
         );
+        localStorage.setItem(`chat_${booking._id}`, existingChat.id);
         router.push("/inbox");
         return;
       }
@@ -107,25 +120,36 @@ export default function BookingDetailsSidebar({
       if (newChat) {
         console.log("New group chat created:", newChat);
 
-        if (newChat.participants && newChat.participants.length === participants.length) {
-          console.log("Fetching all threads after creating new group chat...");
-          const threadsResponse = await dispatch(fetchAllThreads({ userId: currentUserId, token }));
-          console.log("Threads fetched:", threadsResponse.payload);
+        // Fetch threads again to check for existing chats with same participants
+        console.log("Fetching all threads after creating new group chat...");
+        const threadsResponse = await dispatch(fetchAllThreads({ userId: currentUserId, token }));
+        console.log("Threads fetched:", threadsResponse.payload);
 
-          dispatch(
-            setSelectedChat({
-              chatId: newChat._id,
-              cleanerName: "Group Chat",
-              cleanerAvatar: "",
-            })
+        // Check if a chat with identical participants already exists
+        const finalChat = chats.find((chat) => {
+          const chatParticipants = chat.participants
+            .map((p: { id: string; type: string }) => `${p.id}:${p.type}`)
+            .sort();
+          const requiredParticipants = participants
+            .map((p) => `${p.id}:${p.type}`)
+            .sort();
+          return (
+            chatParticipants.length === requiredParticipants.length &&
+            chatParticipants.every((p, index) => p === requiredParticipants[index])
           );
+        }) || newChat;
 
-          console.log("Redirecting to /inbox");
-          router.push("/inbox");
-        } else {
-          console.error("Group chat participants are not initialized correctly:", newChat);
-          alert("The group chat was created, but the participants are not correctly initialized.");
-        }
+        dispatch(
+          setSelectedChat({
+            chatId: finalChat._id || finalChat.id,
+            cleanerName: "Group Chat",
+            cleanerAvatar: "",
+          })
+        );
+
+        localStorage.setItem(`chat_${booking._id}`, finalChat._id || finalChat.id);
+        console.log("Redirecting to /inbox");
+        router.push("/inbox");
       } else {
         console.error("Failed to create group chat thread. Response:", response);
         alert("Failed to create group chat thread. Please try again.");
