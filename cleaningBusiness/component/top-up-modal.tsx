@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
-import AHCTransferModal from ".3/ahc-transfer-modal"; // Adjust path as needed
+import AHCTransferModal from "./ahc-transfer-modal"; // Adjust path as needed
 
 interface TopUpModalProps {
   isOpen: boolean;
