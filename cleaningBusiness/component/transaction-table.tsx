@@ -101,7 +101,7 @@ export default function TransactionTable({ searchQuery, statusFilter }: Transact
           description: payment.bookingId
             ? `Booking Payment, ${payment.bookingId.serviceType}`
             : "Wallet Top Up",
-          amount: `$${((payment.amount || 0) / 100).toFixed(2)}`,
+          amount: `$${((payment.amount || 0) ).toFixed(2)}`,
           paymentMethod: "Debit/Credit Card Transaction",
           status: payment.status === "succeeded" ? "Completed" : payment.status.charAt(0).toUpperCase() + payment.status.slice(1),
         }));
@@ -124,7 +124,7 @@ export default function TransactionTable({ searchQuery, statusFilter }: Transact
             txn.transactionCategory === "wallet_transfer" ? `Wallet Transfer` :
             txn.transactionCategory === "refund" ? `Refund` : `Wallet ${txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}`
           ),
-          amount: `${txn.amount < 0 ? "-" : ""}$${(Math.abs(txn.amount) / 100).toFixed(2)}`,
+          amount: `${txn.amount < 0 ? "-" : ""}$${(Math.abs(txn.amount) ).toFixed(2)}`,
           paymentMethod: txn.transactionCategory === "wallet_transfer" || txn.type === "debit" || txn.type === "credit"
             ? "Wallet Transaction"
             : txn.transactionCategory === "refund"

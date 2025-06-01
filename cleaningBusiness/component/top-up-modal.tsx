@@ -167,7 +167,7 @@ export default function TopUpModal({ isOpen, onClose, onProceed, amount, setAmou
         if (data.success) {
           console.log("Payment verified:", data);
           setWalletBalance(data.paymentResult?.walletBalance ?? walletBalance);
-          alert(`Payment successful! Your wallet balance is now $${(data.paymentResult?.walletBalance / 100)?.toFixed(2) ?? (walletBalance / 100).toFixed(2)}.`);
+          alert(`Payment successful! Your wallet balance is now $${(data.paymentResult?.walletBalance)?.toFixed(2) ?? (walletBalance ).toFixed(2)}.`);
           onClose();
         } else {
           throw new Error("Payment verification failed");
@@ -222,7 +222,7 @@ export default function TopUpModal({ isOpen, onClose, onProceed, amount, setAmou
             </div>
 
             <div className="text-sm text-gray-600">
-              Available Balance: <span className="font-medium">${(walletBalance / 100).toFixed(2)}</span>
+              Available Balance: <span className="font-medium">${(walletBalance ).toFixed(2)}</span>
             </div>
 
             <div>

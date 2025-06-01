@@ -120,7 +120,7 @@ export default function PaymentPage() {
         ...txn,
         method: "stripe",
         description:
-          txn.description || `Payment of $${(txn.amount / 100).toFixed(2)} via Stripe`,
+          txn.description || `Payment of $${(txn.amount ).toFixed(2)} via Stripe`,
       }));
 
       // Fetch wallet data

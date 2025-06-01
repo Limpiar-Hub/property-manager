@@ -250,7 +250,7 @@ export function WithdrawModal() {
             <div className="flex justify-between">
               <span className="text-sm text-gray-500">Available Balance</span>
               <span className="text-sm text-gray-500">
-                {isLoading ? "Loading..." : `$${((walletBalance || 0) / 100).toFixed(2)}`}
+                {isLoading ? "Loading..." : `$${((walletBalance || 0) ).toFixed(2)}`}
               </span>
             </div>
           </div>
