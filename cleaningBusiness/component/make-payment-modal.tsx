@@ -153,7 +153,7 @@ export function MakePaymentModal() {
     const payload = {
       senderUserId: userId,
       recipientUserId: localRecipientUserId,
-      amount: numericAmount, // in dollars
+      amount: numericAmount, 
       note: localNote,
     };
 
