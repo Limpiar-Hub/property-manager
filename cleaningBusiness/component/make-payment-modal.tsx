@@ -229,7 +229,7 @@ export function MakePaymentModal() {
               value={localAmount}
               onChange={handleAmountChange}
               disabled={isLoading}
-              placeholder="Enter exact balance"
+              placeholder="Enter Amount"
             />
             <div className="flex justify-between text-sm text-gray-500">
               <span>Available Balance</span>
