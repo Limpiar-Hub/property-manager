@@ -1,244 +1,406 @@
-"use client"
-
-import { useState } from "react"
-import Image from "next/image"
-import { X } from "lucide-react"
-import AssignCleanerModal from "./assign-cleaner-modal"
-import type { Task, Cleaner } from "../lib/types"
-
-// Mock data for tasks
-const initialTasks: Task[] = [
-  {
-    id: 1,
-    serviceType: "Janitorial Service",
-    property: "Azure Haven",
-    propertyManager: { name: "Cody Fisher", image: "/placeholder.svg" },
-    date: "12 Feb '25, Sat",
-    time: "7:30 AM - 9:30 AM",
-    notes: "Physical space is often conceived in three linear dimensions, although modern physicists usually con",
-    status: "Pending",
-    assignedTo: null,
-    isConfirmed: false,
-  },
-  {
-    id: 2,
-    serviceType: "Janitorial Service",
-    property: "Azure Haven",
-    propertyManager: { name: "Cody Fisher", image: "/placeholder.svg" },
-    date: "12 Feb '25, Sat",
-    time: "7:30 AM - 9:30 AM",
-    notes: "Physical space is often conceived in three linear dimensions, although modern physicists usually con",
-    status: "Pending",
-    assignedTo: null,
-    isConfirmed: false,
-  },
-  {
-    id: 3,
-    serviceType: "Janitorial Service",
-    property: "Azure Haven",
-    propertyManager: { name: "Cody Fisher", image: "/placeholder.svg" },
-    date: "12 Feb '25, Sat",
-    time: "7:30 AM - 9:30 AM",
-    notes: "Physical space is often conceived in three linear dimensions, although modern physicists usually con",
-    status: "Pending",
-    assignedTo: null,
-    isConfirmed: false,
-  },
-  {
-    id: 4,
-    serviceType: "Janitorial Service",
-    property: "Azure Haven",
-    propertyManager: { name: "Cody Fisher", image: "/placeholder.svg" },
-    date: "12 Feb '25, Sat",
-    time: "7:30 AM - 9:30 AM",
-    notes: "Physical space is often conceived in three linear dimensions, although modern physicists usually con",
-    status: "Pending",
-    assignedTo: null,
-    isConfirmed: false,
-  },
-]
+"use client";
+import { MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
+import { X, ClipboardX } from "lucide-react";
+import AssignCleanerModal from "./assign-cleaner-modal";
+import {
+  assignCleanerToTask,
+  type Booking,
+} from "../lib/services/bookingService";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "@/hooks/useReduxHooks";
+import {
+  createChatThread,
+  setSelectedChat,
+  fetchAllThreads,
+} from "@/redux/features/chat/chatSlice";
+import { RootState } from "@/redux/store";
+import { AppDispatch } from "@/redux/store";
 
 interface TaskListProps {
-  activeTab: "pending" | "active" | "delayed" | "paused" | "completed" | "cancelled"
+  activeTab: "pending" | "active" | "completed";
+  searchQuery?: string;
+  allTasks?: Booking[];
+  onTaskUpdate?: (updatedTask: Booking) => void;
 }
 
-export default function TaskList({ activeTab }: TaskListProps) {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
-  const [currentTaskId, setCurrentTaskId] = useState<number | null>(null)
-  const [notification, setNotification] = useState<{ message: string; visible: boolean }>({
+const normalizeStatus = (status: string | undefined): string => {
+  if (!status) return "";
+  return status.toLowerCase().replace("_", " ").trim();
+};
+
+export default function TaskList({
+  activeTab,
+  searchQuery = "",
+  allTasks = [],
+}: TaskListProps) {
+  const [tasks, setTasks] = useState<Booking[]>(allTasks);
+  const [filteredTasks, setFilteredTasks] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(!allTasks.length);
+  const [error, setError] = useState<string | null>(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [currentBookingId, setCurrentBookingId] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: "success" | "error";
+    visible: boolean;
+  }>({
     message: "",
+    type: "success",
     visible: false,
-  })
+  });
+
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const chats = useAppSelector((state: RootState) => state.chat.chats || []);
+  const token = useAppSelector((state: RootState) => state.auth.token);
+  const currentUserId = useAppSelector(
+    (state: RootState) => state.auth.user?._id
+  );
+
+  useEffect(() => {
+    if (allTasks.length) {
+      setTasks(allTasks);
+      setIsLoading(false);
+    }
+  }, [allTasks]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    let filtered = [...tasks];
+
+    // Filter by status
+    filtered = filtered.filter((task) => {
+      const status = normalizeStatus(task.status);
+
+      switch (activeTab) {
+        case "pending":
+          return status === "pending";
+        case "active":
+          return (
+            status === "confirmed" ||
+            status === "not started" ||
+            status === "in progress"
+          );
+        case "completed":
+          return status === "completed";
+        default:
+          return true;
+      }
+    });
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((task) => {
+        const serviceType = task.serviceType?.toLowerCase() || "";
+        const property = task.propertyId?.name?.toLowerCase() || "";
+        const propertyManagerName =
+          task.propertyManagerId?.fullName?.toLowerCase() || "";
+        const date = task.date?.toLowerCase() || "";
+        const time = `${task.startTime} - ${task.endTime}`.toLowerCase();
+        const assignedToName = task.cleanerId?.fullName?.toLowerCase() || "";
+
+        return (
+          serviceType.includes(query) ||
+          property.includes(query) ||
+          propertyManagerName.includes(query) ||
+          date.includes(query) ||
+          time.includes(query) ||
+          assignedToName.includes(query)
+        );
+      });
+    }
+
+    setFilteredTasks(filtered);
+  }, [tasks, activeTab, searchQuery, isLoading]);
+
+  const handleConfirmBooking = (bookingId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentBookingId(bookingId);
+    setIsAssignModalOpen(true);
+  };
 
 
-  const filteredTasks = tasks.filter((task) => {
-    if (activeTab === "pending") return task.status === "Pending"
-    if (activeTab === "active") return task.status === "Not Started" || task.status === "In Progress"
-    if (activeTab === "delayed") return task.status === "Delayed"
-    if (activeTab === "paused") return task.status === "Paused"
-    if (activeTab === "completed") return task.status === "Completed"
-    if (activeTab === "cancelled") return task.status === "Cancelled"
-    return true
-  })
 
+  const handleAssignCleaner = async (
+    selectedCleaners: { cleanerId: string }[]
+  ) => {
+    if (!currentBookingId || !token) return;
 
-  const handleConfirmBooking = (taskId: number) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId
-          ? {
+    try {
+      setIsAssignModalOpen(false);
+
+      const response = await assignCleanerToTask(
+        {
+          bookingId: currentBookingId,
+          cleaners: selectedCleaners.map((cleaner) => ({
+            cleanerId: cleaner.cleanerId,
+          })),
+        },
+        token
+      );
+
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => {
+          if (task._id === currentBookingId) {
+            return {
               ...task,
-              isConfirmed: true,
-              status: "Not Started",
-            }
-          : task,
-      ),
-    )
-  }
+              status: "Confirmed",
+              assignedCleaners: response.data.cleaners,
+            };
+          }
+          return task;
+        })
+      );
+
+      showNotification("Cleaners assigned successfully", "success");
+    } catch (err: any) {
+      showNotification(err.message || "Failed to assign cleaners", "error");
+    }
+  };
 
 
-  const openAssignModal = (taskId: number) => {
-    setCurrentTaskId(taskId)
-    setIsAssignModalOpen(true)
-  }
-
-
-  const handleAssignCleaner = (cleaner: Cleaner) => {
-    if (!currentTaskId) return
-
-    setTasks(
-      tasks.map((task) =>
-        task.id === currentTaskId
-          ? {
-              ...task,
-              assignedTo: cleaner,
-            }
-          : task,
-      ),
-    )
-
-    setIsAssignModalOpen(false)
-    showNotification("Successfully assigned")
-  }
-
-  
-  const showNotification = (message: string) => {
-    setNotification({ message, visible: true })
+  const showNotification = (message: string, type: "success" | "error") => {
+    setNotification({ message, type, visible: true });
     setTimeout(() => {
-      setNotification({ message: "", visible: false })
-    }, 3000)
+      setNotification({ message: "", type: "success", visible: false });
+    }, 3000);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+        role="alert"
+      >
+        <strong className="font-bold">Error: </strong>
+        <span className="block sm:inline">{error}</span>
+      </div>
+    );
+  }
+
+  if (filteredTasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <ClipboardX className="h-16 w-16 text-gray-300 mb-4" />
+        <h3 className="text-xl font-medium text-gray-700 mb-2">
+          No tasks found
+        </h3>
+        <p className="text-gray-500 max-w-md">
+          {searchQuery
+            ? `No tasks matching "${searchQuery}" found in the ${activeTab} category.`
+            : activeTab === "pending"
+            ? "There are no pending tasks at the moment."
+            : activeTab === "active"
+            ? "There are no active tasks at the moment."
+            : `There are no ${activeTab} tasks at the moment.`}
+        </p>
+      </div>
+    );
   }
 
   return (
     <>
       <div className="space-y-4">
-        {filteredTasks.map((task) => (
-          <div key={task.id} className="bg-white border rounded-lg overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4">
-              <div className="md:col-span-1">
-                <p className="text-xs text-gray-500 mb-1">Service Type</p>
-                <p className="font-medium">{task.serviceType}</p>
-              </div>
-              <div className="md:col-span-1">
-                <p className="text-xs text-gray-500 mb-1">Property</p>
-                <p className="font-medium">{task.property}</p>
-              </div>
-              <div className="md:col-span-1">
-                <p className="text-xs text-gray-500 mb-1">Property Manager</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full overflow-hidden">
-                    <Image
-                      src={task.propertyManager.image || "/placeholder.svg"}
-                      alt={task.propertyManager.name}
-                      width={24}
-                      height={24}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <p className="font-medium">{task.propertyManager.name}</p>
-                </div>
-              </div>
-              <div className="md:col-span-1">
-                <p className="text-xs text-gray-500 mb-1">Date</p>
-                <p className="font-medium">{task.date}</p>
-              </div>
-              <div className="md:col-span-1">
-                <p className="text-xs text-gray-500 mb-1">Time</p>
-                <p className="font-medium">{task.time}</p>
-              </div>
-              <div className="md:col-span-1">
-                <p className="text-xs text-gray-500 mb-1">Additional Notes</p>
-                <p className="font-medium truncate">{task.notes}</p>
-              </div>
-            </div>
+        {filteredTasks.map((task) => {
+          const property = task.propertyId?.name || "N/A";
+          const propertyManagerName = task.propertyManagerId?.fullName || "N/A";
+          const date = new Date(task.date).toLocaleDateString();
+          const time = `${task.startTime} - ${task.endTime}`;
+          const status = task.status
+            ? task.status.charAt(0).toUpperCase() +
+              task.status.slice(1).replace("_", " ")
+            : "Unknown";
 
-            {task.isConfirmed ? (
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-t">
-                <div className="flex items-center gap-2 mb-2 sm:mb-0">
-                  <p className="text-xs text-gray-500">Assigned to</p>
-                  {task.assignedTo ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden">
-                        <Image
-                          src={task.assignedTo.image || "/placeholder.svg"}
-                          alt={task.assignedTo.name}
-                          width={24}
-                          height={24}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                      <p className="font-medium">{task.assignedTo.name}</p>
+          return (
+            <div key={task._id}>
+              <Link
+                href={`/cleaning-business/tasks/${task._id}`}
+                className="block"
+              >
+                <div className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4">
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Service Type</p>
+                      <p className="font-medium">{task.serviceType || "N/A"}</p>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => openAssignModal(task.id)}
-                      className="text-primary font-medium hover:underline"
-                    >
-                      Assign Cleaner
-                    </button>
-                  )}
-                </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Property</p>
+                      <p className="font-medium">{property}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Property Manager
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                          <span className="text-xs font-medium text-gray-600">
+                            {propertyManagerName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="font-medium">{propertyManagerName}</p>
+                      </div>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Date</p>
+                      <p className="font-medium">{date}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Time</p>
+                      <p className="font-medium">{time}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <p className="text-xs text-gray-500 mb-1">Price</p>
+                      <p className="font-medium">${task.price || "N/A"}</p>
+                    </div>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-500">Status</p>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {task.status}
-                  </span>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-t">
+                    {activeTab === "pending" ? (
+                      <>
+                        <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                          <p className="text-xs text-gray-500">Status</p>
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            {status}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => handleConfirmBooking(task._id, e)}
+                          className="px-4 py-2 bg-[#4C41C0] text-white rounded-md hover:bg-[#4C41C0] transition-colors"
+                        >
+                          Confirm Booking
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {/* <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                          <p className="text-xs text-gray-500">Assigned to</p>
+                          {task.cleanerId ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                                <span className="text-xs font-medium text-gray-600">
+                                {task.cleanerId?.fullName?.charAt(0).toUpperCase() || ""}
+                                </span>
+                              </div>
+                              <p className="font-medium">{task.cleanerId.fullName}</p>
+                              {activeTab === "active" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    handleStartChat(task)
+                                  }}
+                                  className="text-gray-500 hover:text-primary transition-colors"
+                                  title="Message cleaner"
+                                >
+                                  <MessageSquare className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="font-medium">Not assigned</p>
+                          )}
+                        </div> */}
+
+                        <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                          <p className="text-xs text-gray-500">Assigned to</p>
+                          {task.cleaners && task.cleaners.length > 0 ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                                <span className="text-xs font-medium text-gray-600">
+                                  {task.cleaners[0].cleanerId.fullName
+                                    ?.charAt(0)
+                                    .toUpperCase()}
+                                </span>
+                              </div>
+                              <p className="font-medium">
+                                {task.cleaners.length === 1
+                                  ? task.cleaners[0].cleanerId.fullName
+                                  : `${
+                                      task.cleaners[0].cleanerId.fullName
+                                    } and ${task.cleaners.length - 1} other(s)`}
+                              </p>
+                              {/* {activeTab === "active" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleStartChat(task);
+                                  }}
+                                  className="text-gray-500 hover:text-primary transition-colors"
+                                  title="Message cleaner"
+                                >
+                                  <MessageSquare className="w-5 h-5" />
+                                </button>
+                              )} */}
+                            </div>
+                          ) : (
+                            <p className="font-medium">Not assigned</p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-gray-500">Status</p>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              normalizeStatus(task.status) === "confirmed" ||
+                              normalizeStatus(task.status) === "not started"
+                                ? "bg-blue-100 text-blue-800"
+                                : normalizeStatus(task.status) === "in progress"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {status}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex justify-end p-4 border-t">
-                <button
-                  onClick={() => handleConfirmBooking(task.id)}
-                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-600 transition-colors"
-                >
-                  Confirm Booking
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+              </Link>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Assign Cleaner Modal */}
-      {isAssignModalOpen && (
-        <AssignCleanerModal
-          isOpen={isAssignModalOpen}
-          onClose={() => setIsAssignModalOpen(false)}
-          onAssign={handleAssignCleaner}
-        />
-      )}
+      <AssignCleanerModal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        onAssign={handleAssignCleaner}
+      />
 
-      {/* Notification Toast */}
       {notification.visible && (
-        <div className="fixed bottom-4 left-4 bg-green-800 text-white px-4 py-2 rounded-md flex items-center gap-2 z-50">
+        <div
+          className={`fixed bottom-4 left-4 px-4 py-2 rounded-md flex items-center gap-2 z-50 ${
+            notification.type === "success"
+              ? "bg-green-800 text-white"
+              : "bg-red-800 text-white"
+          }`}
+        >
           <span>{notification.message}</span>
-          <button onClick={() => setNotification({ ...notification, visible: false })}>
+          <button
+            onClick={() => setNotification({ ...notification, visible: false })}
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
     </>
-  )
+  );
 }

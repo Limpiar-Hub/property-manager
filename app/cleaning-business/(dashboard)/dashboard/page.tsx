@@ -25,14 +25,14 @@ export default function Dashboard() {
               >
                 Cleaners
               </button>
-              <button
+              {/* <button
                 onClick={() => setActiveTab("tasks")}
                 className={`pb-2 font-medium ${
                   activeTab === "tasks" ? "text-[#4C41C0] border-b-2 border-[#4C41C0]" : "text-gray-500"
                 }`}
               >
                 Tasks
-              </button>
+              </button> */}
             </div>
           </div>
 
