@@ -9,9 +9,15 @@ export interface ServiceType {
   price: number
 }
 
+export interface TimeSlot {
+  id: string
+  startTime: string
+  endTime: string
+}
+
 export interface BookingState {
   step: number
-  serviceType: ServiceType[]        // now an array for multiple selected services
+  serviceType: ServiceType[]
   property: {
     id: string
     name: string
@@ -26,18 +32,18 @@ export interface BookingState {
     }
     routineDays?: string[]
   }
-  time: string
+  timeSlots: TimeSlot[]
   isModalOpen: boolean
 }
 
 const initialState: BookingState = {
   step: 1,
-  serviceType: [],  // empty array initially
+  serviceType: [],
   property: null,
   date: {
     type: null,
   },
-  time: "",
+  timeSlots: [],
   isModalOpen: false,
 }
 
@@ -66,8 +72,24 @@ export const bookingSlice = createSlice({
     setDate: (state, action: PayloadAction<string>) => {
       state.date.selectedDate = action.payload
     },
-    setTime: (state, action: PayloadAction<string>) => {
-      state.time = action.payload
+    setTimeSlots: (state, action: PayloadAction<TimeSlot[]>) => {
+      state.timeSlots = action.payload
+    },
+    updateTimeSlot: (
+      state,
+      action: PayloadAction<{ id: string; key: "startTime" | "endTime"; value: string }>
+    ) => {
+      const { id, key, value } = action.payload
+      const slot = state.timeSlots.find((slot) => slot.id === id)
+      if (slot) {
+        slot[key] = value
+      }
+    },
+    addTimeSlot: (state, action: PayloadAction<TimeSlot>) => {
+      state.timeSlots.push(action.payload)
+    },
+    removeTimeSlot: (state, action: PayloadAction<string>) => {
+      state.timeSlots = state.timeSlots.filter((slot) => slot.id !== action.payload)
     },
     openModal: (state) => {
       state.isModalOpen = true
@@ -78,12 +100,11 @@ export const bookingSlice = createSlice({
       state.serviceType = []
       state.property = null
       state.date = { type: null }
-      state.time = ""
+      state.timeSlots = []
     },
     resetBooking: () => initialState,
     setDateType: (state, action: PayloadAction<DateType>) => {
       state.date.type = action.payload
-      // Reset other date-related fields when type changes
       state.date.selectedDate = undefined
       state.date.dateRange = undefined
       state.date.routineDays = undefined
@@ -106,7 +127,10 @@ export const {
   setToggleService,
   setProperty,
   setDate,
-  setTime,
+  setTimeSlots,
+  updateTimeSlot,
+  addTimeSlot,
+  removeTimeSlot,
   openModal,
   closeModal,
   resetBooking,

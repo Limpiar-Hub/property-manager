@@ -23,11 +23,17 @@ export default function BookingPreview() {
     dispatch(setStep(4));
   };
 
+  // Validate time format "HH:MM AM/PM"
   const isValidTime = (time) => /^\d{1,2}:\d{2} (AM|PM)$/.test(time?.trim());
+
+  // Validate a single slot has valid startTime and optional valid endTime
+  const isValidSlot = (slot) =>
+    slot?.startTime && isValidTime(slot.startTime) &&
+    (!slot.endTime || isValidTime(slot.endTime));
 
   const handleSubmit = async () => {
     setIsLoading(true);
-  
+
     try {
       if (
         !user?._id ||
@@ -36,53 +42,59 @@ export default function BookingPreview() {
         !booking.property?.id ||
         !booking.serviceType?.length ||
         !booking.date.selectedDate ||
-        !isValidTime(booking.time) ||
-        (booking.endTime && !isValidTime(booking.endTime))
+        !booking.timeSlots ||
+        !booking.timeSlots.length ||
+        !booking.timeSlots.every(isValidSlot)
       ) {
-        console.error("Missing or invalid required fields");
-        alert("Unable to submit booking. Please ensure all required fields are filled correctly.");
+        alert("Please fill all required fields correctly.");
         setIsLoading(false);
         return;
       }
-  
-      // Join all selected service names with commas and spaces
-      const serviceTypeString = booking.serviceType.map(s => s.name).join(", ");
-  
-      const requestBody = {
-        propertyId: booking.property.id,
-        propertyManagerId: user._id,
-        serviceType: serviceTypeString,
-        date: new Date(booking.date.selectedDate).toISOString(),
-        startTime: booking.time.trim(),
-        phoneNumber: user.phoneNumber,
-        ...(booking.endTime && { endTime: booking.endTime.trim() }),
-      };
-  
-      console.log("Submitting booking data:", requestBody);
-  
-      const response = await axios.post(
-        "https://limpiar-backend.onrender.com/api/bookings",
-        requestBody,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+
+      const serviceTypeString = booking.serviceType.map((s) => s.name).join(", ");
+
+      // Submit each time slot as separate booking request
+      for (const slot of booking.timeSlots) {
+        const requestBody = {
+          propertyId: booking.property.id,
+          propertyManagerId: user._id,
+          serviceType: serviceTypeString,
+          date: new Date(booking.date.selectedDate).toISOString(),
+          startTime: slot.startTime.trim(),
+          phoneNumber: user.phoneNumber,
+        };
+
+        if (slot.endTime) {
+          requestBody.endTime = slot.endTime.trim();
         }
-      );
-  
-      console.log("Booking response:", response.data);
-      setResponseData(response.data.data);
+
+        console.log("Submitting booking data:", requestBody);
+
+        const response = await axios.post(
+          "https://limpiar-backend.onrender.com/api/bookings",
+          requestBody,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        // Optionally, you can handle individual responses here
+        setResponseData(response.data.data);
+      }
+
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting booking:", error);
-      const errorMessage = error.response?.data?.error || "Failed to submit booking. Please try again.";
+      const errorMessage =
+        error.response?.data?.error || "Failed to submit booking. Please try again.";
       alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   const handleGoToBookings = () => {
     dispatch(closeModal());
@@ -175,17 +187,22 @@ export default function BookingPreview() {
           <p className="font-medium">{booking.date.selectedDate}</p>
         </div>
 
+        {/* Show all time slots */}
         <div>
-          <p className="text-sm text-gray-500 mb-2">Time</p>
-          <p className="font-medium">{booking.time}</p>
+          <p className="text-sm text-gray-500 mb-2">Time Slots</p>
+          {booking.timeSlots && booking.timeSlots.length > 0 ? (
+            booking.timeSlots.map((slot, idx) => (
+              <div key={idx} className="mb-2">
+                <p className="font-medium">
+                  Start: {slot.startTime}
+                  {slot.endTime ? ` - End: ${slot.endTime}` : ""}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">No time slots selected.</p>
+          )}
         </div>
-
-        {booking.endTime && (
-          <div>
-            <p className="text-sm text-gray-500 mb-2">End Time</p>
-            <p className="font-medium">{booking.endTime}</p>
-          </div>
-        )}
       </div>
 
       <div className="flex justify-between mt-8">
