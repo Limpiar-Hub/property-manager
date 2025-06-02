@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -30,7 +31,7 @@ export function InboxContent() {
   const [activeTab, setActiveTab] = useState<"tickets" | "chats">("chats");
   const dispatch = useAppDispatch();
   const token = useAppSelector((state: RootState) => state.auth.token);
-  const chatLoading = useAppSelector((state: RootState) => state.chat.loading);
+  const chatListLoading = useAppSelector((state: RootState) => state.chat.loading && !state.chat.chats.length);
   const ticketLoading = useAppSelector(
     (state: RootState) => state.tickets.loading
   );
@@ -54,12 +55,20 @@ export function InboxContent() {
     }
   }, [dispatch, token, activeTab, currentUserId]);
 
+  // Show list on mobile when no item is selected, always show on desktop
+  const showList = !isMobile || 
+    (activeTab === "tickets" && !selectedTicketId) ||
+    (activeTab === "chats" && !selectedChatId);
+
+  // Show detail when item is selected (mobile) or always (desktop)
+  const showDetail = !isMobile || 
+    (activeTab === "tickets" && selectedTicketId) ||
+    (activeTab === "chats" && selectedChatId);
+
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-4rem)] w-full">
       {/* Left side - List */}
-      {(!isMobile ||
-        (activeTab === "tickets" && !selectedTicketId) ||
-        (activeTab === "chats" && !selectedChatId)) && (
+      {showList && (
         <div className="w-full md:w-[400px] border-r flex flex-col">
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-6">
@@ -95,7 +104,7 @@ export function InboxContent() {
           </div>
 
           <div className="flex-1 overflow-auto">
-            {chatLoading || ticketLoading ? (
+            {(activeTab === "chats" && chatListLoading) || (activeTab === "tickets" && ticketLoading) ? (
               <div className="flex items-center justify-center h-full">
                 Loading...
               </div>
@@ -122,22 +131,11 @@ export function InboxContent() {
       )}
 
       {/* Right side - Detail */}
-      <div
-        className={`flex-1 ${
-          isMobile
-            ? selectedTicketId || selectedChatId
-              ? "block"
-              : "hidden"
-            : "block"
-        }`}
-      >
-        {activeTab === "tickets" ? <TicketDetail /> : <ChatDetail />}
-      </div>
-
-      {/* Mobile view - Show detail when selected */}
-      <div className="md:hidden flex-1 bg-gray-50">
-        {activeTab === "tickets" ? <TicketDetail /> : <ChatDetail />}
-      </div>
+      {showDetail && (
+        <div className="flex-1 min-w-0">
+          {activeTab === "tickets" ? <TicketDetail /> : <ChatDetail />}
+        </div>
+      )}
 
       <NewTicketDialog
         open={isNewTicketOpen}

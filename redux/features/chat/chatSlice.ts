@@ -150,11 +150,13 @@ export const fetchChatMessages = createAsyncThunk(
       return {
         chatId,
         messages: response.data.map((msg: any) => ({
-          id: msg._id,
+          _id: msg._id,
           senderId: msg.senderId,
+          senderType: msg.senderType || "user",
           text: msg.text,
-          createdAt: format(new Date(msg.timestamp), "MMMM dd, yyyy hh:mm a"),
-          isRead: false,
+          fileUrl: msg.fileUrl || null,
+          fileType: msg.fileType || "other",
+          timestamp: msg.timestamp, // Keep the original ISO timestamp from backend
         })),
       };
     } catch (error: any) {
