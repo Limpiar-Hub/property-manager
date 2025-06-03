@@ -8,7 +8,7 @@ export default function RegistrationSuccess() {
   const router = useRouter()
 
   const handleProceedToLogin = () => {
-    router.push("/cleaning-business/login")
+    router.push("/partner/login")
   }
 
   return (

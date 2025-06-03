@@ -14,7 +14,7 @@ export default function VerifyingInfo() {
     // If registration is successful, we'll redirect to success page after a delay
     if (registrationStatus === "success") {
       const timer = setTimeout(() => {
-        router.push("/cleaning-business/registration-success")
+        router.push("/partner/registration-success")
       }, 2000)
 
       return () => clearTimeout(timer)

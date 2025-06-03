@@ -10,7 +10,7 @@ export default function LoadingAccount() {
   useEffect(() => {
  
     const timer = setTimeout(() => {
-      router.push("/cleaning-business/dashboard")
+      router.push("/partner/dashboard")
     }, 2000)
 
     return () => clearTimeout(timer)

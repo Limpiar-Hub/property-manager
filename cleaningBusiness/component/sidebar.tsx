@@ -24,11 +24,11 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/redux/features/auth/authSlice";
 
 const navItems = [
-  { name: "Dashboard", href: "/cleaning-business/dashboard", icon: Building },
-  { name: "Tasks", href: "/cleaning-business/tasks", icon: MessageCircle },
-  { name: "Cleaners", href: "/cleaning-business/cleaners", icon: Activity },
-  { name: "Inbox", href: "/cleaning-business/inbox", icon: Calendar },
-  { name: "Payment", href: "/cleaning-business/payment", icon: CreditCard },
+  { name: "Dashboard", href: "/partner/dashboard", icon: Building },
+  { name: "Tasks", href: "/partner/tasks", icon: MessageCircle },
+  { name: "Cleaners", href: "/partner/cleaners", icon: Activity },
+  { name: "Inbox", href: "/partner/inbox", icon: Calendar },
+  { name: "Payment", href: "/partner/payment", icon: CreditCard },
 
 ];
 

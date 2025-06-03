@@ -103,8 +103,8 @@ export default function TopUpModal({ isOpen, onClose, onProceed, amount, setAmou
 
     const payload = {
       userId,
-      bookingId: "679bb35b7902d90855a9e5fc", // Placeholder; replace with dynamic bookingId if available
-      amount: Math.round(numericAmount * 100), // Convert to cents for Stripe
+     
+      amount: Math.round(numericAmount ), // Convert to cents for Stripe
       currency: "usd",
       email,
     };

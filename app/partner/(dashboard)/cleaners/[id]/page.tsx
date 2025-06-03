@@ -74,7 +74,7 @@ export default function CleanerDetail({ params }: { params: { id: string } }) {
         setCleaner(foundCleaner);
       } catch (error) {
         console.error("Failed to fetch cleaner details:", error);
-        router.push("/cleaning-business/dashboard");
+        router.push("/partner/dashboard");
       } finally {
         setLoading(false);
       }
@@ -109,7 +109,7 @@ export default function CleanerDetail({ params }: { params: { id: string } }) {
       <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
         <p className="text-gray-500 mb-4">Cleaner not found</p>
         <Link
-          href="/cleaning-business/dashboard"
+          href="/partner/dashboard"
           className="text-primary hover:underline"
         >
           Back to dashboard
@@ -121,7 +121,7 @@ export default function CleanerDetail({ params }: { params: { id: string } }) {
   return (
     <div className="p-4 md:p-6">
       <Link
-        href="/cleaning-business/dashboard"
+        href="/partner/dashboard"
         className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />

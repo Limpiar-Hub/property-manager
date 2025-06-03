@@ -120,7 +120,7 @@ export default function TaskDetail() {
   if (error || !task) {
     return (
       <div>
-        <Link href="/cleaning-business/tasks" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
+        <Link href="/partner/tasks" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Tasks
         </Link>
@@ -135,7 +135,7 @@ export default function TaskDetail() {
 
   return (
     <div>
-      <Link href="/cleaning-business/tasks" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
+      <Link href="/partner/tasks" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Tasks
       </Link>
@@ -309,7 +309,7 @@ export default function TaskDetail() {
               <button
                 onClick={() => {
                   setIsSuccessModalOpen(false)
-                  router.push("/cleaning-business/tasks")
+                  router.push("/partner/tasks")
                 }}
                 className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-600 transition-colors"
               >

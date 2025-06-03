@@ -12,7 +12,7 @@ export default function VerifyOtpPage() {
   // Redirect to login if no token is present
   useEffect(() => {
     if (!token) {
-      router.push("/cleaning-business/login");
+      router.push("/partner/login");
     }
   }, [token, router]);
 

@@ -172,7 +172,7 @@ export default function CleanersTab() {
           {filteredCleaners.map((cleaner) => (
             <Link
               key={cleaner._id}
-              href={`/cleaning-business/cleaners/${cleaner._id}`}
+              href={`/partner/cleaners/${cleaner._id}`}
               className="block"
             >
               <div className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow">

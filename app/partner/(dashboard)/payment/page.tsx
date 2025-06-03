@@ -249,7 +249,7 @@ export default function PaymentsPage() {
         ) : error ? (
           <div className="text-red-500">{error}</div>
         ) : (
-          <WalletCard balance={walletBalance.toFixed(2)} />
+<WalletCard balance={walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
         )}
       </div>
 

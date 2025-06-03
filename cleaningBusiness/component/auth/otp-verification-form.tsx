@@ -21,7 +21,7 @@ export function OtpVerificationForm() {
   // Redirect if no token is present
   useEffect(() => {
     if (!token) {
-      router.push("/cleaning-business/login");
+      router.push("/partner/login");
     }
   }, [token, router]);
 
@@ -131,7 +131,7 @@ export function OtpVerificationForm() {
       ).unwrap();
 
       // If we got here, verification was successful
-      router.push("/cleaning-business/dashboard");
+      router.push("/partner/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
     }

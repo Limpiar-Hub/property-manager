@@ -163,7 +163,7 @@ export default function BusinessInformation() {
 
       <div className="text-center text-sm">
         If you already have an account{" "}
-        <Link href="/cleaning-business/login" className="text-indigo-600 hover:underline">
+        <Link href="/partner/login" className="text-indigo-600 hover:underline">
           Log in
         </Link>
       </div>
