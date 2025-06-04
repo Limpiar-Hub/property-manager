@@ -18,7 +18,7 @@ import { PropertyDetailsModal } from "@/admin-component/property/property-detail
 import mongoose from "mongoose";
 import { PropertyRequestModal } from "@/admin-component/property/property-request-modal";
 import AdminProfile from "@/admin-component/adminProfile";
-const IMAGE_BA
+const IMAGE_BASE_URL =
   process.env.NEXT_PUBLIC_IMAGE_URL ||
   "https://limpiar-backend.onrender.com/api/properties/gridfs/files/";
 

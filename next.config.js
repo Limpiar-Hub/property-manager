@@ -6,10 +6,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   webpack(config, { isServer }) {
     if (!isServer) {
       config.resolve.fallback = { fs: false };
     }
+    config.resolve.alias['@'] = path.resolve(__dirname);
     return config;
   },
   images: {
