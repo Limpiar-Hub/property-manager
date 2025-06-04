@@ -27,6 +27,7 @@ export function InitialStep({ fetchTransactions }: { fetchTransactions: () => vo
       email: email,
       amount: amount,
       currency: "usd",
+      frontendUrl: window.location.origin, 
     };
 
     const { data } = await createPayment({ body }) as { data: { success: boolean; checkoutUrl: string; message: string } };
