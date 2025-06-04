@@ -5,6 +5,8 @@ import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import AHCTransferModal from "./ahc-transfer-modal"; // Adjust path as needed
+import { setPaymentReference } from "@/redux/features/topUpModalSlice/topUpModalSlice";
+import { useDispatch } from "react-redux";
 
 interface TopUpModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface TopUpModalProps {
 }
 
 export default function TopUpModal({ isOpen, onClose, onProceed, amount, setAmount }: TopUpModalProps) {
+  const dispatch = useDispatch(); 
   const [paymentMethod, setPaymentMethod] = useState<"debit" | "ahc">("debit");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,8 +106,9 @@ export default function TopUpModal({ isOpen, onClose, onProceed, amount, setAmou
 
     const payload = {
       userId,
+      frontendUrl: window.location.origin, 
      
-      amount: Math.round(numericAmount ), // Convert to cents for Stripe
+      amount: Math.round(numericAmount ), 
       currency: "usd",
       email,
     };
@@ -123,10 +127,11 @@ export default function TopUpModal({ isOpen, onClose, onProceed, amount, setAmou
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || "Failed to initiate payment");
       }
-
       const data = await response.json();
       if (data.success && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+        dispatch(setPaymentReference(data.reference)); // optional for your Redux state
+        window.location.href = data.checkoutUrl;      // redirect to Stripe Checkout page
+      
       } else {
         throw new Error("Invalid response from payment initiation");
       }

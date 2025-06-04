@@ -10,6 +10,7 @@ interface TopUpModalState {
   amount: number
   paymentMethod: "debit" | "ahc" | null
   userBalance: number
+  paymentReference: string | null
 }
 
 const initialState: TopUpModalState = {
@@ -19,7 +20,8 @@ const initialState: TopUpModalState = {
   currentStep: "initial",
   amount: 0,
   paymentMethod: null,
-  userBalance: 0
+  userBalance: 0,
+  paymentReference: null
 }
 
 const topUpModalSlice = createSlice({
@@ -37,6 +39,7 @@ const topUpModalSlice = createSlice({
       state.currentStep = "initial"
       state.amount = 0
       state.paymentMethod = null
+      state.paymentReference = null
     },
     openRefundModal: (state) => {
       state.isRefundModalOpen = true
@@ -59,13 +62,16 @@ const topUpModalSlice = createSlice({
     setPaymentMethod: (state, action: PayloadAction<"debit" | "ahc">) => {
       state.paymentMethod = action.payload
     },
+    setPaymentReference: (state, action: PayloadAction<string>) => {
+      state.paymentReference = action.payload;
+    },
     goBack: (state) => {
       state.currentStep = "initial"
     },
   },
 })
 
-export const { openModal, closeModal, openRefundModal, closeRefundModal, setUserBalance, setReason, setStep, setAmount, setPaymentMethod, goBack } = topUpModalSlice.actions
+export const { openModal, closeModal, openRefundModal, closeRefundModal, setUserBalance, setReason, setStep, setAmount, setPaymentMethod,  setPaymentReference,goBack } = topUpModalSlice.actions
 
 export default topUpModalSlice.reducer
 
