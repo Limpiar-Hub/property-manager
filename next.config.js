@@ -13,14 +13,14 @@ const nextConfig = {
     if (!isServer) {
       config.resolve.fallback = { fs: false };
     }
+  
 
-    // Base alias for '@'
     config.resolve.alias['@'] = path.resolve(__dirname);
+  
+ 
+    config.resolve.alias['@/actions'] = path.resolve(__dirname, 'mocks/empty.js');
+    config.resolve.alias['@/cleaningBusiness/component'] = path.resolve(__dirname, 'mocks/empty.js');
 
-    // Aliases for missing modules to empty mock file
-    config.resolve.alias['@/actions/password-reset'] = path.resolve(__dirname, 'mocks/empty.js');
-    config.resolve.alias['@/cleaningBusiness/component/refund-modal'] = path.resolve(__dirname, 'mocks/empty.js');
-    config.resolve.alias['@/cleaningBusiness/component/withdraw-modal'] = path.resolve(__dirname, 'mocks/empty.js');
 
     return config;
   },
