@@ -152,7 +152,7 @@ export function LoginForm() {
 
         <div className="text-center text-sm">
           If you don&apos;t have an account{" "}
-          <Link href="/cleaning-business/sign-up" className="text-[#4C41C0] hover:text-blue-600">
+          <Link href="/partner/sign-up" className="text-[#4C41C0] hover:text-blue-600">
             Sign Up
           </Link>
         </div>
