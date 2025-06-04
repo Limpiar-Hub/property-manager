@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/admin-component/ui/button"
-import { requestPasswordReset } from "@/actions/password-reset"
+
 
 export function CheckEmailForm() {
   const handleResend = async () => {
