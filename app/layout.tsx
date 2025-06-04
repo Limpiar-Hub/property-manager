@@ -1,5 +1,6 @@
 import './globals.css';
 import { ReactNode } from 'react';
+import { Providers } from "@/redux/provider";
 
 export const metadata = {
   title: 'Limpiar Cleaning Business Platform',
@@ -10,7 +11,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
