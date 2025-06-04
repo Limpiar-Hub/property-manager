@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Cleaaning Business Management System ",
   generator: "Next.js",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favico.jpg",
   },
 };
 
