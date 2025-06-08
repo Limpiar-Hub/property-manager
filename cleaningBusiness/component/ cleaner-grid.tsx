@@ -99,10 +99,6 @@ export default function CleanerGrid({
     setIsModalOpen(true);
   };
 
-  const closeBioModal = () => {
-    setIsModalOpen(false);
-    setSelectedCleaner(null);
-  };
 
   if (isLoading) {
     return (
@@ -208,9 +204,6 @@ export default function CleanerGrid({
           <DialogHeader>
             <DialogTitle className="flex justify-between items-center">
               <span>Cleaner Bio Data</span>
-              <Button variant="ghost" size="sm" onClick={closeBioModal}>
-                <X className="h-4 w-4" />
-              </Button>
             </DialogTitle>
           </DialogHeader>
 
