@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import {
   updateFormData,
@@ -15,7 +14,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { registerBusiness } from "../../lib/api"
@@ -32,13 +30,41 @@ export default function OperatingInformation() {
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [mapUrl, setMapUrl] = useState("")
+  const autocompleteInputRef = useRef<HTMLInputElement>(null)
+
+  // Initialize Google Maps Autocomplete for cities
+  useEffect(() => {
+    if (!window.google) return
+
+    const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInputRef.current!, {
+      types: ["(cities)"],
+      componentRestrictions: { country: "us" }, // Restrict to US cities
+      fields: ["formatted_address"],
+    })
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace()
+      if (!place.formatted_address) return
+
+      setFormState((prev) => ({
+        ...prev,
+        operatingCity: place.formatted_address,
+      }))
+
+      const fullAddress = encodeURIComponent(place.formatted_address)
+      const baseUrl = "https://www.google.com/maps/embed/v1/place"
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+      setMapUrl(`${baseUrl}?q=${fullAddress}&key=${apiKey}`)
+    })
+
+    return () => {
+      window.google.maps.event.clearInstanceListeners(autocomplete)
+    }
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormState((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
     setFormState((prev) => ({ ...prev, [name]: value }))
   }
 
@@ -178,19 +204,32 @@ export default function OperatingInformation() {
 
         <div className="space-y-2">
           <Label htmlFor="operatingCity">Operating City</Label>
-          <Select value={formState.operatingCity} onValueChange={(value) => handleSelectChange("operatingCity", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="New York" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="new_york">New York</SelectItem>
-              <SelectItem value="los_angeles">Los Angeles</SelectItem>
-              <SelectItem value="chicago">Chicago</SelectItem>
-              <SelectItem value="houston">Houston</SelectItem>
-              <SelectItem value="miami">Miami</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="operatingCity"
+            name="operatingCity"
+            value={formState.operatingCity}
+            onChange={handleChange}
+            placeholder="e.g., New York, NY"
+            required
+            ref={autocompleteInputRef}
+          />
         </div>
+
+        {mapUrl && (
+          <div className="space-y-2">
+            <Label>City Map Preview</Label>
+            <iframe
+              src={mapUrl}
+              width="100%"
+              height="300"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              title="City Map Preview"
+              className="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label>What Services do you provide</Label>
@@ -273,6 +312,12 @@ export default function OperatingInformation() {
           Log in
         </Link>
       </div>
+
+      <script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        async
+        defer
+      ></script>
     </div>
   )
 }

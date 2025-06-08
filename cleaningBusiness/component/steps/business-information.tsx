@@ -1,15 +1,13 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { updateFormData, nextStep } from "../../lib/features/form/formSlice"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 
 export default function BusinessInformation() {
@@ -26,12 +24,68 @@ export default function BusinessInformation() {
     referralSource: formData.referralSource || "",
   })
 
+  const [mapUrl, setMapUrl] = useState("")
+  const autocompleteInputRef = useRef<HTMLInputElement>(null)
+
+  // Initialize Google Maps Autocomplete
+  useEffect(() => {
+    if (!window.google) return
+
+    const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInputRef.current!, {
+      types: ["address"],
+      componentRestrictions: { country: "us" }, // Restrict to US addresses
+      fields: ["address_components", "formatted_address"],
+    })
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace()
+      if (!place.address_components) return
+
+      let address = ""
+      let city = ""
+      let state = ""
+      let zipcode = ""
+
+      place.address_components.forEach((component: any) => {
+        const types = component.types
+        if (types.includes("street_number")) {
+          address = component.long_name
+        }
+        if (types.includes("route")) {
+          address += ` ${component.long_name}`
+        }
+        if (types.includes("locality")) {
+          city = component.long_name
+        }
+        if (types.includes("administrative_area_level_1")) {
+          state = component.short_name
+        }
+        if (types.includes("postal_code")) {
+          zipcode = component.long_name
+        }
+      })
+
+      setFormState((prev) => ({
+        ...prev,
+        address: place.formatted_address || address,
+        city,
+        state,
+        zipcode,
+      }))
+
+      const fullAddress = encodeURIComponent(`${address}, ${city}, ${state}, ${zipcode}`)
+      const baseUrl = "https://www.google.com/maps/embed/v1/place"
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+      setMapUrl(`${baseUrl}?q=${fullAddress}&key=${apiKey}`)
+    })
+
+    return () => {
+      window.google.maps.event.clearInstanceListeners(autocomplete)
+    }
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormState((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
     setFormState((prev) => ({ ...prev, [name]: value }))
   }
 
@@ -57,7 +111,7 @@ export default function BusinessInformation() {
             name="businessName"
             value={formState.businessName}
             onChange={handleChange}
-            placeholder="John Doe"
+            placeholder="e.g., Acme Corp"
             required
           />
         </div>
@@ -69,40 +123,50 @@ export default function BusinessInformation() {
             name="address"
             value={formState.address}
             onChange={handleChange}
-            placeholder="John Doe"
+            placeholder="e.g., 123 Main St, New York, NY 10001"
             required
+            ref={autocompleteInputRef}
+          />
+        </div>
+
+        {mapUrl && (
+          <div className="space-y-2">
+            <Label>Map Preview</Label>
+            <iframe
+              src={mapUrl}
+              width="100%"
+              height="300"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              title="Map Preview"
+              className="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label htmlFor="city">City</Label>
+          <Input
+            id="city"
+            name="city"
+            value={formState.city}
+            onChange={handleChange}
+            placeholder="e.g., New York"
+            readOnly
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="city">City</Label>
-          <Select value={formState.city} onValueChange={(value) => handleSelectChange("city", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Manhattan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="manhattan">Manhattan</SelectItem>
-              <SelectItem value="brooklyn">Brooklyn</SelectItem>
-              <SelectItem value="queens">Queens</SelectItem>
-              <SelectItem value="bronx">Bronx</SelectItem>
-              <SelectItem value="staten_island">Staten Island</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="state">State</Label>
-          <Select value={formState.state} onValueChange={(value) => handleSelectChange("state", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="New York" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ny">New York</SelectItem>
-              <SelectItem value="nj">New Jersey</SelectItem>
-              <SelectItem value="ct">Connecticut</SelectItem>
-              <SelectItem value="pa">Pennsylvania</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="state"
+            name="state"
+            value={formState.state}
+            onChange={handleChange}
+            placeholder="e.g., NY"
+            readOnly
+          />
         </div>
 
         <div className="space-y-2">
@@ -112,8 +176,8 @@ export default function BusinessInformation() {
             name="zipcode"
             value={formState.zipcode}
             onChange={handleChange}
-            placeholder="07008"
-            required
+            placeholder="e.g., 10001"
+            readOnly
           />
         </div>
 
@@ -124,14 +188,13 @@ export default function BusinessInformation() {
             name="website"
             value={formState.website}
             onChange={handleChange}
-            placeholder="www.limpiar.com"
+            placeholder="e.g., www.example.com"
           />
         </div>
 
         <div className="space-y-2">
           <Label>Referral Source</Label>
           <p className="text-sm text-gray-500">Choose one of the options:</p>
-
           <RadioGroup
             value={formState.referralSource}
             onValueChange={handleRadioChange}
@@ -162,11 +225,17 @@ export default function BusinessInformation() {
       </form>
 
       <div className="text-center text-sm">
-        If you already have an account{" "}
+        If you already have an account,{" "}
         <Link href="/partner/login" className="text-indigo-600 hover:underline">
           Log in
         </Link>
       </div>
+
+      <script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        async
+        defer
+      ></script>
     </div>
   )
 }
