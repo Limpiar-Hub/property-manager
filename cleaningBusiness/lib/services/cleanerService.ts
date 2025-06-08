@@ -31,6 +31,10 @@ export interface Cleaner {
     identityVerified: boolean
     tasks: any[]
 
+
+    createdAt: string; 
+    updatedAt: string;
+
   }
 
   export interface CleaningBusiness {
