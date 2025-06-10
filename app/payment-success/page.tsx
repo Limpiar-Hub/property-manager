@@ -126,7 +126,7 @@ export default function PaymentSuccessPage() {
             </motion.p>
             <motion.button
               className="mt-4 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center mx-auto shadow-lg"
-              onClick={() => router.push("/support")}
+              onClick={() => router.push("/partner/payment")}
               whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(239, 68, 68, 0.5)" }}
               whileTap={{ scale: 0.95 }}
             >
