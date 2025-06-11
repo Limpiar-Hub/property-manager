@@ -14,14 +14,15 @@ import {
   LogOut,
   Menu,
   X,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// import { useRouter } from "next/navigation"
-import { useAppDispatch } from "@/hooks/useReduxHooks"
-
+import { useAppDispatch } from "@/hooks/useReduxHooks";
 import { useRouter } from "next/navigation";
 import { logout } from "@/redux/features/auth/authSlice";
+
+// Import Vercel Analytics
+import { Analytics } from "@vercel/analytics/react";
 
 const navItems = [
   { name: "Dashboard", href: "/partner/dashboard", icon: Building },
@@ -29,25 +30,25 @@ const navItems = [
   { name: "Cleaners", href: "/partner/cleaners", icon: Activity },
   { name: "Inbox", href: "/partner/inbox", icon: Calendar },
   { name: "Payment", href: "/partner/payment", icon: CreditCard },
-
+  { name: "Analytics", href: "/partner/analytics", icon: BarChart2 },
 ];
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-
-
   const dispatch = useAppDispatch();
   const router = useRouter();
- 
 
   const handleLogout = () => {
     dispatch(logout());
-    router.push('/property-manager/login');
+    router.push("/property-manager/login");
   };
 
   return (
     <>
+      {/* Vercel Analytics Component */}
+      <Analytics />
+
       {/* Mobile menu button */}
       <button
         className="fixed z-50 bottom-4 right-4 lg:hidden bg-blue-600 text-white p-3 rounded-full shadow-lg"
@@ -64,7 +65,7 @@ export default function Sidebar() {
         )}
       >
         {/* Logo */}
-        <div className="p-4 ">
+        <div className="p-4">
           <Image
             src="/cleaningBusinessLogo.png"
             alt="Limpiar Logo"
@@ -103,15 +104,12 @@ export default function Sidebar() {
             Help and Support
           </Link>
           <div
-             onClick={handleLogout}
-            className="group flex items-center px-4 py-3 text-sm font-medium hover:bg-gray-700"
+            onClick={handleLogout}
+            className="group flex items-center px-4 py-3 text-sm font-medium hover:bg-gray-700 cursor-pointer"
           >
             <LogOut className="mr-3 h-5 w-5 text-gray-300" />
             Logout
           </div>
-
-
-  
         </div>
       </div>
     </>

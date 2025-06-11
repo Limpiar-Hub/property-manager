@@ -27,7 +27,7 @@ export default function DashboardLayout({
     }
 
     if (!isAuthenticated) {
-      router.push("/property-manager/login");
+      router.push("/partner/login");
     }
   }, [isAuthenticated, token, dispatch, router]); 
 
