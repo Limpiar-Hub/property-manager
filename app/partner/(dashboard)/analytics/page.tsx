@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useCallback, useState, useRef } from "react";
@@ -13,14 +12,15 @@ import { Analytics } from "@vercel/analytics/react";
 const selectUserId = (state) => state.auth.user?.id || "placeholder_userid";
 const selectToken = (state) => state.auth.token;
 
+// Updated interface with optional properties
 interface DashboardData {
-  bookingsTrend: { _id: string; count: number }[];
-  cancellationTrend: { _id: string; count: number }[];
-  uniqueCleaners: number;
-  avgBookingValue: number;
-  repeatClientCount: number;
-  totalRevenue: number;
-  cleaners: {
+  bookingsTrend?: { _id: string; count: number }[];
+  cancellationTrend?: { _id: string; count: number }[];
+  uniqueCleaners?: number;
+  avgBookingValue?: number;
+  repeatClientCount?: number;
+  totalRevenue?: number;
+  cleaners?: {
     cleanerId: string;
     fullName: string;
     email: string;
@@ -33,26 +33,26 @@ interface DashboardData {
     bookingDistribution: number;
     performanceScore: number;
   }[];
-  avgBookingsPerCleaner: number;
-  avgRevenuePerCleaner: number;
-  avgCancellationRate: number;
-  bookingGrowthRate: number;
-  topCleaner: { cleanerId: string; fullName: string; totalRevenue: number };
-  cleanerUtilizationRate: number;
-  revenuePerBookingDay: number;
-  clientRetentionRate: number;
-  revenueTrend: { _id: string; totalRevenue: number }[];
-  avgBookingsPerDay: number;
-  peakBookingDay: { date: string; count: number };
-  clientBookingFrequency: number;
-  bookingStdDev: number;
-  revenueConcentration: number;
-  cleanerReliability: number;
-  bookingCompletionRate: number;
+  avgBookingsPerCleaner?: number;
+  avgRevenuePerCleaner?: number;
+  avgCancellationRate?: number;
+  bookingGrowthRate?: number;
+  topCleaner?: { cleanerId: string; fullName: string; totalRevenue: number };
+  cleanerUtilizationRate?: number;
+  revenuePerBookingDay?: number;
+  clientRetentionRate?: number;
+  revenueTrend?: { _id: string; totalRevenue: number }[];
+  avgBookingsPerDay?: number;
+  peakBookingDay?: { date: string; count: number };
+  clientBookingFrequency?: number;
+  bookingStdDev?: number;
+  revenueConcentration?: number;
+  cleanerReliability?: number;
+  bookingCompletionRate?: number;
 }
 
 interface AnalyticsData {
-  dashboard: DashboardData;
+  dashboard?: DashboardData;
 }
 
 export default function AnalyticsPage() {
@@ -102,7 +102,7 @@ export default function AnalyticsPage() {
           }
           toast({
             title: "Error",
-            description: "Invalid analytics data received.",
+            description: "No analytics data available.",
             variant: "destructive",
           });
         }
@@ -175,6 +175,15 @@ export default function AnalyticsPage() {
     return `Updated ${secondsAgo + Math.floor(Math.random() * 5)} seconds ago`;
   };
 
+  // Helper to check if dashboard data is empty or invalid
+  const isDashboardEmpty = () => {
+    return (
+      !analytics?.dashboard ||
+      Object.keys(analytics.dashboard).length === 0 ||
+      !analytics.dashboard.totalRevenue // Example key to check for meaningful data
+    );
+  };
+
   return (
     <div className="relative min-h-screen bg-gray-50 dark:bg-gray-900">
       <style jsx>{`
@@ -235,7 +244,6 @@ export default function AnalyticsPage() {
           <div className="max-w-7xl mx-auto">
             <div className="mb-8 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-              
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                     Business Analytics Dashboard
@@ -266,9 +274,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {!analytics ? (
-              <div className="text-center text-red-500 dark:text-red-400">
-                Failed to load analytics data.
+            {isDashboardEmpty() ? (
+              <div className="text-center text-gray-500 dark:text-gray-400 py-10">
+                No analytics data available. Please check your connection or try again later.
               </div>
             ) : (
               <div className="space-y-8">
@@ -317,7 +325,7 @@ export default function AnalyticsPage() {
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
                           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-all">
-                            ${analytics.dashboard.totalRevenue.toLocaleString()}
+                            ${(analytics?.dashboard?.totalRevenue ?? 0).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -343,7 +351,7 @@ export default function AnalyticsPage() {
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Avg Booking Value</p>
                           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-all">
-                            ${Math.round(analytics.dashboard.avgBookingValue).toLocaleString()}
+                            ${Math.round(analytics?.dashboard?.avgBookingValue ?? 0).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -369,7 +377,7 @@ export default function AnalyticsPage() {
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Unique Cleaners</p>
                           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-all">
-                            {analytics.dashboard.uniqueCleaners}
+                            {analytics?.dashboard?.uniqueCleaners ?? 0}
                           </p>
                         </div>
                       </div>
@@ -395,7 +403,7 @@ export default function AnalyticsPage() {
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Repeat Clients</p>
                           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-all">
-                            {analytics.dashboard.repeatClientCount}
+                            {analytics?.dashboard?.repeatClientCount ?? 0}
                           </p>
                         </div>
                       </div>
@@ -421,7 +429,7 @@ export default function AnalyticsPage() {
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Avg Bookings/Day</p>
                           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-all">
-                            {analytics.dashboard.avgBookingsPerDay.toFixed(1)}
+                            {(analytics?.dashboard?.avgBookingsPerDay ?? 0).toFixed(1)}
                           </p>
                         </div>
                       </div>
@@ -447,7 +455,7 @@ export default function AnalyticsPage() {
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Cancellation Rate</p>
                           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-all">
-                            {(analytics.dashboard.avgCancellationRate * 100).toFixed(1)}%
+                            {((analytics?.dashboard?.avgCancellationRate ?? 0) * 100).toFixed(1)}%
                           </p>
                         </div>
                       </div>
@@ -477,31 +485,37 @@ export default function AnalyticsPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Total Bookings</TableHead>
-                          <TableHead>Booking Distribution</TableHead>
-                          <TableHead>Performance Score</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {analytics.dashboard.cleaners.map((cleaner) => (
-                          <TableRow
-                            key={cleaner.cleanerId}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            <TableCell>{cleaner.fullName}</TableCell>
-                            <TableCell>{cleaner.email}</TableCell>
-                            <TableCell>{cleaner.totalBookings}</TableCell>
-                            <TableCell>{cleaner.bookingDistribution.toFixed(2)}%</TableCell>
-                            <TableCell>{cleaner.performanceScore.toFixed(2)}</TableCell>
+                    {(analytics?.dashboard?.cleaners ?? []).length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Total Bookings</TableHead>
+                            <TableHead>Booking Distribution</TableHead>
+                            <TableHead>Performance Score</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {analytics?.dashboard?.cleaners?.map((cleaner) => (
+                            <TableRow
+                              key={cleaner.cleanerId}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <TableCell>{cleaner.fullName}</TableCell>
+                              <TableCell>{cleaner.email}</TableCell>
+                              <TableCell>{cleaner.totalBookings}</TableCell>
+                              <TableCell>{cleaner.bookingDistribution.toFixed(2)}%</TableCell>
+                              <TableCell>{cleaner.performanceScore.toFixed(2)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                        No cleaner performance data available.
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -535,34 +549,46 @@ export default function AnalyticsPage() {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="scroll-container">
-                        <div className="scroll-content">
-                          {[...analytics.dashboard.bookingsTrend, ...analytics.dashboard.bookingsTrend].map(
-                            (trend, index) => (
-                              <div
-                                key={`${trend._id}-${index}`}
-                                className="flex justify-between py-2 px-4 text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-700"
-                              >
-                                <span>{trend._id}</span>
-                                <span>{trend.count} bookings</span>
-                              </div>
-                            )
-                          )}
-                        </div>
+                        {(analytics?.dashboard?.bookingsTrend ?? []).length > 0 ? (
+                          <div className="scroll-content">
+                            {[...(analytics?.dashboard?.bookingsTrend ?? []), ...(analytics?.dashboard?.bookingsTrend ?? [])].map(
+                              (trend, index) => (
+                                <div
+                                  key={`${trend._id}-${index}`}
+                                  className="flex justify-between py-2 px-4 text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-700"
+                                >
+                                  <span>{trend._id}</span>
+                                  <span>{trend.count} bookings</span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                            No booking trend data available.
+                          </div>
+                        )}
                       </div>
                       <div className="scroll-container">
-                        <div className="scroll-content">
-                          {[...analytics.dashboard.revenueTrend, ...analytics.dashboard.revenueTrend].map(
-                            (trend, index) => (
-                              <div
-                                key={`${trend._id}-${index}`}
-                                className="flex justify-between py-2 px-4 text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-700"
-                              >
-                                <span>{trend._id}</span>
-                                <span>${trend.totalRevenue.toLocaleString()}</span>
-                              </div>
-                            )
-                          )}
-                        </div>
+                        {(analytics?.dashboard?.revenueTrend ?? []).length > 0 ? (
+                          <div className="scroll-content">
+                            {[...(analytics?.dashboard?.revenueTrend ?? []), ...(analytics?.dashboard?.revenueTrend ?? [])].map(
+                              (trend, index) => (
+                                <div
+                                  key={`${trend._id}-${index}`}
+                                  className="flex justify-between py-2 px-4 text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-700"
+                                >
+                                  <span>{trend._id}</span>
+                                  <span>${trend.totalRevenue.toLocaleString()}</span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                            No revenue trend data available.
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -586,24 +612,30 @@ export default function AnalyticsPage() {
                           d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                         ></path>
                       </svg>
-                      <CardTitle>Inactive Cleaner</CardTitle>
+                      <CardTitle>Top Cleaner</CardTitle> {/* Fixed title from "Inactive Cleaner" */}
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
-                        <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                          {analytics.dashboard.topCleaner.fullName}
-                        </p>
+                    {analytics?.dashboard?.topCleaner ? (
+                      <div className="flex items-center space-x-4">
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {analytics.dashboard.topCleaner.fullName}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            ${(analytics.dashboard.topCleaner.totalRevenue ?? 0).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
-                        <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                          ${analytics.dashboard.topCleaner.totalRevenue.toLocaleString()}
-                        </p>
+                    ) : (
+                      <div className="text-center text-gray-500 dark:text-gray-400">
+                        No top cleaner data available.
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -619,10 +651,11 @@ export default function AnalyticsPage() {
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <path
+                          stroke="currentColor"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth="2"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m0-6v6h2m0V9a2 2 00-2-2H5m6 2h2a2 2 0 002-2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                         ></path>
                       </svg>
                       <CardTitle>Detailed Analytics Dashboard</CardTitle>
@@ -649,4 +682,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
