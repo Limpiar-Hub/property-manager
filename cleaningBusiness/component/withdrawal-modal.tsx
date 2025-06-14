@@ -137,7 +137,7 @@ export function WithdrawModal() {
       return;
     }
 
-    if (numericAmount * 100 > walletBalance) {
+    if (numericAmount > walletBalance) {
       setError("Withdrawal amount exceeds available balance.");
       return;
     }
@@ -150,7 +150,7 @@ export function WithdrawModal() {
       routingNumber: localRoutingNumber,
       accountNumber: localAccountNumber,
       accountHolderName: localAccountHolderName,
-      amount: Math.round(numericAmount * 100), // Convert to cents
+      amount: Math.round(numericAmount ), // Convert to cents
     };
 
     try {
