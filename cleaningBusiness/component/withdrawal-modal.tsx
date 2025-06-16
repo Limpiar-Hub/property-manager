@@ -130,29 +130,39 @@ export function WithdrawModal() {
       setError("Missing required fields or authentication token.");
       return;
     }
-
+  
     const numericAmount = parseFloat(localAmount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
       setError("Please enter a valid amount.");
       return;
     }
-
+  
     if (numericAmount > walletBalance) {
       setError("Withdrawal amount exceeds available balance.");
       return;
     }
-
+  
+    if (!localRoutingNumber.trim() || localRoutingNumber.length !== 9) {
+      setError("Please enter a valid 9-digit routing number.");
+      return;
+    }
+  
+    if (!localAccountNumber.trim() || localAccountNumber.length < 8 || localAccountNumber.length > 17) {
+      setError("Please enter a valid account number (8-17 digits).");
+      return;
+    }
+  
     setIsLoading(true);
     setError(null);
-
+  
     const payload = {
       userId,
-      routingNumber: localRoutingNumber,
-      accountNumber: localAccountNumber,
-      accountHolderName: localAccountHolderName,
-      amount: Math.round(numericAmount ), // Convert to cents
+      routingNumber: localRoutingNumber.trim(),
+      accountNumber: localAccountNumber.trim(),
+      accountHolderName: localAccountHolderName.trim(),
+      amount: Math.round(numericAmount ), 
     };
-
+  
     try {
       const response = await fetch("https://limpiar-backend.onrender.com/api/payments/withdraw", {
         method: "POST",
@@ -162,13 +172,21 @@ export function WithdrawModal() {
         },
         body: JSON.stringify(payload),
       });
-
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to process withdrawal");
+        // Check if onboarding is required
+        if (data.message === "Complete onboarding to receive payouts." && data.onboardingLink) {
+          setError("You need to complete onboarding to enable withdrawals.");
+          // Redirect to the Stripe onboarding link
+          window.location.href = data.onboardingLink;
+          return;
+        }
+        throw new Error(data.message || "Failed to process withdrawal");
       }
-
-      console.log("Withdrawal request successful");
+  
+      console.log("Withdrawal request successful:", data.message);
       dispatch(closeWithdrawModal());
     } catch (err: any) {
       console.error("Error processing withdrawal:", err.message);
