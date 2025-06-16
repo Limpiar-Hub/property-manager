@@ -1,3 +1,4 @@
+
 "use client";
 
 export const dynamic = "force-dynamic";
@@ -6,12 +7,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { FaCheckCircle, FaTimesCircle, FaSpinner, FaArrowRight } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaSpinner } from "react-icons/fa";
 import type { RootState } from "@/redux/store";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function PaymentSuccessPage() {
-  const [message, setMessage] = useState("Verifying your payment...");
-  const [isSuccess, setIsSuccess] = useState(null);
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
   const token = useSelector((state: RootState) => state.auth.token);
   const router = useRouter();
 
@@ -21,8 +22,10 @@ export default function PaymentSuccessPage() {
       const sessionId = params.get("session_id");
 
       if (!sessionId || !token) {
-        setMessage("Missing payment session ID or authentication token.");
         setIsSuccess(false);
+        toast.error("Missing payment session ID or authentication token.", {
+          duration: 5000,
+        });
         return;
       }
 
@@ -45,14 +48,22 @@ export default function PaymentSuccessPage() {
 
         const data = await response.json();
         if (data.success) {
-          setMessage("Payment successful! Your wallet has been updated.");
           setIsSuccess(true);
+          toast.success("Payment successful! Your wallet has been updated.", {
+            duration: 3000,
+          });
+          // Delay navigation to allow toast visibility
+          setTimeout(() => {
+            router.push("/partner/payment");
+          }, 3000);
         } else {
           throw new Error("Payment verification failed.");
         }
-      } catch (err) {
-        setMessage(err.message || "Failed to verify payment. Please contact support.");
+      } catch (err: any) {
         setIsSuccess(false);
+        toast.error(err.message || "Failed to verify payment. Please contact support.", {
+          duration: 5000,
+        });
       }
     };
 
@@ -60,82 +71,84 @@ export default function PaymentSuccessPage() {
   }, [token, router]);
 
   return (
-    <motion.div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-    >
-      <div className="bg-gray-800 bg-opacity-90 p-10 rounded-2xl shadow-2xl text-center max-w-md mx-4 border border-gray-700">
-        {isSuccess === null ? (
-          <motion.div
-            className="mb-8"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-          >
-            <FaSpinner className="w-12 h-12 mx-auto text-blue-400" />
-            <p className="mt-4 text-lg font-medium text-gray-200">{message}</p>
-          </motion.div>
-        ) : isSuccess ? (
-          <>
-            <motion.div
-              className="mb-8 relative"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              <div className="absolute inset-0 rounded-full bg-green-500 opacity-20 blur-xl"></div>
-              <FaCheckCircle className="w-16 h-16 mx-auto text-green-400 relative z-10" />
-            </motion.div>
-            <motion.p
-              className="text-2xl font-semibold text-white mb-6"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              {message}
-            </motion.p>
-            <motion.button
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 flex items-center justify-center mx-auto shadow-lg"
-              onClick={() => router.push("/partner/payment")}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(59, 130, 246, 0.5)" }}
-              whileTap={{ scale: 0.95 }}
-            >
-              View Payment Details
-              <FaArrowRight className="ml-2" />
-            </motion.button>
-          </>
-        ) : (
-          <>
-            <motion.div
-              className="mb-8 relative"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              <div className="absolute inset-0 rounded-full bg-red-500 opacity-20 blur-xl"></div>
-              <FaTimesCircle className="w-16 h-16 mx-auto text-red-400 relative z-10" />
-            </motion.div>
-            <motion.p
-              className="text-2xl font-semibold text-white mb-6"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              {message}
-            </motion.p>
-            <motion.button
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center mx-auto shadow-lg"
-              onClick={() => router.push("/partner/payment")}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(239, 68, 68, 0.5)" }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Contact Support
-              <FaArrowRight className="ml-2" />
-            </motion.button>
-          </>
-        )}
-      </div>
-    </motion.div>
+    <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#fff",
+            color: "#333",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            padding: "12px",
+          },
+          success: {
+            style: {
+              borderColor: "#22c55e",
+              color: "#166534",
+            },
+            iconTheme: {
+              primary: "#22c55e",
+              secondary: "#fff",
+            },
+          },
+          error: {
+            style: {
+              borderColor: "#ef4444",
+              color: "#991b1b",
+            },
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#fff",
+            },
+          },
+        }}
+      />
+      <motion.div
+        className="min-h-screen flex items-center justify-center bg-gray-100"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4 border border-gray-200">
+          {isSuccess === null ? (
+            <div className="flex flex-col items-center">
+              <FaSpinner className="w-10 h-10 text-blue-600 animate-spin" />
+              <p className="mt-4 text-lg font-medium text-gray-700">Verifying your payment...</p>
+            </div>
+          ) : isSuccess ? (
+            <div className="flex flex-col items-center">
+              <FaCheckCircle className="w-12 h-12 text-green-600" />
+              <h2 className="mt-4 text-2xl font-semibold text-gray-800">Payment Successful</h2>
+              <p className="mt-2 text-gray-600 text-center">
+                Your wallet has been updated. You will be redirected to the payment details page.
+              </p>
+              <button
+                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium"
+                onClick={() => router.push("/partner/payment")}
+              >
+                View Payment Details
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <FaTimesCircle className="w-12 h-12 text-red-600" />
+              <h2 className="mt-4 text-2xl font-semibold text-gray-800">Payment Failed</h2>
+              <p className="mt-2 text-gray-600 text-center">
+                Failed to verify payment. Please contact support for assistance.
+              </p>
+              <button
+                className="mt-6 px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200 font-medium"
+                onClick={() => router.push("/partner/payment")}
+              >
+                Contact Support
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </>
   );
 }

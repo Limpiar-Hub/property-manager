@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { isAfter, parse } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import toast, { Toaster } from "react-hot-toast";
 
 interface Cleaner {
   _id: string;
@@ -87,6 +88,7 @@ export function MakePaymentModal() {
           setWalletBalance(data.wallet?.balance || 0);
         } catch (err: any) {
           setError("Failed to fetch wallet balance.");
+          toast.error("Failed to fetch wallet balance. Please try again.");
         } finally {
           setIsLoading(false);
         }
@@ -110,6 +112,7 @@ export function MakePaymentModal() {
           setFilteredCleaners(data.cleaners || []);
         } catch (err: any) {
           setError("Failed to load cleaners.");
+          toast.error("Failed to load cleaners. Please try again.");
         }
       };
 
@@ -165,23 +168,27 @@ export function MakePaymentModal() {
   const handleProceed = async () => {
     if (!userId || !token || !localRecipientUserId || !localAmount || !localNote) {
       setError("All fields are required.");
+      toast.error("Please fill in all required fields.");
       return;
     }
 
     const numericAmount = parseFloat(localAmount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
       setError("Enter a valid amount.");
+      toast.error("Please enter a valid amount.");
       return;
     }
 
     if (numericAmount > walletBalance) {
       setError("Insufficient balance.");
+      toast.error("Insufficient wallet balance.");
       return;
     }
 
     if (isRecurring) {
       if (!startDate) {
         setError("Please enter a start date.");
+        toast.error("Please enter a start date for recurring payment.");
         return;
       }
 
@@ -189,14 +196,17 @@ export function MakePaymentModal() {
         const parsedDate = parse(startDate, "yyyy-MM-dd", new Date());
         if (isNaN(parsedDate.getTime())) {
           setError("Invalid date format. Use YYYY-MM-DD (e.g., 2025-06-20).");
+          toast.error("Invalid date format. Use YYYY-MM-DD (e.g., 2025-06-20).");
           return;
         }
         if (!isAfter(parsedDate, new Date())) {
           setError("Start date must be in the future.");
+          toast.error("Start date must be in the future.");
           return;
         }
       } catch (err) {
         setError("Invalid date format. Use YYYY-MM-DD (e.g., 2025-06-20).");
+        toast.error("Invalid date format. Use YYYY-MM-DD (e.g., 2025-06-20).");
         return;
       }
     }
@@ -234,15 +244,35 @@ export function MakePaymentModal() {
       if (!response.ok) {
         if (data.message === "Complete onboarding to receive payouts." && data.onboardingLink) {
           setError("Onboarding required. Redirecting...");
-          window.location.href = data.onboardingLink;
+          toast.error("Onboarding required. Redirecting to onboarding page...");
+          setTimeout(() => {
+            window.location.href = data.onboardingLink;
+          }, 2000);
           return;
         }
         throw new Error(data.message || "Payment failed");
       }
 
-      dispatch(closeMakePaymentModal());
+      // Show success toast and delay modal closure and page refresh
+      toast.success(
+        isRecurring
+          ? `Recurring payment to ${selectedCleanerName} set up successfully!`
+          : `Payment of $${numericAmount.toFixed(2)} to ${selectedCleanerName} sent successfully!`,
+        { duration: 3000 } // Ensure toast is visible for 3 seconds
+      );
+
+      // Delay modal closure and page refresh to allow toast visibility
+      setTimeout(() => {
+        dispatch(closeMakePaymentModal());
+        window.location.reload(); // Refresh the page
+      }, 3000); // Match toast duration
     } catch (err: any) {
       setError(err.message || "Payment failed.");
+      toast.error(
+        err.message.includes("Payment failed")
+          ? "Payment failed. Please contact support at support@limpiar.com."
+          : err.message
+      );
     } finally {
       setIsLoading(false);
     }
@@ -251,215 +281,250 @@ export function MakePaymentModal() {
   if (!isMakePaymentModalOpen) return null;
 
   return (
-    <Dialog open={isMakePaymentModalOpen} onOpenChange={() => dispatch(closeMakePaymentModal())}>
-      <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="sr-only">Make Payment Modal</DialogTitle>
-        </DialogHeader>
+    <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#fff",
+            color: "#333",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+          success: {
+            style: {
+              borderColor: "#22c55e",
+              color: "#166534",
+            },
+            iconTheme: {
+              primary: "#22c55e",
+              secondary: "#fff",
+            },
+          },
+          error: {
+            style: {
+              borderColor: "#ef4444",
+              color: "#991b1b",
+            },
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#fff",
+            },
+          },
+        }}
+      />
+      <Dialog open={isMakePaymentModalOpen} onOpenChange={() => dispatch(closeMakePaymentModal())}>
+        <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Make Payment Modal</DialogTitle>
+          </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-6">
-          <div className="text-center border-b pb-3">
-            <h2 className="text-xl font-bold text-gray-800">Pay Your Staff</h2>
-          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-6">
+            <div className="text-center border-b pb-3">
+              <h2 className="text-xl font-bold text-gray-800">Pay Your Staff</h2>
+            </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg"
-            >
-              {error}
-            </motion.div>
-          )}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg"
+              >
+                {error}
+              </motion.div>
+            )}
 
-          <div className="grid gap-3">
-            <Label htmlFor="searchCleaner" className="text-sm font-medium text-gray-700">
-              Search Staff
-            </Label>
-            <Input
-              id="searchCleaner"
-              type="text"
-              placeholder="Enter staff name"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              disabled={isLoading}
-              className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-            />
-          </div>
+            <div className="grid gap-3">
+              <Label htmlFor="searchCleaner" className="text-sm font-medium text-gray-700">
+                Search Staff
+              </Label>
+              <Input
+                id="searchCleaner"
+                type="text"
+                placeholder="Enter staff name"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                disabled={isLoading}
+                className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+              />
+            </div>
 
-          <div className="grid gap-3">
-            <Label className="text-sm font-medium text-gray-700">Select Staff</Label>
-            <div className="h-48 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <AnimatePresence>
-                {filteredCleaners.length === 0 ? (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-sm text-gray-500 text-center py-4"
-                  >
-                    No staff found.
-                  </motion.p>
-                ) : (
-                  filteredCleaners.map((cleaner) => (
-                    <motion.div
-                      key={cleaner._id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex items-center gap-3 p-3 mb-2 rounded-lg cursor-pointer transition-all duration-300
-                        ${localRecipientUserId === cleaner._id ? "bg-indigo-50 border-2 border-indigo-500 shadow-md" : "hover:bg-gray-100"}
-                        bg-white shadow-sm hover:shadow-lg`}
-                      onClick={() => handleSelectCleaner(cleaner)}
+            <div className="grid gap-3">
+              <Label className="text-sm font-medium text-gray-700">Select Staff</Label>
+              <div className="h-48 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                <AnimatePresence>
+                  {filteredCleaners.length === 0 ? (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-sm text-gray-500 text-center py-4"
                     >
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <User className="h-5 w-5 text-indigo-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-800 flex-1">{cleaner.fullName}</span>
-                      {localRecipientUserId === cleaner._id && (
-                        <Check className="h-5 w-5 text-indigo-500" />
-                      )}
-                    </motion.div>
-                  ))
+                      No staff found.
+                    </motion.p>
+                  ) : (
+                    filteredCleaners.map((cleaner) => (
+                      <motion.div
+                        key={cleaner._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className={`flex items-center gap-3 p-3 mb-2 rounded-lg cursor-pointer transition-all duration-300
+                          ${localRecipientUserId === cleaner._id ? "bg-indigo-50 border-2 border-indigo-500 shadow-md" : "hover:bg-gray-100"}
+                          bg-white shadow-sm hover:shadow-lg`}
+                        onClick={() => handleSelectCleaner(cleaner)}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <User className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-800 flex-1">{cleaner.fullName}</span>
+                        {localRecipientUserId === cleaner._id && (
+                          <Check className="h-5 w-5 text-indigo-500" />
+                        )}
+                      </motion.div>
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
+              {selectedCleanerName && (
+                <p className="text-sm text-gray-600">
+                  Selected: <span className="font-medium text-indigo-600">{selectedCleanerName}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-3">
+              <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
+                Salary Amount (USD)
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={localAmount}
+                onChange={handleAmountChange}
+                disabled={isLoading}
+                placeholder="Enter amount"
+                className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+              />
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>Available Balance</span>
+                <span>${walletBalance.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              <Label htmlFor="note" className="text-sm font-medium text-gray-700">
+                Payment Note
+              </Label>
+              <Input
+                id="note"
+                type="text"
+                value={localNote}
+                onChange={handleNoteChange}
+                disabled={isLoading}
+                placeholder="e.g., Monthly salary"
+                className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+              />
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="grid gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
+            >
+              <Label className="text-sm font-semibold text-gray-800">Payment Options</Label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={!isRecurring}
+                    onChange={() => {
+                      setIsRecurring(false);
+                      setStartDate("");
+                      setFrequency("weekly");
+                    }}
+                    disabled={isLoading}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Send Now</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={isRecurring}
+                    onChange={() => setIsRecurring(true)}
+                    disabled={isLoading}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Set Up Recurring Salary</span>
+                </label>
+              </div>
+
+              <AnimatePresence>
+                {isRecurring && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid gap-3"
+                  >
+                    <div>
+                      <Label htmlFor="frequency" className="text-sm font-medium text-gray-700">
+                        Payment Frequency
+                      </Label>
+                      <select
+                        id="frequency"
+                        value={frequency}
+                        onChange={(e) => setFrequency(e.target.value as "weekly" | "bi-weekly" | "monthly")}
+                        className="w-full p-2 mt-1 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+                        disabled={isLoading}
+                      >
+                        <option value="weekly">Weekly</option>
+                        <option value="bi-weekly">Bi-Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
+                        Start Date
+                      </Label>
+                      <Input
+                        id="startDate"
+                        type="text"
+                        placeholder="YYYY-MM-DD (e.g., 2025-06-20)"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        disabled={isLoading}
+                        className="mt-1 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+                      />
+                    </div>
+                  </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-            {selectedCleanerName && (
-              <p className="text-sm text-gray-600">
-                Selected: <span className="font-medium text-indigo-600">{selectedCleanerName}</span>
-              </p>
-            )}
+            </motion.div>
+
+            <Button
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-medium shadow-md hover:shadow-lg transition-all duration-200"
+              onClick={handleProceed}
+              disabled={
+                isLoading ||
+                !localRecipientUserId ||
+                !localAmount ||
+                !localNote ||
+                (isRecurring && (!startDate || !frequency))
+              }
+            >
+              {isLoading ? "Processing..." : isRecurring ? "Set Up Recurring Payment" : "Send Now"}
+            </Button>
           </div>
-
-          <div className="grid gap-3">
-            <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
-              Salary Amount (USD)
-            </Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              value={localAmount}
-              onChange={handleAmountChange}
-              disabled={isLoading}
-              placeholder="Enter amount"
-              className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-            />
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>Available Balance</span>
-              <span>${walletBalance.toFixed(2)}</span>
-            </div>
-          </div>
-
-          <div className="grid gap-3">
-            <Label htmlFor="note" className="text-sm font-medium text-gray-700">
-              Payment Note
-            </Label>
-            <Input
-              id="note"
-              type="text"
-              value={localNote}
-              onChange={handleNoteChange}
-              disabled={isLoading}
-              placeholder="e.g., Monthly salary"
-              className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-            />
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="grid gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
-          >
-            <Label className="text-sm font-semibold text-gray-800">Payment Options</Label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  checked={!isRecurring}
-                  onChange={() => {
-                    setIsRecurring(false);
-                    setStartDate("");
-                    setFrequency("weekly");
-                  }}
-                  disabled={isLoading}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Send Now</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  checked={isRecurring}
-                  onChange={() => setIsRecurring(true)}
-                  disabled={isLoading}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Set Up Recurring Salary</span>
-              </label>
-            </div>
-
-            <AnimatePresence>
-              {isRecurring && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid gap-3"
-                >
-                  <div>
-                    <Label htmlFor="frequency" className="text-sm font-medium text-gray-700">
-                      Payment Frequency
-                    </Label>
-                    <select
-                      id="frequency"
-                      value={frequency}
-                      onChange={(e) => setFrequency(e.target.value as "weekly" | "bi-weekly" | "monthly")}
-                      className="w-full p-2 mt-1 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-                      disabled={isLoading}
-                    >
-                      <option value="weekly">Weekly</option>
-                      <option value="bi-weekly">Bi-Weekly</option>
-                      <option value="monthly">Monthly</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                      Start Date
-                    </Label>
-                    <Input
-                      id="startDate"
-                      type="text"
-                      placeholder="YYYY-MM-DD (e.g., 2025-06-20)"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      disabled={isLoading}
-                      className="mt-1 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
-          <Button
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-medium shadow-md hover:shadow-lg transition-all duration-200"
-            onClick={handleProceed}
-            disabled={
-              isLoading ||
-              !localRecipientUserId ||
-              !localAmount ||
-              !localNote ||
-              (isRecurring && (!startDate || !frequency))
-            }
-          >
-            {isLoading ? "Processing..." : isRecurring ? "Set Up Recurring Payment" : "Send Now"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
