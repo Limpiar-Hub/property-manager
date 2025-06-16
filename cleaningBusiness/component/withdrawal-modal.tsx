@@ -274,7 +274,7 @@ export function WithdrawModal() {
           </div>
 
           <Button
-            className="w-full bg-blue-500 hover:bg-blue-600"
+            className="w-full bg-indigo-600 hover:bg-blue-600"
             onClick={handleProceed}
             disabled={isLoading || !localRoutingNumber || !localAccountNumber || !localAccountHolderName || !localAmount}
           >

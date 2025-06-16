@@ -262,7 +262,7 @@ export default function TopUpModal({ isOpen, onClose, onProceed, amount, setAmou
           <div className="p-4 border-t">
             <button
               onClick={handleProceed}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="w-full px-4 py-2 bg-indigo-700 text-white rounded-md hover:bg-blue-700 transition-colors"
               disabled={isLoading}
             >
               {isLoading ? "Processing..." : "Proceed to Pay"}

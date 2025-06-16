@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, User, Check } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Dialog,
@@ -19,6 +19,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { isAfter, parse } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Cleaner {
   _id: string;
@@ -27,12 +29,18 @@ interface Cleaner {
 
 export function MakePaymentModal() {
   const [cleaners, setCleaners] = useState<Cleaner[]>([]);
+  const [filteredCleaners, setFilteredCleaners] = useState<Cleaner[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [localRecipientUserId, setLocalRecipientUserId] = useState<string>("");
-  const [localAmount, setLocalAmount] = useState<string>(""); // Dollars
+  const [selectedCleanerName, setSelectedCleanerName] = useState<string>("");
+  const [localAmount, setLocalAmount] = useState<string>("");
   const [localNote, setLocalNote] = useState<string>("");
-  const [walletBalance, setWalletBalance] = useState<number>(0); // In dollars
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRecurring, setIsRecurring] = useState<boolean>(false);
+  const [frequency, setFrequency] = useState<"weekly" | "bi-weekly" | "monthly">("weekly");
+  const [startDate, setStartDate] = useState<string>("");
 
   const dispatch = useDispatch();
   const { isMakePaymentModalOpen, recipientUserId, amount, note } = useSelector(
@@ -56,6 +64,7 @@ export function MakePaymentModal() {
 
   const userId = userWallet?.user?.userId;
 
+  // Fetch wallet balance and cleaners
   useEffect(() => {
     if (isMakePaymentModalOpen && userId && token) {
       const fetchWalletBalance = async () => {
@@ -69,6 +78,10 @@ export function MakePaymentModal() {
               Authorization: `Bearer ${token}`,
             },
           });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch wallet balance.");
+          }
 
           const data = await response.json();
           setWalletBalance(data.wallet?.balance || 0);
@@ -88,8 +101,13 @@ export function MakePaymentModal() {
             },
           });
 
+          if (!response.ok) {
+            throw new Error("Failed to load cleaners.");
+          }
+
           const data = await response.json();
           setCleaners(data.cleaners || []);
+          setFilteredCleaners(data.cleaners || []);
         } catch (err: any) {
           setError("Failed to load cleaners.");
         }
@@ -100,6 +118,22 @@ export function MakePaymentModal() {
     }
   }, [isMakePaymentModalOpen, userId, token]);
 
+  // Filter cleaners based on search query
+  useEffect(() => {
+    const filtered = cleaners.filter((cleaner) =>
+      cleaner.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredCleaners(filtered);
+  }, [searchQuery, cleaners]);
+
+  // Sync local state with Redux
+  useEffect(() => {
+    setLocalRecipientUserId(recipientUserId || "");
+    setLocalAmount(amount ? String(amount) : "");
+    setLocalNote(note || "");
+  }, [recipientUserId, amount, note]);
+
+  // Close modal with Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -110,16 +144,10 @@ export function MakePaymentModal() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [dispatch]);
 
-  useEffect(() => {
-    setLocalRecipientUserId(recipientUserId || "");
-    setLocalAmount(amount ? String(amount) : "");
-    setLocalNote(note || "");
-  }, [recipientUserId, amount, note]);
-
-  const handleRecipientUserId = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setLocalRecipientUserId(value);
-    dispatch(setRecipientUserId(value));
+  const handleSelectCleaner = (cleaner: Cleaner) => {
+    setLocalRecipientUserId(cleaner._id);
+    setSelectedCleanerName(cleaner.fullName);
+    dispatch(setRecipientUserId(cleaner._id));
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,16 +174,50 @@ export function MakePaymentModal() {
       return;
     }
 
+    if (numericAmount > walletBalance) {
+      setError("Insufficient balance.");
+      return;
+    }
+
+    if (isRecurring) {
+      if (!startDate) {
+        setError("Please enter a start date.");
+        return;
+      }
+
+      try {
+        const parsedDate = parse(startDate, "yyyy-MM-dd", new Date());
+        if (isNaN(parsedDate.getTime())) {
+          setError("Invalid date format. Use YYYY-MM-DD (e.g., 2025-06-20).");
+          return;
+        }
+        if (!isAfter(parsedDate, new Date())) {
+          setError("Start date must be in the future.");
+          return;
+        }
+      } catch (err) {
+        setError("Invalid date format. Use YYYY-MM-DD (e.g., 2025-06-20).");
+        return;
+      }
+    }
 
     setIsLoading(true);
     setError(null);
 
-    const payload = {
-      senderUserId: userId,
-      recipientUserId: localRecipientUserId,
-      amount: numericAmount, 
-      note: localNote,
-    };
+    const payload = isRecurring
+      ? {
+          recipientUserId: localRecipientUserId,
+          amount: numericAmount,
+          note: localNote,
+          isRecurring: true,
+          frequency,
+          startDate: parse(startDate, "yyyy-MM-dd", new Date()).toISOString(),
+        }
+      : {
+          recipientUserId: localRecipientUserId,
+          amount: numericAmount,
+          note: localNote,
+        };
 
     try {
       const response = await fetch("https://limpiar-backend.onrender.com/api/wallets/transfer", {
@@ -167,9 +229,15 @@ export function MakePaymentModal() {
         body: JSON.stringify(payload),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Payment failed");
+        if (data.message === "Complete onboarding to receive payouts." && data.onboardingLink) {
+          setError("Onboarding required. Redirecting...");
+          window.location.href = data.onboardingLink;
+          return;
+        }
+        throw new Error(data.message || "Payment failed");
       }
 
       dispatch(closeMakePaymentModal());
@@ -184,44 +252,90 @@ export function MakePaymentModal() {
 
   return (
     <Dialog open={isMakePaymentModalOpen} onOpenChange={() => dispatch(closeMakePaymentModal())}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="sr-only">Make Payment Modal</DialogTitle>
         </DialogHeader>
-        <button
-          onClick={() => dispatch(closeMakePaymentModal())}
-          className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
-        >
-          <X className="h-4 w-4" />
-        </button>
 
-        <div className="grid gap-4 py-4">
-          <div className="flex justify-center border-b-2 pb-2">
-            <h2 className="text-lg font-semibold">Make Payment</h2>
+        <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-6">
+          <div className="text-center border-b pb-3">
+            <h2 className="text-xl font-bold text-gray-800">Pay Your Staff</h2>
           </div>
 
-          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-
-          <div className="grid gap-2">
-            <Label htmlFor="recipientUserId">Select Cleaner</Label>
-            <select
-              id="recipientUserId"
-              value={localRecipientUserId}
-              onChange={handleRecipientUserId}
-              className="w-full p-2 border rounded-md"
-              disabled={isLoading || cleaners.length === 0}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg"
             >
-              <option value="">Select a cleaner</option>
-              {cleaners.map((cleaner) => (
-                <option key={cleaner._id} value={cleaner._id}>
-                  {cleaner.fullName}
-                </option>
-              ))}
-            </select>
+              {error}
+            </motion.div>
+          )}
+
+          <div className="grid gap-3">
+            <Label htmlFor="searchCleaner" className="text-sm font-medium text-gray-700">
+              Search Staff
+            </Label>
+            <Input
+              id="searchCleaner"
+              type="text"
+              placeholder="Enter staff name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              disabled={isLoading}
+              className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+            />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="amount">Amount (USD)</Label>
+          <div className="grid gap-3">
+            <Label className="text-sm font-medium text-gray-700">Select Staff</Label>
+            <div className="h-48 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <AnimatePresence>
+                {filteredCleaners.length === 0 ? (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-sm text-gray-500 text-center py-4"
+                  >
+                    No staff found.
+                  </motion.p>
+                ) : (
+                  filteredCleaners.map((cleaner) => (
+                    <motion.div
+                      key={cleaner._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className={`flex items-center gap-3 p-3 mb-2 rounded-lg cursor-pointer transition-all duration-300
+                        ${localRecipientUserId === cleaner._id ? "bg-indigo-50 border-2 border-indigo-500 shadow-md" : "hover:bg-gray-100"}
+                        bg-white shadow-sm hover:shadow-lg`}
+                      onClick={() => handleSelectCleaner(cleaner)}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <User className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-800 flex-1">{cleaner.fullName}</span>
+                      {localRecipientUserId === cleaner._id && (
+                        <Check className="h-5 w-5 text-indigo-500" />
+                      )}
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+            {selectedCleanerName && (
+              <p className="text-sm text-gray-600">
+                Selected: <span className="font-medium text-indigo-600">{selectedCleanerName}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-3">
+            <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
+              Salary Amount (USD)
+            </Label>
             <Input
               id="amount"
               type="number"
@@ -229,7 +343,8 @@ export function MakePaymentModal() {
               value={localAmount}
               onChange={handleAmountChange}
               disabled={isLoading}
-              placeholder="Enter Amount"
+              placeholder="Enter amount"
+              className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
             />
             <div className="flex justify-between text-sm text-gray-500">
               <span>Available Balance</span>
@@ -237,24 +352,111 @@ export function MakePaymentModal() {
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="note">Note</Label>
+          <div className="grid gap-3">
+            <Label htmlFor="note" className="text-sm font-medium text-gray-700">
+              Payment Note
+            </Label>
             <Input
               id="note"
               type="text"
               value={localNote}
               onChange={handleNoteChange}
               disabled={isLoading}
-              placeholder="Payment note"
+              placeholder="e.g., Monthly salary"
+              className="rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
             />
           </div>
 
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={handleProceed}
-            disabled={isLoading}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="grid gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
           >
-            {isLoading ? "Processing..." : "Confirm Payment"}
+            <Label className="text-sm font-semibold text-gray-800">Payment Options</Label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  checked={!isRecurring}
+                  onChange={() => {
+                    setIsRecurring(false);
+                    setStartDate("");
+                    setFrequency("weekly");
+                  }}
+                  disabled={isLoading}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Send Now</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  checked={isRecurring}
+                  onChange={() => setIsRecurring(true)}
+                  disabled={isLoading}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Set Up Recurring Salary</span>
+              </label>
+            </div>
+
+            <AnimatePresence>
+              {isRecurring && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid gap-3"
+                >
+                  <div>
+                    <Label htmlFor="frequency" className="text-sm font-medium text-gray-700">
+                      Payment Frequency
+                    </Label>
+                    <select
+                      id="frequency"
+                      value={frequency}
+                      onChange={(e) => setFrequency(e.target.value as "weekly" | "bi-weekly" | "monthly")}
+                      className="w-full p-2 mt-1 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+                      disabled={isLoading}
+                    >
+                      <option value="weekly">Weekly</option>
+                      <option value="bi-weekly">Bi-Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
+                      Start Date
+                    </Label>
+                    <Input
+                      id="startDate"
+                      type="text"
+                      placeholder="YYYY-MM-DD (e.g., 2025-06-20)"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      disabled={isLoading}
+                      className="mt-1 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          <Button
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-medium shadow-md hover:shadow-lg transition-all duration-200"
+            onClick={handleProceed}
+            disabled={
+              isLoading ||
+              !localRecipientUserId ||
+              !localAmount ||
+              !localNote ||
+              (isRecurring && (!startDate || !frequency))
+            }
+          >
+            {isLoading ? "Processing..." : isRecurring ? "Set Up Recurring Payment" : "Send Now"}
           </Button>
         </div>
       </DialogContent>
