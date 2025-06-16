@@ -244,13 +244,9 @@ export default function PaymentsPage() {
       <h1 className="text-2xl font-bold mb-6">Payments</h1>
 
       <div className="mb-6">
-        {isLoading ? (
-          <div className="text-gray-600">Loading balance...</div>
-        ) : error ? (
-          <div className="text-red-500">{error}</div>
-        ) : (
+    
 <WalletCard balance={walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
-        )}
+        
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 px-[15rem]">
