@@ -96,7 +96,7 @@ export default function Sidebar() {
         {/* Bottom links */}
         <div className="absolute bottom-0 w-full border-t border-gray-700">
           <Link
-            href="/support"
+            href="/cleaning-business/support"
             className="group flex items-center px-4 py-3 text-sm font-medium hover:bg-gray-700"
           >
             <Headphones className="mr-3 h-5 w-5 text-gray-300" />
