@@ -39,7 +39,7 @@ interface TransactionDetails {
   from: string;
   to: string;
   status: string;
-  type: string;
+  type?: string;
   transactionCategory: string;
   description: string;
   timestamp: string;
@@ -47,6 +47,7 @@ interface TransactionDetails {
   toFullName: string;
   pdf?: string;
   receiptUrl?: string;
+ 
 }
 
 interface TransactionTableProps {
@@ -199,7 +200,22 @@ function TransactionTable({
 
           data = await response.json();
           if (data.success) {
-            const txn = data.debitTransaction || data.creditTransaction;
+            let txn;
+            let type;
+
+            if (data.creditTransaction && data.debitTransaction) {
+              // For wallet transfers, classify based on userId
+              const userWallet = JSON.parse(localStorage.getItem("userWallet") || "{}")?.data;
+              const userId = userWallet?.user?.userId;
+              const isCredit = data.creditTransaction.to === userId || data.debitTransaction.to === userId;
+              txn = isCredit ? data.creditTransaction : data.debitTransaction;
+              type = isCredit ? "credit" : "debit";
+            } else {
+              // Default handling for other transactions
+              txn = data.debitTransaction || data.creditTransaction;
+              type = txn.type;
+            }
+
             if (!txn) {
               throw new Error("No transaction data found in response");
             }
@@ -209,7 +225,7 @@ function TransactionTable({
               from: txn.from,
               to: txn.to,
               status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
-              type: txn.type,
+              type: type,
               transactionCategory: txn.transactionCategory,
               description: txn.description,
               timestamp: txn.timestamp,
@@ -228,7 +244,6 @@ function TransactionTable({
         setIsLoadingDetails(false);
       }
     };
-
     fetchTransactionDetails();
   }, [selectedTransaction, token]);
 
@@ -436,6 +451,11 @@ function TransactionTable({
                     value={`${transactionDetails.amount < 0 ? "-" : ""}$${Math.abs(transactionDetails.amount ).toFixed(2)}`}
                     className="text-lg font-bold text-purple-800"
                   />
+                      <DetailRowPurple
+                    label="Type"
+                    value={transactionDetails.type.charAt(0).toUpperCase() + transactionDetails.type.slice(1)}
+                    className={transactionDetails.type === "debit" ? "text-red-600" : "text-green-600"}
+                  />
                   <DetailRowPurple
                     label="Payment Method"
                     value={
@@ -448,11 +468,14 @@ function TransactionTable({
                   />
                   <DetailRowPurple label="From" value={transactionDetails.fromFullName} />
                   <DetailRowPurple label="To" value={transactionDetails.toFullName} />
+                  
                   <div className="grid grid-cols-3 gap-2 items-baseline">
                     <span className="col-span-1 text-purple-600 font-medium">Status</span>
                     <span className="col-span-2">{getStatusBadge(transactionDetails.status)}</span>
                   </div>
+                  
                 </>
+                
               ) : (
                 <div className="text-center text-gray-600">No details available.</div>
               )}
@@ -906,35 +929,57 @@ export default function TransactionTables({ searchQuery, statusFilter }: { searc
           ...(walletData.wallet?.transactions?.refunds || []),
         ];
 
-        const walletTransactions: Transaction[] = allWalletTransactions.map((txn: any) => ({
-          key: txn._id,
-          id: txn.transactionId,
-          date: txn.timestamp,
-          formattedDate: formatDate(txn.timestamp),
-          description:
-            txn.description !== "No description provided"
-              ? txn.description
-              : txn.transactionCategory === "cleaning_payment"
-              ? `Booking Payment`
-              : txn.transactionCategory === "wallet_transfer"
-              ? `Wallet Transfer`
-              : txn.transactionCategory === "refund"
-              ? `Refund`
-              : txn.transactionCategory === "topup"
-              ? `Wallet Top Up`
-              : txn.transactionCategory === "withdrawal"
-              ? `Withdrawal`
-              : `Wallet ${txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}`,
-          amount: `${txn.amount < 0 ? "-" : ""}$${Math.abs(txn.amount ).toFixed(2)}`,
-          paymentMethod:
-            txn.transactionCategory === "withdrawal"
-              ? "Bank Transfer"
-              : txn.transactionCategory === "topup"
-              ? "Debit/Credit Card"
-              : "Wallet",
-          status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
-          source: "wallet",
-        }));
+        const walletTransactions: Transaction[] = allWalletTransactions.map((txn: any) => {
+          // Handle wallet transfers for Credit/Debit classification
+          if (txn.transactionCategory === "wallet_transfer" && txn.creditTransaction && txn.debitTransaction) {
+            const isCredit = txn.creditTransaction.to === userId || txn.debitTransaction.to === userId;
+            const selectedTxn = isCredit ? txn.creditTransaction : txn.debitTransaction;
+            return {
+              key: txn._id,
+              id: txn.transactionId,
+              date: txn.timestamp,
+              formattedDate: formatDate(txn.timestamp),
+              description: txn.description !== "No description provided" ? txn.description : "Wallet Transfer",
+              amount: `${isCredit ? "" : "-"}$${Math.abs(selectedTxn.amount).toFixed(2)}`,
+              paymentMethod: "Wallet",
+              status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
+              source: "wallet",
+              type: isCredit ? "credit" : "debit",
+            };
+          }
+
+          // Default handling for other transactions
+          return {
+            key: txn._id,
+            id: txn.transactionId,
+            date: txn.timestamp,
+            formattedDate: formatDate(txn.timestamp),
+            description:
+              txn.description !== "No description provided"
+                ? txn.description
+                : txn.transactionCategory === "cleaning_payment"
+                ? `Booking Payment`
+                : txn.transactionCategory === "wallet_transfer"
+                ? `Wallet Transfer`
+                : txn.transactionCategory === "refund"
+                ? `Refund`
+                : txn.transactionCategory === "topup"
+                ? `Wallet Top Up`
+                : txn.transactionCategory === "withdrawal"
+                ? `Withdrawal`
+                : `Wallet ${txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}`,
+            amount: `${txn.amount < 0 ? "-" : ""}$${Math.abs(txn.amount).toFixed(2)}`,
+            paymentMethod:
+              txn.transactionCategory === "withdrawal"
+                ? "Bank Transfer"
+                : txn.transactionCategory === "topup"
+                ? "Debit/Credit Card"
+                : "Wallet",
+            status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
+            source: "wallet",
+            type: txn.type,
+          };
+        });
 
         const combinedTransactions = [...stripeTransactions, ...walletTransactions].sort((a, b) =>
           new Date(b.date).getTime() - new Date(a.date).getTime()
