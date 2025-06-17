@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Search, ChevronDown, X } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+
 
 type Transaction = {
   key: string;
@@ -703,19 +705,24 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
                     value={`${transactionDetails.type === "debit" ? "-" : ""}$${transactionDetails.amount.toFixed(2)}`}
                     className="text-lg font-bold text-blue-800"
                   />
-                  <DetailRowBlue
-                    label="Type"
-                    value={
-                      transactionDetails.transactionCategory === "withdrawal"
-                        ? "Debit"
-                        : transactionDetails.type.charAt(0).toUpperCase() + transactionDetails.type.slice(1)
-                    }
-                    className={
-                      transactionDetails.transactionCategory === "withdrawal" || transactionDetails.type === "debit"
-                        ? "text-red-600"
-                        : "text-blue-600"
-                    }
-                  />
+                   <DetailRowBlue
+  label="Type"
+  value={
+    <div className="flex items-center gap-2">
+      {transactionDetails.type === "debit" ? (
+        <>
+          <ArrowDownLeft className="w-4 h-4 text-red-600" />
+          <span className="text-red-600">Debit</span>
+        </>
+      ) : (
+        <>
+          <ArrowUpRight className="w-4 h-4 text-blue-600" />
+          <span className="text-blue-600">Credit</span>
+        </>
+      )}
+    </div>
+  }
+/>
                   <DetailRowBlue
                     label="Payment Method"
                     value={
