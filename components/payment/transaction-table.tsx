@@ -713,7 +713,7 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
                     className={
                       transactionDetails.transactionCategory === "withdrawal" || transactionDetails.type === "debit"
                         ? "text-red-600"
-                        : "text-green-600"
+                        : "text-blue-600"
                     }
                   />
                   <DetailRowBlue
