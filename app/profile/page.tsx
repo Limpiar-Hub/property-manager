@@ -80,7 +80,7 @@ export default function ProfilePage() {
           <div className="bg-blue-100 p-3 rounded-full">
             <User className="text-blue-700 h-6 w-6" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">User Profile</h1>
+          <h1 className="text-2xl font-bold text-indigo-600">Business Profile</h1>
         </div>
 
         {/* Loading */}
