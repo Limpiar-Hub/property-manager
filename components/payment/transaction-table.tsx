@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -15,6 +16,8 @@ type Transaction = {
   paymentMethod: string;
   status: string;
   source: "stripe" | "wallet";
+  walletId?: string;
+  type: string;
 };
 
 interface TransactionDetails {
@@ -92,6 +95,7 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
   }, []);
 
   const userId = userWallet?.user?.userId;
+  const userWalletId = userWallet?.walletId;
 
   const fetchUserDetails = useCallback(
     async (userId: string): Promise<string> => {
@@ -169,46 +173,125 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
           paymentMethod: "Debit/Credit Card",
           status: payment.status.charAt(0).toUpperCase() + payment.status.slice(1),
           source: "stripe",
+          type: "credit",
         }));
 
-        const allWalletTransactions = [
-          ...(walletData.wallet?.transactions?.debits || []),
-          ...(walletData.wallet?.transactions?.credits || []),
-          ...(walletData.wallet?.transactions?.transfers || []),
-          ...(walletData.wallet?.transactions?.refunds || []),
-        ];
+        const allWalletTransactions: Transaction[] = [];
 
-        const walletTransactions: Transaction[] = allWalletTransactions.map((txn: any) => ({
-          key: txn._id,
-          id: txn.transactionId,
-          date: txn.timestamp,
-          formattedDate: formatDate(txn.timestamp),
-          description:
-            txn.description !== "No description provided"
-              ? txn.description
-              : txn.transactionCategory === "cleaning_payment"
-              ? `Booking Payment`
-              : txn.transactionCategory === "wallet_transfer"
-              ? `Wallet Transfer`
-              : txn.transactionCategory === "refund"
-              ? `Refund`
-              : txn.transactionCategory === "topup"
-              ? `Wallet Top Up`
-              : txn.transactionCategory === "withdrawal"
-              ? `Withdrawal`
-              : `Wallet ${txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}`,
-          amount: `${txn.amount < 0 ? "-" : ""}$${Math.abs(txn.amount ).toFixed(2)}`,
-          paymentMethod:
-            txn.transactionCategory === "withdrawal"
-              ? "Bank Transfer"
-              : txn.transactionCategory === "topup"
-              ? "Debit/Credit Card"
-              : "Wallet",
-          status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
-          source: "wallet",
-        }));
+        // Process debits
+        (walletData.wallet?.transactions?.debits || []).forEach((txn: any) => {
+          allWalletTransactions.push({
+            key: txn._id,
+            id: txn.transactionId,
+            date: txn.timestamp,
+            formattedDate: formatDate(txn.timestamp),
+            description:
+              txn.description !== "No description provided"
+                ? txn.description
+                : txn.transactionCategory === "cleaning_payment"
+                ? `Booking Payment`
+                : txn.transactionCategory === "wallet_transfer"
+                ? `Wallet Transfer`
+                : txn.transactionCategory === "refund"
+                ? `Refund`
+                : txn.transactionCategory === "topup"
+                ? `Wallet Top Up`
+                : txn.transactionCategory === "withdrawal"
+                ? `Withdrawal`
+                : `Wallet ${txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}`,
+            amount: `${txn.amount < 0 ? "-" : ""}$${Math.abs(txn.amount ).toFixed(2)}`,
+            paymentMethod:
+              txn.transactionCategory === "withdrawal"
+                ? "Bank Transfer"
+                : txn.transactionCategory === "topup"
+                ? "Debit/Credit Card"
+                : "Wallet",
+            status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
+            source: "wallet",
+            walletId: txn.walletId,
+            type: "debit",
+          });
+        });
 
-        const combinedTransactions = [...stripeTransactions, ...walletTransactions].sort((a, b) =>
+        // Process credits
+        (walletData.wallet?.transactions?.credits || []).forEach((txn: any) => {
+          allWalletTransactions.push({
+            key: txn._id,
+            id: txn.transactionId,
+            date: txn.timestamp,
+            formattedDate: formatDate(txn.timestamp),
+            description:
+              txn.description !== "No description provided"
+                ? txn.description
+                : txn.transactionCategory === "cleaning_payment"
+                ? `Booking Payment`
+                : txn.transactionCategory === "wallet_transfer"
+                ? `Wallet Transfer`
+                : txn.transactionCategory === "refund"
+                ? `Refund`
+                : txn.transactionCategory === "topup"
+                ? `Wallet Top Up`
+                : txn.transactionCategory === "withdrawal"
+                ? `Withdrawal`
+                : `Wallet ${txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}`,
+            amount: `${txn.amount < 0 ? "-" : ""}$${Math.abs(txn.amount ).toFixed(2)}`,
+            paymentMethod:
+              txn.transactionCategory === "withdrawal"
+                ? "Bank Transfer"
+                : txn.transactionCategory === "topup"
+                ? "Debit/Credit Card"
+                : "Wallet",
+            status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
+            source: "wallet",
+            walletId: txn.walletId,
+            type: "credit",
+          });
+        });
+
+        // Process transfers
+        (walletData.wallet?.transactions?.transfers || []).forEach((txn: any) => {
+          if (!txn.creditTransaction || !txn.debitTransaction) {
+            console.warn(`Incomplete transfer transaction: ${txn.transactionId}`);
+            return;
+          }
+          const isCredit = txn.creditTransaction?.to === userId || txn.debitTransaction?.to === userId;
+          const selectedTxn = isCredit ? txn.creditTransaction : txn.debitTransaction;
+          allWalletTransactions.push({
+            key: txn._id || selectedTxn?._id,
+            id: txn.transactionId,
+            date: txn.timestamp,
+            formattedDate: formatDate(txn.timestamp),
+            description:
+              txn.description !== "No description provided"
+                ? txn.description
+                : `Wallet Transfer`,
+            amount: `${isCredit ? "" : "-"}$${Math.abs(selectedTxn.amount ).toFixed(2)}`,
+            paymentMethod: "Wallet",
+            status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
+            source: "wallet",
+            walletId: selectedTxn.walletId,
+            type: isCredit ? "credit" : "debit",
+          });
+        });
+
+        // Process refunds
+        (walletData.wallet?.transactions?.refunds || []).forEach((txn: any) => {
+          allWalletTransactions.push({
+            key: txn._id,
+            id: txn.transactionId,
+            date: txn.timestamp,
+            formattedDate: formatDate(txn.timestamp),
+            description: `Refund`,
+            amount: `$${Math.abs(txn.amount / 100).toFixed(2)}`,
+            paymentMethod: "Wallet",
+            status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
+            source: "wallet",
+            walletId: txn.walletId,
+            type: "credit",
+          });
+        });
+
+        const combinedTransactions = [...stripeTransactions, ...allWalletTransactions].sort((a, b) =>
           new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
@@ -224,7 +307,7 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
     };
 
     fetchData();
-  }, [userId, token, fetchUserDetails]);
+  }, [userId, token, userWalletId, fetchUserDetails]);
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesStatus =
@@ -312,9 +395,10 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
           data = await response.json();
           if (data.success && data.data) {
             const payment = data.data;
+            const toFullName = await fetchUserDetails(payment.userId._id);
             setTransactionDetails({
               transactionId: payment._id,
-              amount: payment.amount,
+              amount: payment.amount ,
               from: "Stripe",
               to: payment.userId._id,
               status: payment.status.charAt(0).toUpperCase() + payment.status.slice(1),
@@ -323,7 +407,7 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
               description: payment.bookingId ? `Booking Payment` : "Wallet Top Up",
               timestamp: payment.createdAt,
               fromFullName: "Stripe",
-              toFullName: payment.userId.fullName || payment.userId.email || payment.userId._id,
+              toFullName,
               receiptUrl: payment.receiptUrl,
             });
           } else {
@@ -347,22 +431,59 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
 
           data = await response.json();
           if (data.success) {
-            const txn = data.debitTransaction || data.creditTransaction;
+            let txn;
+            let isCredit = false;
+
+            if (data.debitTransaction && data.creditTransaction) {
+              isCredit = data.creditTransaction.to === userId || data.debitTransaction.to === userId;
+              txn = isCredit ? data.creditTransaction : data.debitTransaction;
+            } else {
+              txn = data.debitTransaction || data.creditTransaction;
+              isCredit = txn.to === userId;
+            }
+
             if (!txn) {
               throw new Error("No transaction data found in response");
             }
+
+            let fromFullName = txn.from;
+            let toFullName = txn.to;
+
+            if (txn.from === "SYSTEM") {
+              fromFullName = "System";
+            } else if (txn.from === "internal-wallet") {
+              fromFullName = "Wallet";
+            } else if (txn.fromUser?.fullName) {
+              fromFullName = txn.fromUser.fullName;
+            } else if (/^[0-9a-f]{24}$/i.test(txn.from)) {
+              fromFullName = await fetchUserDetails(txn.from);
+            }
+
+            if (txn.toUser?.fullName) {
+              toFullName = txn.toUser.fullName;
+            } else if (/^[0-9a-f]{24}$/i.test(txn.to)) {
+              toFullName = await fetchUserDetails(txn.to);
+            } else if (txn.to.includes("@")) {
+              toFullName = txn.to;
+            }
+
+            if (txn.from === txn.to && /^[0-9a-f]{24}$/i.test(txn.from)) {
+              fromFullName = `${fromFullName} (Self)`;
+              toFullName = `${toFullName} (Self)`;
+            }
+
             setTransactionDetails({
               transactionId: txn.transactionId,
-              amount: txn.amount,
+              amount: Math.abs(txn.amount ),
               from: txn.from,
               to: txn.to,
               status: txn.status.charAt(0).toUpperCase() + txn.status.slice(1),
-              type: txn.type,
+              type: isCredit ? "credit" : "debit",
               transactionCategory: txn.transactionCategory,
               description: txn.description,
               timestamp: txn.timestamp,
-              fromFullName: txn.fromUser?.fullName || txn.from,
-              toFullName: txn.toUser?.fullName || txn.to,
+              fromFullName,
+              toFullName,
               pdf: data.pdf,
             });
           } else {
@@ -378,7 +499,7 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
     };
 
     fetchTransactionDetails();
-  }, [selectedTransaction, token]);
+  }, [selectedTransaction, token, userId, fetchUserDetails]);
 
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -579,8 +700,21 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
                   <DetailRowBlue label="Description" value={transactionDetails.description || "N/A"} />
                   <DetailRowBlue
                     label="Amount"
-                    value={`${transactionDetails.amount < 0 ? "-" : ""}$${Math.abs(transactionDetails.amount ).toFixed(2)}`}
+                    value={`${transactionDetails.type === "debit" ? "-" : ""}$${transactionDetails.amount.toFixed(2)}`}
                     className="text-lg font-bold text-blue-800"
+                  />
+                  <DetailRowBlue
+                    label="Type"
+                    value={
+                      transactionDetails.transactionCategory === "withdrawal"
+                        ? "Debit"
+                        : transactionDetails.type.charAt(0).toUpperCase() + transactionDetails.type.slice(1)
+                    }
+                    className={
+                      transactionDetails.transactionCategory === "withdrawal" || transactionDetails.type === "debit"
+                        ? "text-red-600"
+                        : "text-green-600"
+                    }
                   />
                   <DetailRowBlue
                     label="Payment Method"
