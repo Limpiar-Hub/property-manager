@@ -288,7 +288,7 @@ export default function AdvancedSettingsPage() {
     { id: "security", label: "Security", icon: Shield },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "api", label: "API", icon: Key },
+  
   ];
 
   return (
@@ -520,21 +520,7 @@ export default function AdvancedSettingsPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="api" className="mt-6">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">API Settings</h2>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-gray-800 dark:text-gray-200">API Key</Label>
-                    <div className="flex gap-2">
-                      <Input value={apiKey} readOnly placeholder="No API key generated" className="dark:bg-gray-700 dark:text-gray-200" />
-                      <Button onClick={handleGenerateApiKey}>Generate New Key</Button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Keep your API key secure and do not share it publicly.</p>
-                </div>
-              </div>
-            </TabsContent>
+       
           </Tabs>
         </div>
       </main>
