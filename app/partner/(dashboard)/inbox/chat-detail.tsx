@@ -223,7 +223,7 @@ export function ChatDetail() {
         <Avatar className="w-10 h-10 mr-3 flex-shrink-0">
           {participantInfo.avatar ? (
             <Image
-              src={participantInfo.avatar}
+              src="/avater.jpg"
               alt={participantInfo.name}
               width={40}
               height={40}
