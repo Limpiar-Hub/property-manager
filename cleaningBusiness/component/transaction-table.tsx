@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+
 
 interface Transaction {
   key: string;
@@ -451,11 +453,24 @@ function TransactionTable({
                     value={`${transactionDetails.amount < 0 ? "-" : ""}$${Math.abs(transactionDetails.amount ).toFixed(2)}`}
                     className="text-lg font-bold text-purple-800"
                   />
-                      <DetailRowPurple
-                    label="Type"
-                    value={transactionDetails.type.charAt(0).toUpperCase() + transactionDetails.type.slice(1)}
-                    className={transactionDetails.type === "debit" ? "text-red-600" : "text-green-600"}
-                  />
+              <DetailRowPurple
+  label="Type"
+  value={
+    <div className="flex items-center gap-2">
+      {transactionDetails.type === "debit" ? (
+        <>
+          <ArrowDownLeft className="w-4 h-4 text-red-600" />
+          <span className="text-red-600">Debit</span>
+        </>
+      ) : (
+        <>
+          <ArrowUpRight className="w-4 h-4 text-blue-600" />
+          <span className="text-green-600">Credit</span>
+        </>
+      )}
+    </div>
+  }
+/>
                   <DetailRowPurple
                     label="Payment Method"
                     value={
