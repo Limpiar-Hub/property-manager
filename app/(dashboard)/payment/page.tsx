@@ -1,14 +1,18 @@
 "use client";
 
-import { Plus, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw, DollarSign, X } from "lucide-react";
 import { TransactionTable } from "@/components/payment/transaction-table";
 import { fetchTransactionData, fetchUserBalanceData } from "@/components/handlers";
-import { useDispatch } from "react-redux";
-import { openRefundModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { openRefundModal, openModal, setUserBalance } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import { useEffect, useState } from "react";
-import { openModal } from "@/redux/features/topUpModalSlice/topUpModalSlice";
-import { setUserBalance } from "@/redux/features/topUpModalSlice/topUpModalSlice";
 import dynamic from "next/dynamic";
+import type { RootState } from "@/redux/store";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import toast, { Toaster } from "react-hot-toast";
 
 type Transaction = {
   id: string;
@@ -19,7 +23,6 @@ type Transaction = {
   status: "pending" | "succeeded" | "Rejected" | "completed";
 };
 
-// Define the API response type for transaction data
 type TransactionApiResponse = {
   id: string;
   amount: number;
@@ -34,9 +37,7 @@ const TopUpModal = dynamic(
     import("@/components/payment/top-up-modal/top-up-modal").then(
       (mod) => mod.TopUpModal
     ),
-  {
-    ssr: false,
-  }
+  { ssr: false }
 );
 
 const RefundModal = dynamic(
@@ -44,16 +45,39 @@ const RefundModal = dynamic(
     import("@/components/payment/refund-modal/refund-modal").then(
       (mod) => mod.RefundModal
     ),
-  {
-    ssr: false,
-  }
+  { ssr: false }
 );
 
 export default function PaymentsPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [localRoutingNumber, setLocalRoutingNumber] = useState<string>("");
+  const [localAccountNumber, setLocalAccountNumber] = useState<string>("");
+  const [localAccountHolderName, setLocalAccountHolderName] = useState<string>("");
+  const [localAmount, setLocalAmount] = useState<string>("");
+  const [withdrawLoading, setWithdrawLoading] = useState<boolean>(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const dispatch = useDispatch();
+  const token = useSelector((state: RootState) => state.auth.token);
+
+  // Retrieve user details from localStorage
+  const userWallet = (() => {
+    const getUserFromLocalStorage = localStorage.getItem("userWallet");
+    if (getUserFromLocalStorage) {
+      try {
+        const user = JSON.parse(getUserFromLocalStorage);
+        return user.data;
+      } catch (e) {
+        console.error("Error parsing userWallet from localStorage:", e);
+        return null;
+      }
+    }
+    return null;
+  })();
+
+  const userId = userWallet?.user?.userId;
 
   useEffect(() => {
     setIsLoading(true);
@@ -68,13 +92,12 @@ export default function PaymentsPage() {
           transactionsRes.data.map((transaction: any) => ({
             id: transaction.id,
             amount: transaction.amount,
-            date: transaction.createdAt || "",   
+            date: transaction.createdAt || "",
             description: transaction.description || "",
-            paymentMethod: transaction.method || "",  
+            paymentMethod: transaction.method || "",
             status: transaction.status as "pending" | "succeeded" | "Rejected" | "completed",
           }))
         );
-        
       }
       if (balanceRes.data) {
         setWalletBalance(balanceRes.data);
@@ -85,17 +108,172 @@ export default function PaymentsPage() {
     getData().finally(() => setIsLoading(false));
   }, [dispatch]);
 
+  // Close modal with escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsWithdrawModalOpen(false);
+        setLocalRoutingNumber("");
+        setLocalAccountNumber("");
+        setLocalAccountHolderName("");
+        setLocalAmount("");
+        setWithdrawError(null);
+      }
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, []);
+
+  const handleRoutingNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalRoutingNumber(e.target.value);
+  };
+
+  const handleAccountNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalAccountNumber(e.target.value);
+  };
+
+  const handleAccountHolderName = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalAccountHolderName(e.target.value);
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalAmount(e.target.value);
+  };
+
+  const handleProceed = async () => {
+    if (!userId || !token || !localRoutingNumber || !localAccountNumber || !localAccountHolderName || !localAmount) {
+      setWithdrawError("Missing required fields or authentication token.");
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    const numericAmount = parseFloat(localAmount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      setWithdrawError("Please enter a valid amount.");
+      toast.error("Please enter a valid amount.");
+      return;
+    }
+
+    if (numericAmount > walletBalance) {
+      setWithdrawError("Withdrawal amount exceeds available balance.");
+      toast.error("Withdrawal amount exceeds available balance.");
+      return;
+    }
+
+    if (!localRoutingNumber.trim() || localRoutingNumber.length !== 9) {
+      setWithdrawError("Please enter a valid 9-digit routing number.");
+      toast.error("Please enter a valid 9-digit routing number.");
+      return;
+    }
+
+    if (!localAccountNumber.trim() || localAccountNumber.length < 8 || localAccountNumber.length > 17) {
+      setWithdrawError("Please enter a valid account number (8-17 digits).");
+      toast.error("Please enter a valid account number (8-17 digits).");
+      return;
+    }
+
+    setWithdrawLoading(true);
+    setWithdrawError(null);
+
+    const payload = {
+      userId,
+      routingNumber: localRoutingNumber.trim(),
+      accountNumber: localAccountNumber.trim(),
+      accountHolderName: localAccountHolderName.trim(),
+      amount: Math.round(numericAmount),
+    };
+
+    try {
+      const response = await fetch("https://limpiar-backend.onrender.com/api/payments/withdraw", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.message === "Complete onboarding to receive payouts." && data.onboardingLink) {
+          setWithdrawError("You need to complete onboarding to enable withdrawals.");
+          toast.error("Onboarding required. Redirecting to onboarding page...");
+          setTimeout(() => {
+            window.location.href = data.onboardingLink;
+          }, 2000);
+          return;
+        }
+        throw new Error(data.message || "Failed to process withdrawal");
+      }
+
+      // Update local and Redux state with new balance
+      const newBalance = walletBalance - numericAmount;
+      setWalletBalance(newBalance);
+      dispatch(setUserBalance(newBalance));
+
+      // Update transactions
+      const newTransaction: Transaction = {
+        id: data.id || `withdraw-${Date.now()}`,
+        amount: numericAmount,
+        date: new Date().toISOString(),
+        description: "Withdrawal to bank account",
+        paymentMethod: "Bank Transfer",
+        status: "pending",
+      };
+      setTransactions((prev) => [newTransaction, ...prev]);
+
+      // Show success toast and close modal
+      toast.success(`Withdrawal of $${numericAmount.toFixed(2)} requested successfully!`, {
+        duration: 3000,
+      });
+
+      setTimeout(() => {
+        setIsWithdrawModalOpen(false);
+        setLocalRoutingNumber("");
+        setLocalAccountNumber("");
+        setLocalAccountHolderName("");
+        setLocalAmount("");
+        setWithdrawError(null);
+      }, 3000);
+    } catch (err: any) {
+      console.error("Error processing withdrawal:", err.message);
+      setWithdrawError(err.message || "Failed to process withdrawal. Please try again.");
+      toast.error(err.message || "Failed to process withdrawal. Please try again.");
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
+
   return (
     <div className="flex bg-gray-50">
-      {/* Main content */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#fff",
+            color: "#333",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+          success: {
+            style: { borderColor: "#22c55e", color: "#166534" },
+            iconTheme: { primary: "#22c55e", secondary: "#fff" },
+          },
+          error: {
+            style: { borderColor: "#ef4444", color: "#991b1b" },
+            iconTheme: { primary: "#ef4444", secondary: "#fff" },
+          },
+        }}
+      />
       <main className="flex-1 overflow-auto pb-20 md:pb-0">
-        {/* Content */}
         <div className="p-6">
           <h1 className="text-2xl font-bold mb-8">Payments</h1>
           <div className="flex flex-col items-center justify-center">
             <div className="max-w-md w-full mx-auto">
               <div className="bg-[#2D82FF] rounded-lg p-6 text-white relative overflow-hidden shadow-lg">
-                {/* Wave pattern background */}
                 <div className="absolute inset-0 opacity-20">
                   <svg
                     width="100%"
@@ -135,21 +313,19 @@ export default function PaymentsPage() {
                     />
                   </svg>
                 </div>
-
                 <div className="relative z-10 text-center">
-  <p className="text-lg mb-2">Wallet Balance</p>
-  <p className="text-4xl font-bold">
-    {isLoading ? (
-      <span className="text-xl">Loading...</span>
-    ) : (
-      `$${walletBalance.toLocaleString()}`
-    )}
-  </p>
-</div>
-
+                  <p className="text-lg mb-2">Wallet Balance</p>
+                  <p className="text-4xl font-bold">
+                    {isLoading ? (
+                      <span className="text-xl">Loading...</span>
+                    ) : (
+                      `$${walletBalance.toLocaleString()}`
+                    )}
+                  </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-6">
+              <div className="grid grid-cols-3 gap-4 mt-6">
                 <button
                   onClick={() => dispatch(openModal())}
                   className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium"
@@ -157,13 +333,19 @@ export default function PaymentsPage() {
                   <Plus className="w-4 h-4" />
                   Top Up Wallet
                 </button>
-
                 <button
                   onClick={() => dispatch(openRefundModal())}
                   className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium"
                 >
                   <RefreshCcw className="w-4 h-4" />
                   Request Refund
+                </button>
+                <button
+                  onClick={() => setIsWithdrawModalOpen(true)}
+                  className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg text-sm font-medium"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  Withdraw Funds
                 </button>
               </div>
             </div>
@@ -174,8 +356,108 @@ export default function PaymentsPage() {
             <TransactionTable transactions={transactions} />
           </div>
         </div>
+
         <TopUpModal fetchTransactions={fetchTransactionData} />
         <RefundModal />
+
+        <Dialog open={isWithdrawModalOpen} onOpenChange={() => {
+          setIsWithdrawModalOpen(false);
+          setLocalRoutingNumber("");
+          setLocalAccountNumber("");
+          setLocalAccountHolderName("");
+          setLocalAmount("");
+          setWithdrawError(null);
+        }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="sr-only">Withdraw Modal</DialogTitle>
+            </DialogHeader>
+            <button
+              onClick={() => {
+                setIsWithdrawModalOpen(false);
+                setLocalRoutingNumber("");
+                setLocalAccountNumber("");
+                setLocalAccountHolderName("");
+                setLocalAmount("");
+                setWithdrawError(null);
+              }}
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state
+
+System: open]:text-muted-foreground"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
+
+            <div className="grid gap-4 py-4">
+              <div className="relative bottom-5 flex justify-center align-middle space-y-2 border-b-2">
+                <h2 className="relative bottom-3 text-lg font-semibold">Withdraw Funds</h2>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="routingNumber">Routing Number</Label>
+                <Input
+                  id="routingNumber"
+                  placeholder="110000000"
+                  type="text"
+                  value={localRoutingNumber}
+                  onChange={handleRoutingNumber}
+                  disabled={withdrawLoading}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="accountNumber">Account Number</Label>
+                <Input
+                  id="accountNumber"
+                  placeholder="000123456789"
+                  type="text"
+                  value={localAccountNumber}
+                  onChange={handleAccountNumber}
+                  disabled={withdrawLoading}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                <Input
+                  id="accountHolderName"
+                  placeholder="John Doe"
+                  type="text"
+                  value={localAccountHolderName}
+                  onChange={handleAccountHolderName}
+                  disabled={withdrawLoading}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="amount">Amount</Label>
+                <Input
+                  id="amount"
+                  placeholder="50"
+                  type="text"
+                  value={localAmount}
+                  onChange={handleAmountChange}
+                  disabled={withdrawLoading}
+                />
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Available Balance</span>
+                  <span className="text-sm text-gray-500">
+                    {isLoading ? "Loading..." : `$${walletBalance.toFixed(2)}`}
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                className="w-full bg-blue-900 hover:bg-blue-600"
+                onClick={handleProceed}
+                disabled={withdrawLoading || !localRoutingNumber || !localAccountNumber || !localAccountHolderName || !localAmount}
+              >
+                {withdrawLoading ? "Processing..." : "Confirm Withdrawal"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
