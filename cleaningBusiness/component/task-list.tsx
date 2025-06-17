@@ -1,4 +1,5 @@
 "use client";
+
 import { MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -64,7 +65,13 @@ export default function TaskList({
 
   useEffect(() => {
     if (allTasks.length) {
-      setTasks(allTasks);
+      // Sort tasks by createdAt (or date) in descending order (most recent first)
+      const sortedTasks = [...allTasks].sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.date).getTime();
+        const dateB = new Date(b.createdAt || b.date).getTime();
+        return dateB - dateA; // Descending order
+      });
+      setTasks(sortedTasks);
       setIsLoading(false);
     }
   }, [allTasks]);
@@ -127,8 +134,6 @@ export default function TaskList({
     setIsAssignModalOpen(true);
   };
 
-
-
   const handleAssignCleaner = async (
     selectedCleaners: { cleanerId: string }[]
   ) => {
@@ -165,7 +170,6 @@ export default function TaskList({
       showNotification(err.message || "Failed to assign cleaners", "error");
     }
   };
-
 
   const showNotification = (message: string, type: "success" | "error") => {
     setNotification({ message, type, visible: true });
@@ -229,10 +233,7 @@ export default function TaskList({
 
           return (
             <div key={task._id}>
-              <Link
-                href={`/partner/tasks/${task._id}`}
-                className="block"
-              >
+              <Link href={`/partner/tasks/${task._id}`} className="block">
                 <div className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4">
                     <div className="md:col-span-1">
@@ -288,68 +289,24 @@ export default function TaskList({
                       </>
                     ) : (
                       <>
-                        {/* <div className="flex items-center gap-2 mb-2 sm:mb-0">
-                          <p className="text-xs text-gray-500">Assigned to</p>
-                          {task.cleanerId ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                                <span className="text-xs font-medium text-gray-600">
-                                {task.cleanerId?.fullName?.charAt(0).toUpperCase() || ""}
-                                </span>
-                              </div>
-                              <p className="font-medium">{task.cleanerId.fullName}</p>
-                              {activeTab === "active" && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleStartChat(task)
-                                  }}
-                                  className="text-gray-500 hover:text-primary transition-colors"
-                                  title="Message cleaner"
-                                >
-                                  <MessageSquare className="w-5 h-5" />
-                                </button>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="font-medium">Not assigned</p>
-                          )}
-                        </div> */}
-
                         <div className="flex items-center gap-2 mb-2 sm:mb-0">
                           <p className="text-xs text-gray-500">Assigned to</p>
                           {task.cleaners && task.cleaners.length > 0 ? (
                             <div className="flex items-center gap-2">
                               <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                                 <span className="text-xs font-medium text-gray-600">
-                                {task.cleaners[0]?.cleanerId?.fullName
-  ? task.cleaners[0].cleanerId.fullName.charAt(0).toUpperCase()
-  : "?"}
-
+                                  {task.cleaners[0]?.cleanerId?.fullName
+                                    ? task.cleaners[0].cleanerId.fullName.charAt(0).toUpperCase()
+                                    : "?"}
                                 </span>
                               </div>
                               <p className="font-medium">
-                              {task.cleaners.length === 1
-  ? task.cleaners[0]?.cleanerId?.fullName || "Unknown"
-  : `${
-      task.cleaners[0]?.cleanerId?.fullName || "Unknown"
-    } and ${task.cleaners.length - 1} other(s)`}
-
+                                {task.cleaners.length === 1
+                                  ? task.cleaners[0]?.cleanerId?.fullName || "Unknown"
+                                  : `${
+                                      task.cleaners[0]?.cleanerId?.fullName || "Unknown"
+                                    } and ${task.cleaners.length - 1} other(s)`}
                               </p>
-                              {/* {activeTab === "active" && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleStartChat(task);
-                                  }}
-                                  className="text-gray-500 hover:text-primary transition-colors"
-                                  title="Message cleaner"
-                                >
-                                  <MessageSquare className="w-5 h-5" />
-                                </button>
-                              )} */}
                             </div>
                           ) : (
                             <p className="font-medium">Not assigned</p>
