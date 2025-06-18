@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ import type { RootState } from "@/redux/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import toast, { Toaster } from "react-hot-toast";
 
 interface UserWallet {
   data: {
@@ -136,7 +138,9 @@ export default function PaymentsPage() {
 
   const handleForwardToAdmin = async () => {
     if (!invoiceId || !cleaningBusinessId || !token) {
-      alert("Invoice ID, cleaning business ID, or authentication token is missing.");
+      toast.error("Invoice ID, cleaning business ID, or authentication token is missing.", {
+        id: "forward-invoice-missing",
+      });
       return;
     }
 
@@ -156,12 +160,12 @@ export default function PaymentsPage() {
         throw new Error(errorData.message || `Failed to forward invoice (Status: ${response.status})`);
       }
 
-      alert("✅ Invoice successfully forwarded to admin.");
+      toast.success("Invoice successfully forwarded to admin!", { id: "forward-invoice-success" });
       setShowInvoiceSuccessModal(false);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to forward invoice.";
       console.error("Error forwarding invoice:", errorMessage);
-      alert(`❌ ${errorMessage}`);
+      toast.error(errorMessage, { id: "forward-invoice-error" });
     } finally {
       setIsForwarding(false);
     }
@@ -169,12 +173,14 @@ export default function PaymentsPage() {
 
   const handleGenerateInvoiceSubmit = async () => {
     if (!startDate || !endDate) {
-      alert("Please provide both start and end dates.");
+      toast.error("Please provide both start and end dates.", { id: "invoice-date-missing" });
       return;
     }
 
     if (!cleaningBusinessId || !token) {
-      alert("Cleaning business ID or authentication token is missing.");
+      toast.error("Cleaning business ID or authentication token is missing.", {
+        id: "invoice-missing-credentials",
+      });
       return;
     }
 
@@ -183,7 +189,7 @@ export default function PaymentsPage() {
       formattedStartDate = new Date(startDate).toISOString();
       formattedEndDate = new Date(endDate + "T23:59:59.999Z").toISOString();
     } catch (err: unknown) {
-      alert("Invalid date format. Please select valid dates.");
+      toast.error("Invalid date format. Please select valid dates.", { id: "invoice-invalid-date" });
       return;
     }
 
@@ -230,10 +236,11 @@ export default function PaymentsPage() {
       dispatch(closeInvoiceModal());
       setStartDate("");
       setEndDate("");
+      toast.success("Invoice generated successfully!", { id: "invoice-generate-success" });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to generate invoice.";
       console.error("Error generating invoice:", errorMessage, err);
-      alert(`Failed to generate invoice: ${errorMessage}. Check console for details.`);
+      toast.error(`You may not have task for this duration kindly contact support: ${errorMessage}`, { id: "invoice-generate-error" });
     } finally {
       setIsGeneratingInvoice(false);
     }
@@ -241,12 +248,13 @@ export default function PaymentsPage() {
 
   return (
     <div>
+      {/* Single Toaster for all toasts. TopUpModal, WithdrawModal, and MakePaymentModal should NOT render their own Toaster and must use unique toast IDs. */}
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+
       <h1 className="text-2xl font-bold mb-6">Payments</h1>
 
       <div className="mb-6">
-    
-<WalletCard balance={walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
-        
+        <WalletCard balance={walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 px-[15rem]">
