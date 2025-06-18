@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { checkTokenExpiration } from "@/redux/features/auth/authSlice";
 import Sidebar from "@/cleaningBusiness/component/sidebar";
-import Header from "@/components/header";
+import Header from "@/cleaningBusiness/component/header";
 
 export default function DashboardLayout({
   children,
@@ -27,7 +27,7 @@ export default function DashboardLayout({
     }
 
     if (!isAuthenticated) {
-      router.push("/property-manager/login");
+      router.push("/cleaning-business/login");
     }
   }, [isAuthenticated, token, dispatch, router]); 
 
