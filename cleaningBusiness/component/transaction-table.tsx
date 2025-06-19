@@ -1,11 +1,13 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef  } from "react";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import toast from "react-hot-toast";
+
 
 
 interface Transaction {
@@ -542,6 +544,9 @@ const RecurringPaymentTable: React.FC<RecurringPaymentTableProps> = ({
   const [selectedRecurringPayment, setSelectedRecurringPayment] = useState<RecurringPayment | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
+  const hasAutoSent = useRef(false);
+  const [allRecurringPayments, setAllRecurringPayments] = useState<RecurringPayment[]>(recurringPayments);
+
 
   // Format date for display
   const formatDate = (isoDate: string) => {
@@ -554,26 +559,25 @@ const RecurringPaymentTable: React.FC<RecurringPaymentTableProps> = ({
   };
 
   useEffect(() => {
-    let filtered = recurringPayments;
-
+    let filtered = allRecurringPayments;
+  
     if (searchQuery) {
       filtered = filtered.filter(
         (payment) =>
-          (payment.recipientFullName || "Unknown")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
+          (payment.recipientFullName || "Unknown").toLowerCase().includes(searchQuery.toLowerCase()) ||
           payment.note.toLowerCase().includes(searchQuery.toLowerCase()) ||
           payment.frequency.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
+  
     if (statusFilter !== "All Status") {
       filtered = filtered.filter((payment) => payment.status === statusFilter);
     }
-
+  
     setFilteredRecurringPayments(filtered);
     setCurrentPage(1);
-  }, [recurringPayments, searchQuery, statusFilter]);
+  }, [allRecurringPayments, searchQuery, statusFilter]);
+  
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -582,6 +586,11 @@ const RecurringPaymentTable: React.FC<RecurringPaymentTableProps> = ({
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, []);
+
+ 
+  
+  
+  
 
   const calculateTimeLeft = useCallback(() => {
     if (selectedRecurringPayment && selectedRecurringPayment.nextRun !== "N/A") {
@@ -649,18 +658,34 @@ const RecurringPaymentTable: React.FC<RecurringPaymentTableProps> = ({
 
   const handleSendInstantPayment = async () => {
     if (!selectedRecurringPayment || !token) return;
+  
+    const now = new Date();
+    const nextRunDate = new Date(selectedRecurringPayment.nextRun);
+  
+    if (isNaN(nextRunDate.getTime())) {
+      toast.error("❌ Invalid nextRun date.");
+      return;
+    }
+  
+    if (nextRunDate > now) {
+      toast.error("⚠️ Payment is not due yet.");
+      return;
+    }
+  
     setIsSending(true);
+  
     try {
       const amount = selectedRecurringPayment.amount
-        ? parseFloat(selectedRecurringPayment.amount.replace("$", "")) * 100
+        ? parseFloat(selectedRecurringPayment.amount.toString().replace("$", ""))
         : 0;
+  
       const payload = {
         recipientUserId: selectedRecurringPayment.recipientUserId,
         amount: amount,
         note: selectedRecurringPayment.note,
-        transactionCategory: "wallet_transfer",
       };
-      const response = await fetch("https://limpiar-backend.onrender.com/api/wallets/transactions/transfer", {
+  
+      const response = await fetch("https://limpiar-backend.onrender.com/api/wallets/transfer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -668,17 +693,31 @@ const RecurringPaymentTable: React.FC<RecurringPaymentTableProps> = ({
         },
         body: JSON.stringify(payload),
       });
+  
       if (!response.ok) {
-        throw new Error("Failed to send instant payment");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to send instant payment");
       }
-      alert("Instant payment sent successfully!");
+  
+      toast.success("Instant payment sent successfully!");
+  
+      if (typeof fetchRecurringPayments === "function") {
+        await fetchRecurringPayments();
+      } else {
+        window.location.reload();
+      }
+  
+      setSelectedRecurringPayment(null);
     } catch (error) {
       console.error("Error sending instant payment:", error);
-      alert("Failed to send instant payment.");
+      toast.error(`❌ ${error.message || "Failed to send instant payment."}`);
     } finally {
       setIsSending(false);
     }
   };
+  
+  
+  
 
   const getPaginationPages = () => {
     const maxPagesToShow = 5;
