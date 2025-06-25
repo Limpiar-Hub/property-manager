@@ -114,10 +114,10 @@ export default function SupportPage() {
       try {
         if (!token || !userId) {
           console.warn("Missing token or userId:", { token, userId });
-          router.push("/property-manager/login");
+          router.push("/partner/login");
           return;
         }
-  
+
         const response = await fetch(
           `https://limpiar-backend.onrender.com/api/chats/threads/user/${userId}`,
           {
@@ -127,13 +127,13 @@ export default function SupportPage() {
             },
           }
         );
-  
+
         const result = await response.json();
-  
+
         if (!response.ok) {
           throw new Error(result.error || "Failed to fetch support chats");
         }
-  
+
         const chats = Array.isArray(result) ? result : result.data || [];
         if (!Array.isArray(chats)) {
           console.error("Expected chats to be an array, got:", result);
@@ -142,26 +142,28 @@ export default function SupportPage() {
           setUnreadTotal(0);
           return;
         }
-  
+
         const sortedThreads = chats
           .map((chat: Chat) => {
-            const updatedAtDate = new Date(chat.updatedAt);
-            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-            return {
-              ...chat,
-              unreadCount: chat.messages.filter(
+            const unreadCount =
+              chat.messages?.filter(
                 (msg: Message) =>
                   msg.senderType !== "user" &&
                   new Date(msg.timestamp) > new Date(chat.updatedAt)
-              ).length,
-              status: updatedAtDate > sevenDaysAgo ? "active" : "resolved",
+              ).length || 0;
+
+            return {
+              ...chat,
+              unreadCount,
+              status: chat.resolved ? "resolved" : "active",
             };
           })
           .sort(
             (a: Chat, b: Chat) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+              new Date(b.updatedAt).getTime() -
+              new Date(a.updatedAt).getTime()
           );
-  
+
         setThreads(sortedThreads);
         setFilteredThreads(sortedThreads);
         setUnreadTotal(
@@ -177,11 +179,11 @@ export default function SupportPage() {
         setIsLoading(false);
       }
     };
-  
+
     fetchChats();
-    const intervalId = setInterval(fetchChats, 5000);
+    const intervalId = setInterval(fetchChats, 5000); // Refresh every 5s
     return () => clearInterval(intervalId);
-  }, [router, token, userId]);
+  }, [router, token, userId]); 
 
   useEffect(() => {
     const handleResize = () => {
