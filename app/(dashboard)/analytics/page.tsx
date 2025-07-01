@@ -155,7 +155,7 @@ export default function AnalyticsPage() {
 
   // JSX return
   return (
-    <div className="relative min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="relative min-h-screen ">
       <style jsx>{`
         @keyframes scrollUp {
           0% {
