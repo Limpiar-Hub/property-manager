@@ -129,7 +129,7 @@ export default function BookingPreview() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col ">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-semibold">Booking Preview</h3>
         <button

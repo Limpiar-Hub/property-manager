@@ -22,7 +22,7 @@ export default function BookingTabs({ activeTab, setActiveTab, counts }: Booking
   ];
 
   return (
-    <div className="mb-4 px-4 sm:px-6 lg:px-8 overflow-x-auto">
+    <div className="mb-4  overflow-x-auto">
       <div className="flex space-x-2 min-w-[500px] sm:min-w-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {tabs.map((tab) => (
           <button

@@ -30,7 +30,7 @@ export default function ProgressSteps() {
             >
               {s.id}. {s.name}
             </div>
-            <div className={cn("h-0.5 w-16", isActive || isCompleted ? "bg-blue-500" : "bg-gray-200")} />
+            <div className={cn("h-0.5 w-[11rem]", isActive || isCompleted ? "bg-blue-500" : "bg-gray-200")} />
           </div>
         )
       })}

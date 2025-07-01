@@ -16,15 +16,15 @@ export default function TitleInput() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-10">Give a name to your property</h2>
+    <div className="w-full max-w-2xl mx-auto mt-[10rem]">
+      <h2 className="text-3xl   font-medium text-center mb-10">Give a name to your property</h2>
 
       <div className="relative">
         <Input
           value={title}
           onChange={handleTitleChange}
           placeholder="Property title"
-          className="text-lg p-4 h-14"
+          className="text-xl p-4 h-24 font-medium"
           maxLength={40}
         />
         <div className="absolute right-2 bottom-2 text-sm text-gray-500">{title.length}/40</div>

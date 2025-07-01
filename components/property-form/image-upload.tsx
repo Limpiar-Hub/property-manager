@@ -55,7 +55,7 @@ export default function ImageUpload() {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-2">
+      <h2 className="text-3xl mt-[10rem] font-bold text-center mb-2">
         Add Images of Your Property
       </h2>
       <p className="text-center text-gray-500 mb-6">
@@ -63,9 +63,9 @@ export default function ImageUpload() {
       </p>
 
       <div
-        className={`grid gap-3 ${
+        className={`grid lg:mx-15  ${
           images.length > 0
-            ? "grid-cols-2 md:grid-cols-4"
+            ? "grid-cols-2 md:grid-cols-4 gap-y-4 md:gap-y-8"
             : "flex justify-center"
         }`}
       >
@@ -92,26 +92,29 @@ export default function ImageUpload() {
           </div>
         ))}
 
-        {images.length < 8 && (
+              {images.length < 8 && (
           <div
             {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all
+            className={`border-2 rounded-lg p-4 md:p-8 flex flex-col items-center justify-center cursor-pointer transition-all
               ${
                 isDragActive
                   ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:border-gray-400"
+                  : "border-gray-300 hover:border-blue-400"
               }
               ${uploading ? "opacity-50 cursor-not-allowed" : ""}
+              bg-white
               ${
-                images.length === 0 ? "w-60 h-40" : "w-28 h-28 md:w-36 md:h-36"
+                images.length === 0
+                  ? "w-[260px] h-[180px] md:w-[450px] md:h-[220px]"
+                  : "w-28 h-28 md:w-40 md:h-40"
               }`}
           >
             <input {...getInputProps()} />
-            <Upload className="w-8 h-8 text-gray-400 mb-2" />
-            <p className="text-sm text-gray-500">
+            <Upload className="w-10 h-10 md:w-12 md:h-12 text-gray-400 mb-4" />
+            <p className="text-sm md:text-base text-gray-500">
               {isDragActive ? "Drop files here" : "Drag & drop your images"}
             </p>
-            <p className="text-sm text-blue-500 mt-2">or browse</p>
+            <p className="text-sm md:text-base text-blue-500 mt-2">or browse</p>
           </div>
         )}
       </div>

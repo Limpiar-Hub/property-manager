@@ -92,7 +92,7 @@ export function InboxContent() {
       <div
         className={`flex-1 ${
           isMobile ? (selectedChatId ? "block" : "hidden") : "block"
-        } bg-gray-50`}
+        } bg-gray-50 flex flex-col-reverse`}
       >
         <ChatDetail />
       </div>

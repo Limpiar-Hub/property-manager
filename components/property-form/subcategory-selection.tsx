@@ -34,16 +34,15 @@ export default function SubcategorySelection() {
               key={subCat.id}
               onClick={() => handleSubcategorySelect(subCat.id)}
               className={cn(
-                "border rounded-lg p-6 cursor-pointer transition-all",
+                "border rounded-lg p-8 cursor-pointer transition-all",
                 isSelected
-                  ? "border-blue-500 bg-blue-50 shadow-md"
+                  ? "border-[#0082ED] shadow-md"
                   : "hover:border-blue-500 hover:shadow-md"
               )}
             >
               <h3
                 className={cn(
-                  "font-semibold text-lg mb-2",
-                  isSelected && "text-blue-700"
+                  "font-semibold text-lg mb-2"
                 )}
               >
                 {subCat.name}

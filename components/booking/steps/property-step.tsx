@@ -126,12 +126,10 @@ export default function PropertyStep() {
 
       <div className="flex justify-between items-center">
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={handleBack}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+   <Button variant="outline" onClick={handleBack}>
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
         </div>
         <Button
           onClick={handleNext}

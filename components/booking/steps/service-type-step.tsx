@@ -65,6 +65,11 @@ export default function ServiceTypeStep() {
     dispatch(setServiceType(newSelected));
   };
 
+    const handleBack = () => {
+    dispatch(setStep(1));
+  };
+
+
   const handleNext = () => {
     if (serviceTypes.length > 0) {
       dispatch(setStep(2));
@@ -108,12 +113,10 @@ export default function ServiceTypeStep() {
 
       <div className="flex justify-between items-center">
         <div className="flex gap-2">
-          <Button variant="outline" size="icon">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+<Button variant="outline" onClick={handleBack}>
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
         </div>
         <Button
           onClick={handleNext}

@@ -116,7 +116,7 @@ export default function MyPropertyPage() {
                 </p>
                 <button
                   onClick={handleAddProperty}
-                  className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-md transition-colors mt-2"
+                  className="inline-block bg-[#0082ED]  text-white font-medium py-2 px-6 rounded-md  mt-2"
                 >
                   Add property
                 </button>

@@ -39,7 +39,7 @@ export default function ProgressSteps() {
             {/* Separate line for each step */}
             <div
               className={cn(
-                "h-0.5 w-24",
+                "h-0.5 w-40",
                 isActive || isCompleted ? "bg-blue-500" : "bg-gray-200"
               )}
             />
