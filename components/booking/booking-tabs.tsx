@@ -22,17 +22,17 @@ export default function BookingTabs({ activeTab, setActiveTab, counts }: Booking
   ];
 
   return (
-    <div className="mb-4  overflow-x-auto">
-      <div className="flex space-x-2 min-w-[500px] sm:min-w-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+ <div className="mb-4 overflow-x-auto flex bg-gray-50 p-2 sm:p-2 rounded-lg w-full sm:w-fit">
+      <div className="flex space-x-2 min-w-[340px] sm:min-w-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 w-full">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as BookingStatus)}
             className={`
-              py-2 px-4 text-sm font-medium whitespace-nowrap rounded-md transition-colors
+              flex-1 min-w-[120px] sm:min-w-0 py-2 px-2 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap rounded-md transition-colors
               ${
                 activeTab === tab.id
-                  ? "bg-blue-600 text-white border border-blue-700"
+                  ? "bg-blue-500 text-white border"
                   : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
               }
             `}
