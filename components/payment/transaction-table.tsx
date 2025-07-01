@@ -658,7 +658,7 @@ export function TransactionTable({ transactions: initialTransactions }: Transact
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-400"
                     />
                   </td>
-                  <td className="p-4">{transaction.formattedDate}</td>
+                  <td className="p-4 whitespace-nowrap">{transaction.formattedDate}</td>
                   <td className="p-4">{transaction.description}</td>
                   <td className="p-4">{transaction.amount}</td>
                   <td className="p-4">{transaction.paymentMethod}</td>
