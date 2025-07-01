@@ -1,5 +1,6 @@
 import './globals.css';
 import { ReactNode } from 'react';
+import "./fonts.css";
 
 export const metadata = {
   title: 'Property Manager',
