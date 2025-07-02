@@ -54,9 +54,9 @@ export default function AddPropertyPage() {
 
   return (
 
-    <main className="pt- px-4 pb-20">
+    <main className="px-4 pb-20">
          <FormNavigation />
-    <div className="bg-[#F8F8F8] rounded-lg pt-10 pb-[10rem] shadow-sm">
+    <div className="bg-[#F8F8F8] rounded-lg pt-10 pb-[10rem] shadow-sm px-4">
    
       {/* <ProgressSteps /> */}
 
