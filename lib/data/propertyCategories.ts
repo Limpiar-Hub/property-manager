@@ -250,8 +250,8 @@ export const propertyCategories = [
     ],
   },
   {
-    id: "Mixed_Use",
-    name: "Mixed-Use",
+    id: "Mixed_Used",
+    name: "Mixed-Used",
     description: "Multi-purpose developments",
     icon: "LayoutGrid",
     subCategories: [
