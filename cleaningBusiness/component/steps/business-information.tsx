@@ -209,8 +209,8 @@ export default function BusinessInformation() {
               <Label htmlFor="organic">Organic</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="team_member" id="team_member" />
-              <Label htmlFor="team_member">Team Member</Label>
+              <RadioGroupItem value="teammember" id="teammember" />
+              <Label htmlFor="teammember">Team Member</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="referral_partner" id="referral_partner" />
